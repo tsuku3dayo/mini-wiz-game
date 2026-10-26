@@ -5,7 +5,7 @@
 | 依頼日 | 2026-10-26 |
 | 依頼者 | オーナー（tsuku3dayo） |
 | 対象 | `docs/specification-ja.md` v1.0 → v1.1 |
-| 状態 | 仕様書 v1.1 を書いた（ブランチ `docs/spec-1.1-serverless-pwa`）。オーナーの承認待ち |
+| 状態 | 仕様書 v1.1 を承認（tsuku3dayo、2026-10-26T16:51:30+09:00）。ブランチ `docs/spec-1.1-serverless-pwa` |
 
 ## 1. 元のメモ
 
