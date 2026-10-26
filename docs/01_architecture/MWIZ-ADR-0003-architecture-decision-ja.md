@@ -2,13 +2,13 @@
 id: MWIZ-ADR-0003
 type: Architecture Decision
 title: ルールを乱数を引数で受け取る純粋関数にし、層の決まりを ESLint で強制する
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§5、§9
   - docs/specification-ja.md (v1.1) §1.4、§19.4、§20.2、§23
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0003 ルールを乱数を引数で受け取る純粋関数にし、層の決まりを ESLint で強制する

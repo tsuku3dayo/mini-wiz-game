@@ -2,13 +2,13 @@
 id: MWIZ-ADR-0005
 type: Architecture Decision
 title: 画面は DOM で組み立て、疑似3D と地図は SVG、画面の切替えはハッシュにする
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§4.2、§5
   - docs/specification-ja.md (v1.1) §11.2、§11.5、§11.11、§27
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0005 画面は DOM で組み立て、疑似3D と地図は SVG、画面の切替えはハッシュにする

@@ -2,7 +2,7 @@
 id: MWIZ-ADR-0009
 type: Architecture Decision
 title: 新しい版は「更新」で切り替え、起動に失敗したらこのアプリのキャッシュだけ消して直す
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
@@ -10,7 +10,7 @@ sources:
   - docs/specification-ja.md (v1.1) §11.12、§16.6、§30.1、§30.3、§30.4
   - docs/workflow.txt（01 で先に確かめておくこと）
   - mini-blockbreaking-game public/boot.js・src/pwa.ts（v1.0.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0009 新しい版は「更新」で切り替え、起動に失敗したらこのアプリのキャッシュだけ消して直す

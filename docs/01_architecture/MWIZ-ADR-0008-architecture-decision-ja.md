@@ -2,13 +2,13 @@
 id: MWIZ-ADR-0008
 type: Architecture Decision
 title: 効果音と BGM を Web Audio で合成し、曲データは仕様書を正本にする
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§5、§9
   - docs/specification-ja.md (v1.1) §12、§25、§26
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0008 効果音と BGM を Web Audio で合成し、曲データは仕様書を正本にする

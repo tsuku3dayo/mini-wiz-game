@@ -2,14 +2,14 @@
 id: MWIZ-SA-0001
 type: System Architecture
 title: WIZ システム構成
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）
   - docs/specification-ja.md (v1.1) §1.3、§1.4、§11、§14、§17〜§22、§27〜§30
   - mini-blockbreaking-game doc/01_architecture/MBRK-SA-0001（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # システム構成（system-architecture）

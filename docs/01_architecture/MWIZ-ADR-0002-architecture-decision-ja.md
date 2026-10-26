@@ -2,14 +2,14 @@
 id: MWIZ-ADR-0002
 type: Architecture Decision
 title: mini-blockbreaking-game と同じ技術構成とルールを使う
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§5
   - docs/specification-ja.md (v1.1) §18、§19、§30
   - mini-blockbreaking-game package.json (v1.0.0)、CLAUDE.md、doc/01_architecture/MBRK-ADR-0002（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0002 mini-blockbreaking-game と同じ技術構成とルールを使う

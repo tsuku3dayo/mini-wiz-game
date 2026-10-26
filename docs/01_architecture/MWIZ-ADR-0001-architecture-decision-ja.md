@@ -2,14 +2,14 @@
 id: MWIZ-ADR-0001
 type: Architecture Decision
 title: サーバーを持たず、ブラウザだけで動く PWA にする
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§2、§5
   - docs/specification-ja.md (v1.1) §1.1、§1.3、§14
   - docs/requests/2026-10-26-serverless-pwa.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0001 サーバーを持たず、ブラウザだけで動く PWA にする

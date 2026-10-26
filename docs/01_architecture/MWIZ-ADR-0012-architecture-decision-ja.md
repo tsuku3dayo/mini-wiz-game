@@ -2,7 +2,7 @@
 id: MWIZ-ADR-0012
 type: Architecture Decision
 title: 画面はスマートフォンの縦画面での表示を最優先して作る
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
@@ -10,7 +10,7 @@ sources:
   - docs/specification-ja.md (v1.1) §1.3、§11.1、§11.11、§11.12、§14
   - docs/requests/2026-10-26-serverless-pwa.md §4（オーナーの回答）
   - docs/workflow.txt（03 の試作）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0012 画面はスマートフォンの縦画面での表示を最優先して作る

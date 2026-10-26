@@ -2,14 +2,14 @@
 id: MWIZ-ADR-0010
 type: Architecture Decision
 title: フォントは端末のものを使い、同梱しない
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）§4.2、§5、§9
   - docs/specification-ja.md (v1.1) §11.3、§14、§18.1
   - docs/requests/2026-10-26-serverless-pwa.md §4（オーナーの回答）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 
 # ADR-0010 フォントは端末のものを使い、同梱しない
