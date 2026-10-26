@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0A0F">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="WIZ">
+<title>WIZ ～死霊術師の迷宮～（試作）</title>
+<!--
+  03 画面設計の試作（MWIZ-GUI-0001〜0007）。画面の大きさ・配置と主な操作だけを作る。
+  ゲームのロジック・保存・音は作らない。値は見本（固定）。07 の実装では使わない。
+-->
+<style>
+:root {
+  --wiz-color-background: #0B0A0F;
+  --wiz-color-primary: #E8DCC0;
+  --wiz-color-frame: #C9A227;
+  --wiz-color-line: #FFFFFF;
+  --wiz-color-secondary: #FFC845;
+  --wiz-color-success: #5CD65C;
+  --wiz-color-warning: #FFA726;
+  --wiz-color-error: #FF5A4E;
+  --wiz-color-info: #4FC3F7;
+  --wiz-color-arcane: #A77BD9;
+  --wiz-color-text-sub: #A39B8B;
+  --wiz-color-disabled: #8C857A;
+  --wiz-color-floor: #2A2530;
+  --wiz-color-blood: #B3122E;
+  --wiz-color-map-frame: #A39B8B;
+  --wiz-color-rarity-n: #FFFFFF;
+  --wiz-color-rarity-r: #5B8CFF;
+  --wiz-color-rarity-sr: #C792EA;
+  --wiz-color-rarity-ur: #FF8C1A;
+  --wiz-color-rarity-lg: #FF4D6D;
+  --wiz-window-line: #FFFFFF;
+  --wiz-font: "MS Gothic", "Osaka-Mono", "Noto Sans Mono CJK JP", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --gutter-l: max(8px, env(safe-area-inset-left));
+  --gutter-r: max(8px, env(safe-area-inset-right));
+  --safe-top: max(8px, env(safe-area-inset-top));
+  --safe-bottom: max(8px, env(safe-area-inset-bottom));
+  --gap: 8px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--wiz-color-background);
+  color: var(--wiz-color-primary);
+  font-family: var(--wiz-font);
+  font-size: 16px; line-height: 1.6; letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden; min-height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+}
+[hidden] { display: none !important; }
+*:focus-visible { outline: 2px solid var(--wiz-color-secondary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
+
+/* 画面の外枠：狭い画面が基本、600px 以上で広げる */
+main.frame {
+  max-width: 800px; margin: 0 auto;
+  padding: var(--safe-top) var(--gutter-r) var(--safe-bottom) var(--gutter-l);
+  display: grid; gap: var(--gap); align-content: start;
+  min-height: 100dvh;
+}
+/* 操作を画面の下端に寄せる（狭い画面。GUI-0001 §4.1） */
+@media (max-width: 599px) { main.frame.bottom { display: flex; flex-direction: column; } main.frame.bottom > .to-bottom { margin-top: auto; } }
+.screen-name { margin: 0; font-size: 24px; line-height: 1.3; color: var(--wiz-color-frame); font-weight: normal; }
+@media (max-width: 599px) { .screen-name.hide-narrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
+
+/* ウィンドウ（二重線） */
+.win {
+  position: relative; border: 2px solid var(--wiz-window-line); outline: 1px solid var(--wiz-window-line); outline-offset: -6px;
+  padding: 10px 12px; margin: 0;
+}
+.win.titled { margin-top: 12px; padding-top: 14px; }
+.win.danger { border-color: var(--wiz-color-error); }
+.win > .win-title {
+  position: absolute; top: -0.8em; left: 12px; margin: 0; padding: 0 4px;
+  background: var(--wiz-color-background); color: var(--wiz-color-frame);
+  font-size: 18px; line-height: 1.4; font-weight: normal; white-space: nowrap;
+}
+@media (min-width: 600px) { .win { padding: 12px 16px; } .win.titled { padding-top: 16px; } }
+
+/* メニュー */
+ul.menu { list-style: none; margin: 0; padding: 0; }
+ul.menu li {
+  min-height: 44px; display: flex; align-items: center; padding: 4px 0; white-space: pre; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+ul.menu li::before { content: "　"; }
+ul.menu li.cur { color: var(--wiz-color-secondary); }
+ul.menu li.cur::before { content: "▶"; }
+ul.menu li[aria-disabled="true"] { color: var(--wiz-color-disabled); }
+ul.menu li .sub { color: var(--wiz-color-text-sub); margin-left: 16px; }
+@media (hover: hover) { ul.menu li:hover { color: var(--wiz-color-secondary); } }
+
+/* ボタン */
+.btn {
+  font: inherit; letter-spacing: inherit; min-height: 48px; min-width: 48px; padding: 0 12px;
+  background: transparent; color: var(--wiz-color-primary); border: 2px solid var(--wiz-color-primary); border-radius: 0;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer;
+}
+.btn:active { background: var(--wiz-color-secondary); color: var(--wiz-color-background); border-color: var(--wiz-color-secondary); }
+@media (hover: hover) { .btn:hover { color: var(--wiz-color-secondary); border-color: var(--wiz-color-secondary); } }
+.btn[disabled] { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); }
+
+/* メッセージ欄 */
+.log { min-height: calc(4 * 1.6em); position: relative; }
+.log p { margin: 0; white-space: pre-wrap; }
+.log .success { color: var(--wiz-color-success); }
+.log .danger { color: var(--wiz-color-error); }
+.log .wait { position: absolute; right: 0; bottom: 0; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ステータス */
+dl.status { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; margin: 0; }
+dl.status dt, dl.status dd { margin: 0; white-space: pre; }
+dl.status .warn { color: var(--wiz-color-warning); }
+.status-row { display: flex; flex-wrap: wrap; column-gap: 14px; white-space: pre; }
+.status-row .name { color: var(--wiz-color-frame); }
+.status-row .warn { color: var(--wiz-color-warning); }
+
+/* タイトル */
+.title-main { max-width: 800px; margin: 0 auto; padding: max(32px, env(safe-area-inset-top)) var(--gutter-r) max(32px, env(safe-area-inset-bottom)) var(--gutter-l); display: grid; gap: 16px; min-height: 100dvh; align-content: center; }
+.deco { width: 60%; margin: 0 auto; display: flex; align-items: center; gap: 8px; color: var(--wiz-color-blood); }
+.deco::before, .deco::after { content: ""; flex: 1; border-top: 1px solid var(--wiz-color-blood); }
+.logo { margin: 0; text-align: center; font-size: 36px; line-height: 1.2; color: var(--wiz-color-frame); letter-spacing: 0.5em; padding-left: 0.5em; font-weight: normal; }
+@media (min-width: 600px) { .logo { font-size: 48px; } }
+.subtitle { text-align: center; color: var(--wiz-color-arcane); margin: 0; }
+.title-menu { margin: 0 auto; width: 100%; max-width: 360px; }
+.ver { text-align: right; color: var(--wiz-color-text-sub); margin: 0; }
+.title-sub-actions { display: flex; justify-content: space-between; align-items: center; }
+
+/* 名前入力 */
+.field label { display: block; color: var(--wiz-color-text-sub); font-size: 13px; }
+.field input { width: 100%; font: inherit; font-size: 16px; min-height: 48px; padding: 8px; color: var(--wiz-color-primary); background: transparent; border: 2px solid var(--wiz-color-primary); border-radius: 0; }
+.field input:focus { border-color: var(--wiz-color-secondary); outline: none; }
+.field .help { display: flex; justify-content: space-between; font-size: 13px; color: var(--wiz-color-text-sub); min-height: 1.5em; }
+.field .help .err { color: var(--wiz-color-error); }
+
+/* ダンジョン */
+.loc { margin: 0; font-size: 18px; line-height: 1.4; font-weight: normal; }
+.fpv { width: var(--fpv-w, 320px); max-width: 100%; aspect-ratio: 4 / 3; margin: 0 auto; }
+.fpv svg { width: 100%; height: 100%; display: block; background: var(--wiz-color-background); }
+.fpv line { stroke: var(--wiz-color-primary); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.fpv .bump { animation: blink1 200ms step-end 1; }
+@keyframes blink1 { 50% { opacity: 0; } }
+.controls { display: grid; grid-template-columns: auto 1fr; gap: var(--gap); align-items: stretch; }
+.map-win { padding: 8px; display: grid; place-items: center; }
+.movepad { display: grid; grid-template-areas: "left up right" "left down right"; grid-template-columns: repeat(3, minmax(48px, 1fr)); grid-template-rows: 1fr 1fr; gap: var(--gap); }
+.movepad .up { grid-area: up; } .movepad .down { grid-area: down; } .movepad .l { grid-area: left; } .movepad .r { grid-area: right; }
+.movepad .btn { padding: 0 4px; }
+.actions { display: grid; grid-template-columns: 8.5em 1fr; gap: var(--gap); }
+.actions .btn { padding: 0 8px; }
+.actions .menu-btn { justify-self: end; }
+
+/* 戦闘 */
+.enemy { text-align: center; }
+.enemy-img { width: 128px; height: 128px; margin: 0 auto 8px; display: grid; place-items: center; border: 1px dashed var(--wiz-color-text-sub); color: var(--wiz-color-text-sub); font-size: 13px; }
+@media (min-width: 600px) and (min-height: 680px) { .enemy-img { width: 192px; height: 192px; } }
+.enemy-name { margin: 0; font-size: 24px; line-height: 1.3; }
+.enemy-name.boss { color: var(--wiz-color-error); }
+
+/* 2 カラム（広い画面だけ） */
+.cols { display: grid; gap: 16px; }
+@media (min-width: 600px) { .cols { grid-template-columns: 1fr 1fr; align-items: start; } }
+
+/* 装備 */
+.slot-row { display: grid; grid-template-columns: 3.5em 1fr; }
+.rar-r { color: var(--wiz-color-rarity-r); } .rar-sr { color: var(--wiz-color-rarity-sr); } .rar-ur { color: var(--wiz-color-rarity-ur); } .rar-lg { color: var(--wiz-color-rarity-lg); } .rar-n { color: var(--wiz-color-rarity-n); }
+.item { display: inline-flex; flex-wrap: wrap; column-gap: 8px; white-space: normal; }
+.item .slot { color: var(--wiz-color-text-sub); }
+.item .bonus { white-space: nowrap; }
+.diff-up { color: var(--wiz-color-success); } .diff-down { color: var(--wiz-color-warning); }
+.filter { display: flex; align-items: center; gap: 4px; }
+.filter .btn { min-width: 44px; min-height: 44px; padding: 0; }
+.filter .order { margin-left: 8px; color: var(--wiz-color-text-sub); }
+.list-scroll { overflow-y: auto; max-height: var(--list-h, calc(8 * 52px)); }
+
+/* 演出・帯・試作のナビ */
+.low-hp { --wiz-window-line: #FF5A4E; }
+.banner { position: fixed; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top) + 4px) var(--gutter-r) 4px var(--gutter-l); background: #1a1720; border-bottom: 2px solid var(--wiz-color-frame); display: flex; justify-content: space-between; align-items: center; gap: 8px; z-index: 20; }
+dialog.install { background: var(--wiz-color-background); color: var(--wiz-color-primary); border: 2px solid var(--wiz-color-line); outline: 1px solid var(--wiz-color-line); outline-offset: -6px; padding: 16px; max-width: min(92vw, 480px); font: inherit; }
+dialog.install::backdrop { background: rgba(0,0,0,0.7); }
+dialog.install details { margin: 8px 0; }
+dialog.install summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.proto-nav { position: fixed; right: 0; top: 40%; z-index: 30; }
+.proto-nav > button { font: inherit; font-size: 12px; background: #3a2f48; color: #fff; border: 0; padding: 8px 4px; writing-mode: vertical-rl; opacity: 0.85; }
+.proto-panel { position: fixed; inset: auto 8px 8px 8px; max-height: 70dvh; overflow: auto; background: #241e2c; border: 2px solid #A77BD9; padding: 8px; z-index: 31; font-size: 14px; }
+.proto-panel .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.proto-panel button { font: inherit; min-height: 40px; background: #3a2f48; color: #fff; border: 1px solid #A77BD9; }
+.proto-panel .vp { color: #A77BD9; margin: 4px 0 8px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="proto-nav"><button type="button" id="proto-open" aria-label="試作の画面を選ぶ">試作の画面</button></div>
+<div class="proto-panel" id="proto-panel" hidden>
+  <p class="vp" id="proto-vp"></p>
+  <div class="grid" id="proto-list"></div>
+  <p><label><input type="checkbox" id="proto-lowhp"> 体力わずか（赤い枠）</label></p>
+  <p><button type="button" id="proto-close">とじる</button></p>
+</div>
+<dialog class="install" id="install-dialog" aria-labelledby="install-title">
+  <h2 id="install-title" style="margin:0 0 8px;font-size:18px;color:var(--wiz-color-frame);font-weight:normal">【 インストール 】</h2>
+  <p style="margin:0">ホーム画面に追加すると、アプリのように開けます。通信がなくても遊べます。</p>
+  <details data-platform="ios" open><summary>iPhone（Safari）</summary><p>画面下の共有ボタン → 「ホーム画面に追加」</p></details>
+  <details data-platform="android"><summary>Android（Chrome）</summary><p>右上のメニュー → 「ホーム画面に追加」</p></details>
+  <details data-platform="pc"><summary>パソコン（Chrome / Edge）</summary><p>アドレスバーの右のインストールのボタン</p></details>
+  <p style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0 0"><button class="btn" type="button" id="install-close">とじる</button></p>
+</dialog>
+<script>
+// ---- 見本のデータ（固定。ロジックは作らない） ----
+const CHAR = { name: 'ゆうしゃ', lv: 12, exp: 1584, next: 288, hp: 120, maxHp: 135, mp: 31, maxMp: 43, atk: 28, def: 30, spd: 22, bAtk: 10, bDef: 12 };
+const pad3 = (n) => String(n).padStart(3, ' ');
+const $ = (s, r = document) => r.querySelector(s);
+const app = $('#app');
+let lines = [];   // メッセージ欄に出ている行（最大 4 行）
+let lowHp = false;
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(typeof k === 'string' ? document.createTextNode(k) : k);
+  return e;
+}
+function win(title, ...kids) {
+  const w = el('section', { class: 'win' + (title ? ' titled' : '') });
+  if (title) w.append(el('h2', { class: 'win-title', text: `【 ${title} 】` }));
+  w.append(...kids);
+  return w;
+}
+function frame(name, { hideNarrow = false, bottom = false } = {}) {
+  const m = el('main', { class: 'frame' + (lowHp ? ' low-hp' : '') + (bottom ? ' bottom' : '') });
+  m.append(el('h1', { class: 'screen-name' + (hideNarrow ? ' hide-narrow' : ''), text: name }));
+  return m;
+}
+// メニュー：↑↓ は端で止まる。タップ・Enter で決定
+function menu(label, items, { initial = 0, onCancel } = {}) {
+  let cur = initial;
+  const ul = el('ul', { class: 'menu', role: 'menu', 'aria-label': label });
+  const draw = () => [...ul.children].forEach((li, i) => { li.classList.toggle('cur', i === cur); li.tabIndex = i === cur ? 0 : -1; });
+  items.forEach((it, i) => {
+    const li = el('li', { role: 'menuitem', 'aria-disabled': it.disabled ? 'true' : false });
+    li.append(it.text); if (it.sub) li.append(el('span', { class: 'sub', text: it.sub }));
+    li.addEventListener('click', () => { cur = i; draw(); choose(); });
+    li.addEventListener('focus', () => { cur = i; draw(); });
+    ul.append(li);
+  });
+  const choose = () => { const it = items[cur]; if (it.disabled) { say(it.reason || 'いまは えらべない'); return; } it.go && it.go(); };
+  ul.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { cur = Math.min(items.length - 1, cur + 1); draw(); ul.children[cur].focus(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { cur = Math.max(0, cur - 1); draw(); ul.children[cur].focus(); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === ' ') { choose(); e.preventDefault(); }
+    else if (e.key === 'Escape' && onCancel) { onCancel(); }
+  });
+  draw();
+  return ul;
+}
+function logWin() {
+  const w = win(null); w.dataset.testid = 'message-window';
+  const box = el('div', { class: 'log', role: 'log', 'aria-live': 'polite' });
+  for (const l of lines) box.append(el('p', { class: l.tone || '', text: l.text }));
+  w.append(box);
+  w.addEventListener('click', () => {});
+  if (lines.some((l) => l.tone === 'danger')) w.classList.add('danger');
+  return w;
+}
+function say(text, tone) { lines = [...lines, { text, tone }].slice(-4); const old = $('[data-testid="message-window"]'); if (old) old.replaceWith(logWin()); }
+function statusFull() {
+  const warn = CHAR.hp <= CHAR.maxHp * 0.25;
+  const dl = el('dl', { class: 'status' },
+    el('dt', { text: 'Lv' }), el('dd', { text: pad3(CHAR.lv) }),
+    el('dt', { text: 'EXP' }), el('dd', { text: `${pad3(CHAR.exp)}（つぎまで ${CHAR.next}）` }),
+    el('dt', { class: warn ? 'warn' : '', text: 'HP' }), el('dd', { class: warn ? 'warn' : '', text: `${pad3(CHAR.hp)}/${pad3(CHAR.maxHp)}${warn ? '！' : ''} (+15)` }),
+    el('dt', { text: 'MP' }), el('dd', { text: `${pad3(CHAR.mp)}/${pad3(CHAR.maxMp)}` }),
+    el('dt', { text: 'こうげき' }), el('dd', { text: `${pad3(CHAR.atk)} (+${CHAR.bAtk})` }),
+    el('dt', { text: 'ぼうぎょ' }), el('dd', { text: `${pad3(CHAR.def)} (+${CHAR.bDef})` }),
+    el('dt', { text: 'すばやさ' }), el('dd', { text: pad3(CHAR.spd) }));
+  return win(CHAR.name, dl);
+}
+// 狭い画面のステータス：見出しの代わりに名前を行の先頭に置く 1 行の形（GUI-0001 §4.4）
+function statusRow() {
+  const warn = CHAR.hp <= CHAR.maxHp * 0.25;
+  const row = el('div', { class: 'status-row' },
+    el('span', { class: 'name', text: CHAR.name }), el('span', { text: `Lv${pad3(CHAR.lv)}` }),
+    el('span', { class: warn ? 'warn' : '', text: `HP${pad3(CHAR.hp)}/${pad3(CHAR.maxHp)}${warn ? '！' : ''}` }), el('span', { text: `MP${pad3(CHAR.mp)}/${pad3(CHAR.maxMp)}` }));
+  const w = win(null, row); w.style.padding = '6px 12px'; return w;
+}
+
+// ---- 疑似3D（仕様書 §11.5 の枠の座標。見本の視界） ----
+const XK = [0, 40, 80, 110, 130], YK = [0, 30, 60, 82, 97], W = 320, H = 240;
+const SAMPLE_DEPTHS = [
+  { left: 'wall', right: 'open', front: 'open', rightFront: 'wall' },
+  { left: 'wall', right: 'wall', front: 'open' },
+  { left: 'open', right: 'wall', front: 'wall', leftFront: 'wall', stairs: 'down' },
+];
+function fpvSvg(depths, bump) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 320 240'); svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', '3F 北を向いている。前方 2 マス先は かべ。右に わかれみち。2 マス先に くだり階段。');
+  const line = (x1, y1, x2, y2, front0) => { const l = document.createElementNS(NS, 'line'); Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v)); if (front0 && bump) l.classList.add('bump'); svg.append(l); };
+  depths.forEach((d, k) => {
+    const [x0, y0, x1, y1] = [XK[k], YK[k], XK[k + 1], YK[k + 1]];
+    for (const side of ['left', 'right']) {
+      const fx = (x) => (side === 'left' ? x : W - x);
+      if (d[side] === 'wall') { line(fx(x0), y0, fx(x1), y1); line(fx(x0), H - y0, fx(x1), H - y1); line(fx(x1), y1, fx(x1), H - y1); }
+      else { line(fx(x0), y1, fx(x1), y1); line(fx(x0), H - y1, fx(x1), H - y1); if (d[side + 'Front'] === 'wall') { line(fx(x1), y1, fx(x1), H - y1); line(fx(x0), y1, fx(x0), H - y1); } }
+    }
+    if (d.front === 'wall') { line(x1, y1, W - x1, y1, k === 0); line(W - x1, y1, W - x1, H - y1, k === 0); line(W - x1, H - y1, x1, H - y1, k === 0); line(x1, H - y1, x1, y1, k === 0); }
+    if (k >= 1 && d.stairs) { const t = document.createElementNS(NS, 'text'); t.setAttribute('x', 160); t.setAttribute('y', ((H - y0) + (H - y1)) / 2); t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle'); t.setAttribute('fill', '#4FC3F7'); t.setAttribute('font-size', '12'); t.textContent = '↓ くだり階段'; svg.append(t); }
+  });
+  return svg;
+}
+// ---- 自動地図（16px × 10 = 160。見本の踏破） ----
+function mapSvg() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 160 160'); svg.setAttribute('width', 160); svg.setAttribute('height', 160);
+  svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', '3F の地図。踏破済み 14 マス。');
+  const add = (tag, a, text) => { const e = document.createElementNS(NS, tag); Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v)); if (text) e.textContent = text; svg.append(e); };
+  add('rect', { x: 0.5, y: 0.5, width: 159, height: 159, fill: 'none', stroke: '#A39B8B', 'stroke-width': 1 });
+  const visited = [[4,8],[4,7],[4,6],[5,6],[6,6],[6,5],[6,4],[5,4],[4,4],[3,4],[3,3],[3,2],[2,2],[7,6]];
+  for (const [x, y] of visited) {
+    add('rect', { x: x * 16, y: y * 16, width: 16, height: 16, fill: '#2A2530' });
+    if ((x + y) % 3 === 0) add('line', { x1: x * 16, y1: y * 16, x2: x * 16 + 16, y2: y * 16, stroke: '#E8DCC0', 'stroke-width': 2 });
+    if ((x * y) % 4 === 1) add('line', { x1: x * 16 + 16, y1: y * 16, x2: x * 16 + 16, y2: y * 16 + 16, stroke: '#E8DCC0', 'stroke-width': 2 });
+  }
+  add('text', { x: 4 * 16 + 8, y: 8 * 16 + 8, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#4FC3F7', 'font-size': 12 }, '↑');
+  add('text', { x: 2 * 16 + 8, y: 2 * 16 + 8, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#4FC3F7', 'font-size': 12 }, '↓');
+  add('text', { x: 6 * 16 + 8, y: 4 * 16 + 8, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#FFC845', 'font-size': 12 }, '▲');
+  return svg;
+}
+
+// ---- 画面 ----
+const screens = {};
+function show(name, ...args) { app.replaceChildren(); window.scrollTo(0, 0); screens[name](...args); document.body.dataset.screen = name; fit(); $('#proto-vp').textContent = vpText(); }
+
+screens.title = () => {
+  lines = [];
+  const m = el('main', { class: 'title-main' });
+  m.append(el('div', { class: 'deco', 'aria-hidden': 'true', text: '✦' }),
+    el('h1', { class: 'logo', text: 'WIZ' }), el('p', { class: 'subtitle', text: '～ 死霊術師の迷宮 ～' }),
+    el('div', { class: 'deco', 'aria-hidden': 'true', text: '✦' }));
+  const box = el('div', { class: 'title-menu' });
+  box.append(menu('タイトル', [
+    { text: 'はじめから', go: () => show('name') },
+    { text: 'つづきから', sub: 'ゆうしゃ Lv12', go: () => show('inn') },
+    { text: 'おと：オフ', go: () => say('おとを オンにした') },
+  ], { initial: 1 }));
+  m.append(box, logWin());
+  const sub = el('div', { class: 'title-sub-actions' },
+    el('button', { class: 'btn', type: 'button', text: 'インストール', onclick: () => $('#install-dialog').showModal() }),
+    el('p', { class: 'ver', text: 'v1.0' }));
+  m.append(sub);
+  app.append(m);
+};
+screens.name = () => {
+  lines = [];
+  const m = frame('なまえ');
+  const input = el('input', { id: 'name', type: 'text', maxlength: 8, autocomplete: 'off', enterkeyhint: 'done' });
+  const count = el('span', { text: '0/8' }); const err = el('span', { class: 'err', text: ' ' });
+  input.addEventListener('input', () => { const n = [...input.value].length; count.textContent = `${n}/8`; err.textContent = /[<>😀]/u.test(input.value) ? 'つかえない もじが ふくまれています' : ' '; });
+  const field = el('div', { class: 'field' }, el('label', { for: 'name', text: 'なまえ' }), input, el('div', { class: 'help' }, err, count));
+  m.append(win(null, el('p', { style: 'margin:0 0 16px', text: 'なまえを いれてください' }), field,
+    menu('なまえ入力', [{ text: 'もどる', go: () => show('title') }, { text: '決定', go: () => { say(`${input.value || 'ゆうしゃ'}の ぼうけんが はじまった`); show('inn', true); } }], { initial: 1 })));
+  m.append(logWin()); app.append(m); input.focus();
+};
+screens.inn = (keep) => {
+  if (!keep) lines = [{ text: 'ゆうしゃは 宿屋で めをさました' }];
+  const m = frame('宿屋', { bottom: true });
+  const cmd = menu('宿屋', [
+    { text: 'やすむ', go: () => say('HP と MP が かいふくした', 'success') },
+    { text: 'セーブ', go: () => say('セーブしました', 'success') },
+    { text: 'メニュー', go: () => show('innMenu') },
+    { text: 'ダンジョンへ', go: () => { lines = [{ text: 'ダンジョンに ふみこんだ' }]; show('dungeon', true); } },
+    { text: 'タイトルへ戻る', go: () => show('confirmQuit') },
+  ]);
+  // 狭い画面：上に情報、真ん中にメッセージ、下に操作（GUI-0003 §1）
+  const cw = win(null, cmd); cw.classList.add('to-bottom'); m.append(statusFull(), logWin(), cw); app.append(m);
+};
+screens.confirmQuit = () => {
+  const m = frame('宿屋');
+  m.append(statusFull(), logWin(), win('かくにん', el('p', { style: 'margin:0 0 8px', text: 'プレイ中の ぼうけんは きえます。よろしいですか？' }),
+    menu('かくにん', [{ text: 'はい', go: () => show('title') }, { text: 'いいえ', go: () => show('inn', true) }], { initial: 1, onCancel: () => show('inn', true) })));
+  app.append(m); $('li.cur').focus();
+};
+function gameMenu(where) {
+  const items = [{ text: 'もどる', go: () => show(where, true) }];
+  if (where === 'dungeon') items.push({ text: 'ヒール', go: () => say('ゆうしゃは ヒールを となえた！ HP が 15 かいふくした', 'success') });
+  items.push({ text: 'そうび', go: () => show('equip', where) }, { text: 'もちもの', go: () => show('inventory', where) }, { text: 'ステータス', go: () => show('statusScreen', where) }, { text: 'おと：オフ', go: () => say('おとを オンにした') });
+  return win('メニュー', menu(`メニュー（${where === 'dungeon' ? 'ダンジョン' : '宿屋'}）`, items, { initial: 1, onCancel: () => show(where, true) }));
+}
+screens.innMenu = () => { const m = frame('宿屋'); m.append(statusFull(), logWin(), gameMenu('inn')); app.append(m); $('li.cur').focus(); };
+
+let bump = false;
+screens.dungeon = (keep) => {
+  if (!keep) lines = [{ text: 'ダンジョンに ふみこんだ' }];
+  const m = frame('ダンジョン', { hideNarrow: true, bottom: true });
+  const head = el('div', { style: 'display:flex;justify-content:space-between;align-items:baseline' }, el('h2', { class: 'loc', text: '3F　北' }));
+  const fpv = el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS, bump)); bump = false;
+  const mv = (label, cls, text, act) => el('button', { class: 'btn ' + cls, type: 'button', 'aria-label': label, text, onclick: act });
+  const pad = el('div', { class: 'movepad' },
+    mv('前進', 'up', '↑ 前進', () => { say('（試作）まえへ すすんだ'); }),
+    mv('左を向く', 'l', '← 左', () => say('（試作）ひだりを むいた')),
+    mv('右を向く', 'r', '右 →', () => say('（試作）みぎを むいた')),
+    mv('後退', 'down', '↓ 後退', () => { bump = true; lines = [...lines, { text: 'かべだ' }].slice(-4); show('dungeon', true); }));
+  const controls = el('div', { class: 'controls' }, win(null, mapSvg()), pad);
+  controls.firstChild.classList.add('map-win'); controls.classList.add('to-bottom');
+  const actions = el('div', { class: 'actions' },
+    el('button', { class: 'btn', type: 'button', text: '↓ おりる', onclick: () => { lines = [{ text: 'スライムが あらわれた！' }]; show('battle'); } }),
+    el('button', { class: 'btn menu-btn', type: 'button', text: '≡ メニュー', onclick: () => show('dungeonMenu') }));
+  m.append(head, fpv, statusRow(), logWin(), controls, actions);
+  app.append(m);
+};
+// 狭い画面のメニュー：地図・移動ボタンの場所に出す（GUI-0004 §3）
+screens.dungeonMenu = () => {
+  const m = frame('ダンジョン', { hideNarrow: true });
+  m.append(el('h2', { class: 'loc', text: '3F　北' }), el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS)), statusRow(), logWin(), gameMenu('dungeon'));
+  app.append(m); $('li.cur').focus();
+};
+screens.battle = (boss) => {
+  if (!lines.length) lines = [{ text: 'スライムが あらわれた！' }];
+  const m = frame('戦闘', { hideNarrow: true, bottom: true });
+  const enemy = win(null, el('div', { class: 'enemy' }, el('div', { class: 'enemy-img', text: '敵の絵 64×64（2 倍）' }), el('p', { class: 'enemy-name' + (boss ? ' boss' : ''), text: boss ? '暗黒のネクロマンサー' : 'スライム' })));
+  const cmd = win('コマンド', menu('戦闘', [
+    { text: 'たたかう', go: () => say('ゆうしゃの こうげき！ スライムに 12 の ダメージ！') },
+    { text: 'ヒール', go: () => say('ゆうしゃは ヒールを となえた！ HP が 15 かいふくした', 'success') },
+    { text: 'にげる', disabled: !!boss, reason: 'にげられない！', go: () => { lines = [{ text: 'うまく にげきれた' }]; show('dungeon', true); } },
+  ]));
+  // 狭い画面：敵 → ステータス → メッセージ → コマンド（親指の位置）（GUI-0005 §1）
+  cmd.classList.add('to-bottom'); m.append(enemy, statusRow(), logWin(), cmd); app.append(m);
+};
+screens.clear = () => {
+  lines = [{ text: 'ダンジョンに 平和が もどった', tone: 'success' }];
+  const m = el('main', { class: 'title-main' });
+  m.append(el('h1', { class: 'logo', style: 'letter-spacing:0.05em;padding:0;font-size:28px', text: '暗黒のネクロマンサーを たおした' }),
+    win(null, el('p', { style: 'margin:0', text: '暗黒のネクロマンサーは ほろび、ダンジョンに 平和が もどった' }), el('p', { style: 'margin:8px 0 0', text: 'ゆうしゃ Lv15' }),
+      el('p', { style: 'margin:8px 0 0;color:var(--wiz-color-success)', text: 'ぼうけんの きろくを セーブした' }), el('p', { style: 'margin:8px 0 0;color:var(--wiz-color-arcane)', text: '2 周目へ すすむ' })),
+    logWin(), win(null, menu('ゲームクリア', [{ text: '宿屋へ', go: () => show('inn') }])));
+  app.append(m);
+};
+const ITEMS = [
+  { slot: 'ぶき', name: 'バトルアックス', r: 'sr', R: 'SR', b: ['こうげき +10'] },
+  { slot: 'よろい', name: 'チェインメイル', r: 'n', R: 'N', b: ['ぼうぎょ +5'] },
+  { slot: 'アクセ', name: 'ソロモンのゆびわ', r: 'lg', R: 'LG', b: ['こうげき +20', 'ぼうぎょ +20'] },
+  { slot: 'たて', name: 'カイトシールド', r: 'r', R: 'R', b: ['ぼうぎょ +5'] },
+  { slot: 'ぶき', name: 'ミスリルソード', r: 'ur', R: 'UR', b: ['こうげき +28'] },
+  { slot: 'よろい', name: 'レザーアーマー', r: 'n', R: 'N', b: ['ぼうぎょ +3'] },
+  { slot: 'ぶき', name: 'ショートソード', r: 'r', R: 'R', b: ['こうげき +2'] },
+  { slot: 'たて', name: 'ウッドシールド', r: 'n', R: 'N', b: ['ぼうぎょ +1'] },
+  { slot: 'アクセ', name: 'ウィンドブーツ', r: 'n', R: 'N', b: ['すばやさ +3'] },
+  { slot: 'よろい', name: 'クロースアーマー', r: 'r', R: 'R', b: ['ぼうぎょ +2'] },
+];
+const itemLabel = (it, showSlot) => el('span', { class: 'item' }, showSlot ? el('span', { class: 'slot', text: `［${it.slot}］` }) : null, el('span', { class: 'rar-' + it.r, text: `${it.name}［${it.R}］` }), it.b.map((t) => el('span', { class: 'bonus', text: t })));
+screens.equip = (where) => {
+  const m = frame('そうび');
+  const slots = [{ text: 'もどる', go: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') }];
+  [['ぶき', ITEMS[0]], ['よろい', ITEMS[1]], ['たて', null], ['アクセ', ITEMS[2]]].forEach(([s, it]) => slots.push({ text: '', slot: s, it, go: () => show('equipCand', where) }));
+  const ul = menu('そうび', slots, { initial: 1, onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') });
+  [...ul.children].slice(1).forEach((li, i) => { const s = slots[i + 1]; li.append(el('span', { class: 'slot-row' }, el('span', { text: s.slot }), s.it ? itemLabel(s.it) : el('span', { class: 'slot', style: 'color:var(--wiz-color-text-sub)', text: '―― なし ――' }))); });
+  const abil = el('dl', { class: 'status' }, ...[['こうげき', ' 58 =  28 + 30'], ['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
+  m.append(el('div', { class: 'cols' }, win('そうび', ul), win('のうりょく', abil)), logWin()); app.append(m); $('li.cur').focus();
+};
+screens.equipCand = (where) => {
+  const m = frame('そうび');
+  const cands = [ITEMS[4], ITEMS[6]];
+  const items = [{ text: 'もどる', go: () => show('equip', where) }, { text: 'はずす', go: () => { say('バトルアックス［SR］を はずした'); show('equip', where); } }, ...cands.map((it) => ({ text: '', it, go: () => { say(`${it.name}［${it.R}］を そうびした`); show('equip', where); } }))];
+  const ul = menu('そうび', items, { initial: 2, onCancel: () => show('equip', where) });
+  [...ul.children].slice(2).forEach((li, i) => li.append(itemLabel(cands[i])));
+  const abil = el('dl', { class: 'status' }, el('dt', { text: 'こうげき' }), el('dd', { class: 'diff-up', text: ' 58 →  76 ↑' }), ...[['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
+  m.append(el('div', { class: 'cols' }, win('ぶき', el('p', { style: 'margin:0;color:var(--wiz-color-text-sub)', text: 'つよい じゅん' }), ul), win('のうりょく', abil)), logWin()); app.append(m); $('li.cur').focus();
+};
+function itemList(onSelect, onBack) {
+  let f = 0; const F = ['すべて', 'ぶき', 'よろい', 'たて', 'アクセ'];
+  const wrap = el('div');
+  const draw = () => {
+    const list = ITEMS.filter((it) => f === 0 || it.slot === F[f]);
+    const items = [{ text: 'もどる', go: onBack }, ...list.map((it) => ({ text: '', it, go: () => onSelect(it) }))];
+    const ul = menu('もちもの', items, { initial: list.length ? 1 : 0, onCancel: onBack });
+    [...ul.children].slice(1).forEach((li, i) => li.append(itemLabel(list[i], f === 0)));
+    const head = el('div', { class: 'filter' }, el('button', { class: 'btn', type: 'button', tabindex: '-1', 'aria-label': 'まえの しぼりこみ', text: '◀', onclick: () => { f = (f + 4) % 5; draw(); } }),
+      el('span', { 'aria-live': 'polite', text: ` ${F[f]} ` }), el('button', { class: 'btn', type: 'button', tabindex: '-1', 'aria-label': 'つぎの しぼりこみ', text: '▶', onclick: () => { f = (f + 1) % 5; draw(); } }), el('span', { class: 'order', text: 'よわい じゅん' }));
+    wrap.replaceChildren(head, el('div', { class: 'list-scroll', id: 'list' }, ul));
+    fit();
+  };
+  draw();
+  return wrap;
+}
+screens.inventory = (where) => {
+  const m = frame('もちもの');
+  const back = () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu');
+  m.append(win('もちもの', el('p', { style: 'margin:0', text: 'もちもの 23／50' }), itemList((it) => show('confirmDiscard', where, it), back)), logWin()); app.append(m); $('li.cur')?.focus();
+};
+screens.confirmDiscard = (where, it) => {
+  const m = frame('もちもの');
+  m.append(win('かくにん', el('p', { style: 'margin:0 0 8px', text: `${it.name}［${it.R}］を すてますか？` }), menu('かくにん', [{ text: 'はい', go: () => { say(`${it.name}［${it.R}］を すてた`); show('inventory', where); } }, { text: 'いいえ', go: () => show('inventory', where) }], { initial: 1, onCancel: () => show('inventory', where) })), logWin());
+  app.append(m); $('li.cur').focus();
+};
+screens.swap = () => {
+  lines = [{ text: 'オークは ミスリルソード［UR］（こうげき +34）を おとした！' }];
+  const m = frame('いれかえ');
+  m.append(win('もちものが いっぱいだ', el('p', { style: 'margin:0' }, 'おちている：', itemLabel(ITEMS[4])), menu('いれかえ', [{ text: 'ひろう（すてるものを えらぶ）', go: () => show('swapList') }, { text: 'あきらめる', go: () => { say('ミスリルソード［UR］を あきらめた'); show('dungeon', true); } }])), logWin());
+  app.append(m);
+};
+screens.swapList = () => {
+  const m = frame('いれかえ');
+  m.append(win('もちものが いっぱいだ', el('p', { style: 'margin:0' }, 'おちている：', itemLabel(ITEMS[4])), itemList(() => show('dungeon', true), () => show('swap'))), logWin());
+  app.append(m);
+};
+screens.statusScreen = (where) => {
+  const m = frame('ステータス');
+  const rec = el('dl', { class: 'status' }, ...[['そうせんとう', '128 回'], ['とうばつ', '120 体'], ['しぼう', '3 回'], ['しゅうかい', '2 周目'], ['ボスとうばつ', '1 回']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
+  m.append(el('div', { class: 'cols' }, statusFull(), win('じっせき', el('p', { style: 'margin:0 0 8px;color:var(--wiz-color-arcane)', text: 'このキャラクターの きろく' }), rec)),
+    win(null, menu('ステータス', [{ text: 'もどる', go: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') }], { onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') })), logWin());
+  app.append(m);
+};
+screens.error = () => {
+  const m = frame('宿屋');
+  m.append(statusFull(), win('エラー', el('p', { role: 'alert', style: 'margin:0 0 8px', text: 'きろくを よみかき できません' }), menu('エラー', [{ text: '再試行', go: () => show('inn') }])));
+  m.lastChild.classList.add('danger'); app.append(m);
+};
+screens.update = () => {
+  screens.title();
+  document.body.append(el('div', { class: 'banner', id: 'update-banner' }, el('span', { text: '新しい版があります' }), el('button', { class: 'btn', type: 'button', text: '更新', onclick: () => $('#update-banner').remove() })));
+};
+screens.bootError = () => {
+  const d = el('div', { style: 'position:fixed;inset:0;display:grid;place-items:center;background:#0B0A0F;color:#E8DCC0;padding:16px;text-align:center' },
+    el('div', {}, el('p', { text: 'うまく起動できませんでした。' }), el('button', { class: 'btn', type: 'button', style: 'border-color:#FFC845;color:#FFC845', text: 'なおす', onclick: () => d.remove() }), el('p', { text: 'きろくは消えません。' })));
+  app.append(d);
+};
+
+// ---- 高さに合わせる（疑似3D・一覧） ----
+function fit() {
+  const fpv = $('#fpv');
+  if (fpv) {
+    fpv.style.setProperty('--fpv-w', '320px');
+    const over = document.documentElement.scrollHeight - window.innerHeight;
+    if (over > 0 && window.innerWidth < 600) { const h = Math.max(150, fpv.offsetHeight - over); fpv.style.setProperty('--fpv-w', Math.floor(h * 4 / 3) + 'px'); }
+  }
+  const list = $('#list');
+  if (list && window.innerWidth < 600) {
+    list.style.setProperty('--list-h', '9999px');
+    const over = document.documentElement.scrollHeight - window.innerHeight;
+    list.style.setProperty('--list-h', Math.max(4 * 52, list.offsetHeight - Math.max(0, over)) + 'px');
+  }
+}
+const vpText = () => `表示の大きさ：${window.innerWidth} × ${window.innerHeight}（画面の縦スクロール ${Math.max(0, document.documentElement.scrollHeight - window.innerHeight)}px）`;
+window.addEventListener('resize', () => { fit(); $('#proto-vp').textContent = vpText(); });
+
+// ---- 試作のナビ ----
+const NAV = [['title', 'タイトル'], ['name', '名前入力'], ['inn', '宿屋'], ['innMenu', '宿屋のメニュー'], ['dungeon', 'ダンジョン'], ['dungeonMenu', 'ダンジョンのメニュー'], ['battle', '戦闘'], ['bossBattle', 'ボス戦'], ['clear', 'クリア'], ['equip', 'そうび'], ['inventory', 'もちもの'], ['swap', '入れ替え'], ['statusScreen', 'ステータス'], ['error', 'エラー'], ['update', '更新の帯'], ['bootError', '起動の失敗']];
+screens.bossBattle = () => { lines = [{ text: '暗黒のネクロマンサーが あらわれた！' }]; screens.battle(true); };
+for (const [k, label] of NAV) $('#proto-list').append(el('button', { type: 'button', text: label, onclick: () => { $('#proto-panel').hidden = true; show(k, k === 'equip' || k === 'inventory' || k === 'statusScreen' ? 'inn' : undefined); } }));
+$('#proto-open').addEventListener('click', () => { $('#proto-vp').textContent = vpText(); $('#proto-panel').hidden = false; });
+$('#proto-close').addEventListener('click', () => { $('#proto-panel').hidden = true; });
+$('#proto-lowhp').addEventListener('change', (e) => { lowHp = e.target.checked; CHAR.hp = lowHp ? 20 : 120; show(document.body.dataset.screen || 'title'); });
+$('#install-close').addEventListener('click', () => $('#install-dialog').close());
+// 測定用（試作だけ）
+window.__show = (k) => { lines = []; show(k, k === 'equip' || k === 'inventory' || k === 'statusScreen' ? 'inn' : undefined); };
+show('title');
+</script>
+</body>
+</html>
