@@ -2,13 +2,13 @@
 id: MWIZ-US-0029
 type: User Story
 title: もちものを見て捨てる
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0006（v1.0）
   - docs/specification-ja.md (v1.1) §8.5、§8.6、§8.7、§11.7、§16.3
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0029 もちものを見て捨てる

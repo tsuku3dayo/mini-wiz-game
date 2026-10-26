@@ -2,13 +2,13 @@
 id: MWIZ-US-0001
 type: User Story
 title: 公開 URL を開いて遊び始める
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0001（v1.0）
   - docs/specification-ja.md (v1.1) §1.3、§11.12、§14、§16.6、§21.2
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0001 公開 URL を開いて遊び始める

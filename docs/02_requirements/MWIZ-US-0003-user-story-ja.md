@@ -2,13 +2,13 @@
 id: MWIZ-US-0003
 type: User Story
 title: 通信なしで遊ぶ
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0001（v1.0）
   - docs/specification-ja.md (v1.1) §1.3、§11.12、§14、§16.6、§30.1
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0003 通信なしで遊ぶ

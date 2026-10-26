@@ -2,13 +2,13 @@
 id: MWIZ-US-0038
 type: User Story
 title: テストで決まった場面を作れる
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0010（v1.0）
   - docs/specification-ja.md (v1.1) §16.2、§22.2、§28
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0038 テストで決まった場面を作れる

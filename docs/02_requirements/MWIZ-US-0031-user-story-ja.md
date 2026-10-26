@@ -2,13 +2,13 @@
 id: MWIZ-US-0031
 type: User Story
 title: 演出でできごとを感じる
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0007（v1.0）
   - docs/specification-ja.md (v1.1) §8.4、§11.5、§11.8、§16.3、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0031 演出でできごとを感じる

@@ -2,13 +2,13 @@
 id: MWIZ-US-0022
 type: User Story
 title: 敵を倒して強くなる
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0004（v1.0）
   - docs/specification-ja.md (v1.1) §2.2、§2.3、§5.5、§11.2、§11.6、§16.1、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0022 敵を倒して強くなる

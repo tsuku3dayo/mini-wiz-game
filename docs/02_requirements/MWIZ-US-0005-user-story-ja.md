@@ -2,13 +2,13 @@
 id: MWIZ-US-0005
 type: User Story
 title: 起動に失敗しても直る
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0001（v1.0）
   - docs/specification-ja.md (v1.1) §11.12、§16.6、§30.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0005 起動に失敗しても直る

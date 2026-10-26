@@ -2,13 +2,13 @@
 id: MWIZ-US-0004
 type: User Story
 title: 新しい版に更新する
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0001（v1.0）
   - docs/specification-ja.md (v1.1) §11.12、§16.6、§30.3
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0004 新しい版に更新する

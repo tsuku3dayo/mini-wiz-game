@@ -2,13 +2,13 @@
 id: MWIZ-US-0033
 type: User Story
 title: 戦闘で敵の絵を見る
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0008（v1.0）
   - docs/specification-ja.md (v1.1) §13、§16.5
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0033 戦闘で敵の絵を見る

@@ -2,13 +2,13 @@
 id: MWIZ-EP-0003
 type: Epic
 title: 迷宮を探索する
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）
   - docs/specification-ja.md (v1.1) §3、§4、§11.5、§16.2、§16.4、§23
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # EP-0003 迷宮を探索する

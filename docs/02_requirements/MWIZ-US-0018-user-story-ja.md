@@ -2,13 +2,13 @@
 id: MWIZ-US-0018
 type: User Story
 title: 敵と遭遇する
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0004（v1.0）
   - docs/specification-ja.md (v1.1) §4.3、§5.1、§6、§11.8、§16.1、§16.2、§16.4、§23
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0018 敵と遭遇する

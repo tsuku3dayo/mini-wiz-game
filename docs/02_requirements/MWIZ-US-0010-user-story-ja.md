@@ -2,13 +2,13 @@
 id: MWIZ-US-0010
 type: User Story
 title: メニューとコマンドを操作する
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0002（v1.0）
   - docs/specification-ja.md (v1.1) §11.4、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0010 メニューとコマンドを操作する

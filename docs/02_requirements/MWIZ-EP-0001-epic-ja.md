@@ -2,13 +2,13 @@
 id: MWIZ-EP-0001
 type: Epic
 title: アプリとして届け、通信なしでも遊べる（土台）
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.0）
   - docs/specification-ja.md (v1.1) §1.3、§11.12、§14、§16.6、§30
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # EP-0001 アプリとして届け、通信なしでも遊べる（土台）

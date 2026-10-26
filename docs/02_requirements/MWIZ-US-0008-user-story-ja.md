@@ -2,13 +2,13 @@
 id: MWIZ-US-0008
 type: User Story
 title: 宿屋で休む
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0002（v1.0）
   - docs/specification-ja.md (v1.1) §7.2、§7.3、§11.5、§16.1
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
 # US-0008 宿屋で休む
