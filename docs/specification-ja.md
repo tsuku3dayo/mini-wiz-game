@@ -24,7 +24,7 @@
 | 版 | 日付 | 内容 |
 | --- | --- | --- |
 | 1.0 | 2026-10-26 | 初版。MVP〜Update6 の実装を 1 冊にまとめた（`docs/reproduction/project-brief-*.md` は MVP〜Update3 の再現用ブリーフとして残す） |
-| 1.1 | 2026-10-26 | 構成をサーバーなしの PWA（`mini-blockbreaking-game` と同じ）に改めた。第 1 部：§1.1・§1.3・§1.4 の前提、API を「ゲーム API」（`api.xxx()`）に、DB を端末内保存に読み替え（§2〜§10）、§11 を UI フレームワークに依らない書き方に改め、ハッシュのルート・保存できないときの表示・PWA の画面（§11.12）を足した。§12・§13 のファイルの場所と持ち込み方、音の設定の保存キー、§14〜§16 の非機能要件・パラメータ・受け入れ基準（§16.6 を追加）。第 2 部（§17〜§32）を書き直した（§23〜§26 の値は変えていない）。付録 A に v1.1 での扱いを足した |
+| 1.1 | 2026-10-26 | 構成をサーバーなしの PWA（`mini-blockbreaking-game` と同じ）に改めた。第 1 部：§1.1・§1.3・§1.4 の前提、API を「ゲーム API」（`api.xxx()`）に、DB を端末内保存に読み替え（§2〜§10）、§11 を UI フレームワークに依らない書き方に改め、ハッシュのルート・保存できないときの表示・PWA の画面（§11.12）を足した。§12・§13 のファイルの場所と持ち込み方、音の設定の保存キー、§14〜§16 の非機能要件・パラメータ・受け入れ基準（§16.6 を追加）。第 2 部（§17〜§32）を書き直した（§23〜§26 の値は変えていない）。付録 A に v1.1 での扱いを足した。オーナーの決定で、ページの題名を「WIZ ～死霊術師の迷宮～」に、フォントを端末のもの（DotGothic16 を同梱しない）にし、画面はスマートフォンの表示を最優先にした（§1.3・§11.1） |
 
 ---
 
@@ -110,6 +110,7 @@ v1.1（この仕様書）は、上のすべての機能を、サーバーなし�
 - **ゲーム API が正**：移動・戦闘・成長・ドロップ・乱数はすべて「ゲーム API」で計算する。ゲーム API は、ブラウザの中で動く操作の窓口で、元の WIZ の API サーバーと同じ操作・同じ結果の形・同じエラーを持つ（第 2 部 §22）。画面はゲーム API が返した状態（GameView）とメッセージを表示するだけで、HP やダメージを画面で計算しない。
 - **見せてはいけない情報を返さない**：未踏破のマス、ボスの位置、敵の HP はゲーム API の結果に含めない（画面の層に渡さない）。端末内保存は利用者が読めるので、これはネタばれを防ぎ層を分けるための決まりで、不正を防ぐ仕組みではない。
 - **想定する端末**：スマートフォンの縦画面（iPhone の Safari、Android の Chrome）を基準にし、タップで遊べることを必須とする。PC の Chrome / Edge では、キーボードだけ、またはマウス（クリック）でも遊べる。
+- **画面はスマートフォンの表示を最優先する**（オーナーの決定、2026-10-26）。画面の配置・大きさ・操作は、まずスマートフォンの縦画面で決め、PC の広い画面はそれを崩さない範囲で整える（§11.1）。
 - **インストール・オフライン**：公開 URL を開くだけで遊べ、ホーム画面に追加（インストール）でき、一度開いた後は通信なしでも起動して遊べる（§11.12）。
 - **読み替え**：v1.0 の文の書き方を、次のように読み替えて書いている。
   - 「API」「サーバー」→ ゲーム API。`POST /api/dungeon/move { action }` のような元の API は `api.move({ action })` のような操作名で書く（対応表は §22.2）
@@ -1309,6 +1310,9 @@ stateDiagram-v2
 | 狭い画面 | ビューポートの幅 600px 未満（スマートフォンの縦画面はこちら）。600px 以上を「広い画面」と呼ぶ（CSS の `@media (min-width: 600px)`） |
 | タップ・クリック | 指で触れる操作とマウスのクリックをまとめて「クリック」と書く（どちらも同じ動き） |
 
+- **スマートフォンの表示を最優先する**（§1.3）。決める順は「スマートフォンの縦画面（狭い画面）→ PC（広い画面）」とする。どちらかを選ばなければならないときは、スマートフォンの見やすさ・押しやすさを採る。
+- この章の配置の図（ダンジョン・戦闘など）は、元の WIZ の広い画面のもの。狭い画面の配置は v1.0 の「1 列に積む」を出発点に、03 画面設計の試作を実機で触って決める（1 画面に収まらない・指で隠れる・押しにくいなど）。決めた配置がこの章と違うときは、変更の依頼で仕様書の版を上げる。
+
 - 使わない部品：トースト、モーダルダイアログ（インストールの案内 §11.12 を除く）、ナビゲーションバー、サイドバー、タブ、パンくず、プログレスバー、日付ピッカー、グラフ。確認はウィンドウとして画面に重ねる（ConfirmMenu）。
 - 言語は日本語固定、テーマはダーク固定。切り替えは持たない。
 - 角丸・影は使わない（`borderRadius: 0`、`elevation: 0`）。
@@ -1345,7 +1349,7 @@ stateDiagram-v2
 | 体力わずかの枠（§11.8） | すべてのウィンドウの線の色 | `LowHpFrame` |
 | 演出の層（§11.8） | 画面全体の演出 | `EffectLayer` |
 
-- フォント DotGothic16 は `@fontsource/dotgothic16` の CSS を起動時に読み込む（同梱）。
+- フォントは端末のものを使う（同梱しない。§11.3（文字））。
 
 #### LocationGuard（表示する画面をゲームの状態の場所で決める）
 
@@ -1417,7 +1421,8 @@ stateDiagram-v2
 
 #### 文字
 
-- フォント：`"DotGothic16", "MS Gothic", "Osaka-Mono", monospace`（全 variant 共通）。DotGothic16 は npm パッケージ `@fontsource/dotgothic16`（^5.3.0）の CSS を起動時（§27.2）に読み込んで同梱する（外部から配信しない）。
+- フォント：**端末のフォントを使う**（全 variant 共通。CSS 変数 `--wiz-font`）：`"MS Gothic", "Osaka-Mono", "Noto Sans Mono CJK JP", ui-monospace, "SF Mono", Menlo, Consolas, monospace`。v1.0 は先頭に DotGothic16（同梱の Web フォント）を置いていたが、v1.1 では同梱しない（オーナーの決定、2026-10-26）。
+- 端末によって字形が変わる（iPhone には日本語の等幅フォントがなく、かなと漢字はヒラギノで出る）。数字と半角スペースは等幅のフォントで出るので、3 桁右揃え（`padStart`）の桁はそろう。数字には `font-variant-numeric: tabular-nums` も付ける。見え方は 03 の試作で実機で確かめる。
 
 | variant | 大きさ | 行の高さ | その他 |
 | --- | --- | --- | --- |
@@ -2096,7 +2101,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 項目 | 実装 |
 | --- | --- |
-| ページ | `<html lang="ja">`、title「ウィザードリィ1風ゲーム」。各画面に `<main>` と `<h1>` を 1 つ |
+| ページ | `<html lang="ja">`、title「WIZ ～死霊術師の迷宮～」（v1.0 は「ウィザードリィ1風ゲーム」。公開するので、他社の作品名を含まない題名に変えた。オーナーの決定、2026-10-26）。各画面に `<main>` と `<h1>` を 1 つ |
 | ウィンドウ | `<section aria-labelledby>`。見出しの「【 】」は読ませない |
 | メニュー | `role="menu"`／`menuitem`、無効は `aria-disabled="true"`。カーソル記号は `aria-hidden`。無効の理由はメッセージ欄（live region）で伝える |
 | 移動ボタン | `aria-label`：前進・左を向く・右を向く・後退 |
@@ -2123,7 +2128,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 項目 | 振る舞い |
 | --- | --- |
-| オフライン | 一度開いた後は、通信なしでも起動して最後まで遊べる（画面・敵の絵・フォントをすべて事前に保存する） |
+| オフライン | 一度開いた後は、通信なしでも起動して最後まで遊べる（画面・敵の絵をすべて事前に保存する） |
 | インストールの案内 | タイトル画面に「インストール」のボタンを出す（インストール済みなら出さない）。押すと案内のダイアログを開く。iPhone（Safari の共有 → ホーム画面に追加）・Android（Chrome のメニュー → ホーム画面に追加）・PC（アドレスバーのインストール）の 3 つの手順のうち、今の端末のものを開いて見せる。ブラウザがすぐにインストールできるときは「今すぐインストール」も出す。「とじる」・Esc で閉じ、フォーカスを「インストール」に戻す |
 | ホーム画面のアプリ名 | 「WIZ」（切れない長さ） |
 | 更新の帯 | 新しい版を受け取ったら、タイトル・宿屋の画面のときだけ「新しい版があります」と「更新」ボタンの帯を出す（ダンジョン・戦闘など遊んでいる途中には出さない）。「更新」で新しい版に切り替えて読み込み直す。プレイ中の状態とセーブは消えず、読み込み直した後も続きから遊べる。勝手には切り替えない |
@@ -2347,7 +2352,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | 操作 | スマートフォンではタップだけで、PC ではキーボードだけですべての操作ができる。マウス（クリック）でも操作できる |
 | オフライン | 一度開いた後は、通信なしで起動・プレイ・セーブ・つづきからができる |
 | アクセシビリティ | axe-core の検査で違反がない。音だけで情報を伝えない（すべてメッセージ欄に文で出す）。動きを減らす設定（`prefers-reduced-motion`）では演出を動かさない |
-| 外部リソース | 外部 CDN・Web フォントの配信を使わない（フォント DotGothic16 も同梱）。音は Web Audio でその場で合成し、音声ファイルを持たない |
+| 外部リソース | 外部 CDN・Web フォントを使わない（フォントは端末のもの）。音は Web Audio でその場で合成し、音声ファイルを持たない |
 | 通信・個人情報 | 外部へデータを送らない。名前は端末の中にだけ保存する |
 | 見せない情報 | ゲーム API の結果（GameView）に見せてはいけない情報（未踏破のマス・ボスの位置・敵の HP）を含めない（§1.3。不正を防ぐ仕組みではない） |
 
@@ -2665,7 +2670,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 - [ ] 公開 URL を開くと、登録・インストールなしでタイトル画面が出る。
 - [ ] ホーム画面に追加でき、アプリ名「WIZ」が切れずに出る。追加したアプリから起動して遊べる。
-- [ ] 一度開いた後、通信を切っても、起動・プレイ・セーブ・つづきからができる（敵の絵・フォントも出る）。
+- [ ] 一度開いた後、通信を切っても、起動・プレイ・セーブ・つづきからができる（敵の絵も出る）。
 - [ ] 新しい版を公開すると、タイトル・宿屋の画面で「新しい版があります」と「更新」が出る。ダンジョン・戦闘などの途中では出ない。「更新」で新しい版に切り替わり、プレイ中の状態とセーブは消えない。
 - [ ] 起動に失敗したとき、このアプリのキャッシュだけを消して 1 回だけ自動で読み込み直す。2 分以内に続けて失敗したら「うまく起動できませんでした。」と「なおす」が出る。どちらでもプレイ中の状態・セーブ・音の設定は消えない。
 - [ ] インストール済みなら「インストール」を出さない。案内には今の端末（iPhone・Android・PC）の手順が開いて出る。
@@ -2706,11 +2711,10 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | E2E | Playwright | `^1.64.0` |
 | アクセシビリティの検査 | @axe-core/playwright | `^4.10.0` |
 | 静的検査 | ESLint + typescript-eslint（flat config） | `^10.12.0` / `^8.71.1` |
-| フォント | @fontsource/dotgothic16（OFL） | `^5.3.0` |
 | その他 | `@eslint/js` `^10.0.1`、`globals` `^17.13.0`、`@types/node` `^24.19.2` | |
 
-- 版は `mini-blockbreaking-game` と同じ（新しく足す 2 つは、07 の土台で入れた時点の版に合わせる）。
-- **実行時の依存は `@fontsource/dotgothic16` だけ**（フォントのファイルと CSS で、コードは入らない）。ほかはすべて `devDependencies`。
+- 版は `mini-blockbreaking-game` と同じ（新しく足す @axe-core/playwright は、07 の土台で入れた時点の版に合わせる）。
+- **実行時の依存はない**（`dependencies` は空。すべて `devDependencies`）。フォントは端末のものを使う。
 - 画面は DOM、疑似3D と地図は SVG、効果音・BGM は Web Audio の合成、保存は localStorage。
 
 ### 18.2 使わないもの
@@ -2726,7 +2730,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | アニメーションライブラリ | 短い画面効果は CSS で足りる |
 | シード付き乱数ライブラリ | 自前の `Rng`（§23）で足りる |
 | Jest・jsdom・Testing Library | ロジックとゲーム API は Vitest（node）、画面は Playwright の本物のブラウザで確かめる |
-| 外部の CDN・Web フォントの配信 | オフラインで動かすため。フォントは同梱する |
+| 外部の CDN・Web フォント（同梱を含む） | オフラインで動かすため。フォントは端末のものを使う（オーナーの決定） |
 
 ### 18.3 選んだ理由（要約）
 
@@ -2741,7 +2745,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | ゲーム API は非同期（Promise）で、元の API と同じ形 `{ state, messages }` を返す | 画面の作り（応答待ち・二重送信の防止・エラーの扱い）を第 1 部のまま使える |
 | 疑似3D・地図は SVG | 元の WIZ-AD-0005・0007 |
 | 効果音・BGM は Web Audio の合成 | 元の WIZ-AD-0014・0019 |
-| フォント DotGothic16 を同梱 | 元の見た目。通信なしでも同じ字形 |
+| フォントは端末のものを使う | 依存と事前キャッシュを小さくする（オーナーの決定）。字形は端末で変わる |
 | アプリ識別子 `mini-wiz-game` | 同じサイト（`tsuku3dayo.github.io`）のほかのアプリと、保存のキー・キャッシュを分ける |
 | E2E は Chromium で 3 つの画面（スマートフォン 2・PC 1）、iPhone は実機 | CI で動かせる範囲と、実機でしか分からないものを分ける |
 
@@ -2769,9 +2773,6 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
     "check:docs": "node scripts/check-docs.mjs",
     "icons": "node scripts/make-icons.mjs",
     "verify": "npm run lint && npm run check:docs && npm test && npm run build && npm run check:dist"
-  },
-  "dependencies": {
-    "@fontsource/dotgothic16": "^5.3.0"
   }
 }
 ```
@@ -4440,7 +4441,7 @@ export const BGM: Readonly<Record<BgmName, BgmTrack>> = {
 
 ### 27.2 起動の順（`src/main.ts`）
 
-1. フォントの CSS（`@fontsource/dotgothic16`）、`ui/theme.css`・`ui/style.css` を読み込む。
+1. `ui/theme.css`・`ui/style.css` を読み込む。
 2. 保存の準備：`migrateStorage()`、`navigator.storage.persist()`（使えれば）。
 3. ゲーム API を作る（localStorage・`MathRandomRng`・`platform/clock.ts`）。URL に `?debug=1` があれば §28 の入口を付ける。
 4. 音の設定を読む（`mini-wiz-game-sound`。既定はオフ）。
@@ -4569,8 +4570,8 @@ v1.0 の TanStack Query のクエリ `['game']`・`['save']` に当たる。
 - `manifest.webmanifest` があり、`index.html` から読み込む。`name` が「WIZ」、`display` が `standalone`、`start_url` がある、`orientation` が `portrait`。
 - アイコン 192（any）・512（any）・512（maskable）が manifest にあり、ファイルもある。`apple-touch-icon` がある。`sw.js` がある。
 - `index.html` に `#app`・`#boot-error` があり、`boot.js` を読み込み、`<meta name="app-id" content="mini-wiz-game">` がある。`boot.js` が `__appStarted` を見ている。
-- `enemies/` に 6 枚の PNG がある。フォントのファイル（`.woff2`）が `dist/` にあり、`sw.js` の事前キャッシュに入っている。
-- 事前キャッシュの合計の大きさを表示し、5 MB を超えたら失敗にする（フォントの分け方が変わって急に大きくなったことに気づくため）。
+- `enemies/` に 6 枚の PNG があり、`sw.js` の事前キャッシュに入っている。
+- Web フォントのファイル（`.woff`・`.woff2`・`.ttf`・`.otf`）が `dist/` にない（端末のフォントを使う決まり）。
 
 ### 29.5 成果物の整合性の検査（`scripts/check-docs.mjs`）
 
@@ -4601,7 +4602,7 @@ iPhone の Safari、Android の Chrome、PC の Chrome / Edge の実機で、タ
 | `start_url` / `scope` | `./` / `./` |
 | `theme_color` / `background_color` | `#0B0A0F` / `#0B0A0F` |
 | `icons` | 192（any）、512（any）、512 maskable、SVG（sizes `any`） |
-| `workbox.globPatterns` | `**/*.{js,css,html,svg,png,webmanifest,woff2}`（敵の絵とフォントを含め、すべてを事前キャッシュ） |
+| `workbox.globPatterns` | `**/*.{js,css,html,svg,png,webmanifest}`（敵の絵を含め、すべてを事前キャッシュ） |
 | `workbox.navigateFallback` | `index.html` |
 
 ビルドで `dist/manifest.webmanifest` と `dist/sw.js` ができる。
@@ -4690,7 +4691,7 @@ npm と github-actions を週に 1 回。開発用の依存は 1 つの PR に�
 - [ ] §16 の受け入れ基準をすべて満たす（自動テストか手動テストで確認した記録がある）
 - [ ] `npm run verify` と `npm run test:e2e`（`pixel7`・`small`・`desktop`）が通る
 - [ ] ESLint の層の決まり（§19.4）に違反がない（ルールと表示の計算に DOM・時刻・乱数がない。画面層が `src/domain/` を import しない）
-- [ ] 実行時の依存がフォントだけで、外部のリソース（CDN・Web フォントの配信・音声ファイル）を読み込まない
+- [ ] 実行時の依存がなく、外部のリソース（CDN・Web フォント・音声ファイル）を読み込まない
 - [ ] 通しプレイ（シード 2026 でボス撃破まで、装備を拾ってクリア、2 周）が固定シードで通る
 - [ ] 結果（GameView）に未踏破のマスの壁・ボスの位置・敵の HP が入らない
 - [ ] 効果音が §25 の音色で、BGM が §26 の曲データで鳴る
@@ -4704,8 +4705,8 @@ npm と github-actions を週に 1 回。開発用の依存は 1 つの PR に�
 - **配信の場所**：`base: './'` と manifest の `start_url`・`scope: './'` により、ドメインの直下でもサブパスでも動く。HTTPS（または `localhost`）でないと Service Worker が動かない。
 - **保存の形を変えるとき**：`GAME_SCHEMA_VERSION`・`SAVE_SCHEMA_VERSION`（または `STORAGE_VERSION`）を上げ、`migrateGameState`・`migrateSave`（または `migrateStorage`）に古い形からの移行を足す。古いセーブを捨てない。
 - **バージョンを上げるとき**：`package.json` の `version` だけを変える。タイトル画面の版の表記と、Service Worker の更新の確認に使う。
-- **依存の版**：§18.1 の版より新しいものを使うときは、vite-plugin-pwa の `registerType: 'prompt'` と `virtual:pwa-register` の使い方、Playwright のデバイス定義（Pixel 7・Desktop Chrome）、`@fontsource/dotgothic16` のファイルの分け方（事前キャッシュの大きさ）が変わっていないかを確かめる。
-- **素材**：敵の絵 5 枚は元の WIZ のユーザー提供の画像、スライムはスクリプトで作った画像（§13）。利用条件はオーナーが確かめる。DotGothic16 は SIL Open Font License 1.1（パッケージにライセンスの文が入っている）。
+- **依存の版**：§18.1 の版より新しいものを使うときは、vite-plugin-pwa の `registerType: 'prompt'` と `virtual:pwa-register` の使い方、Playwright のデバイス定義（Pixel 7・Desktop Chrome）が変わっていないかを確かめる。
+- **素材**：敵の絵 5 枚は元の WIZ のユーザー提供の画像、スライムはスクリプトで作った画像（§13）。利用条件はオーナーが確かめる。
 - **公開リポジトリにするとき**：ほかのプロジェクトの内部情報・個人の ID・機密を含むファイルを入れない。
 
 ---
