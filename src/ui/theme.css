@@ -1,0 +1,31 @@
+/* 色・文字の CSS 変数（仕様書 §11.3）。部品には Hex を書かず、ここの変数を使う */
+:root {
+  --wiz-color-background: #0b0a0f;
+  --wiz-color-primary: #e8dcc0;
+  --wiz-color-frame: #c9a227;
+  --wiz-color-line: #ffffff;
+  --wiz-color-secondary: #ffc845;
+  --wiz-color-success: #5cd65c;
+  --wiz-color-warning: #ffa726;
+  --wiz-color-error: #ff5a4e;
+  --wiz-color-info: #4fc3f7;
+  --wiz-color-arcane: #a77bd9;
+  --wiz-color-text-sub: #a39b8b;
+  --wiz-color-disabled: #8c857a;
+  --wiz-color-floor: #2a2530;
+  --wiz-color-blood: #b3122e;
+  --wiz-color-map-frame: #a39b8b;
+  --wiz-color-rarity-n: #ffffff;
+  --wiz-color-rarity-r: #5b8cff;
+  --wiz-color-rarity-sr: #c792ea;
+  --wiz-color-rarity-ur: #ff8c1a;
+  --wiz-color-rarity-lg: #ff4d6d;
+  --wiz-window-line: #ffffff;
+  --wiz-font: "MS Gothic", "Osaka-Mono", "Noto Sans Mono CJK JP", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --wiz-gutter-l: max(8px, env(safe-area-inset-left));
+  --wiz-gutter-r: max(8px, env(safe-area-inset-right));
+  --wiz-safe-top: max(8px, env(safe-area-inset-top));
+  --wiz-safe-bottom: max(8px, env(safe-area-inset-bottom));
+  --wiz-gap: 8px;
+  color-scheme: dark;
+}
