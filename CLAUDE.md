@@ -12,11 +12,20 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## 開発フロー
 
-`docs/workflow.txt` の順に進める。**「承認」の地点では、オーナーが承認するまで次の段階に進まない。** 成果物を作ったら、承認を求めて止まる。workflow.txt に出てくる `doc/` は、このリポジトリでは `docs/` と読み替える（仕様書は `docs/specification-ja.md`）。
+`docs/SDD-PROCESS_v2.md` に沿って進める（2026-10-30 に `docs/workflow.txt` から切り替えた。workflow.txt は、それを根拠にした承認済みの成果物のために残す）。**「承認」の地点では、オーナーが承認するまで次の段階に進まない。** 成果物を作ったら、承認を求めて止まる。
 
-00 project-brief（承認）→ 01 システム構成（承認）→ 02 要件・ユーザーストーリー（承認）→ 03 画面設計（承認）→ 04 詳細設計 → 05 テスト / 06 作業計画（並行）→ 07 実装・自動テスト → 手動テスト → attested-computation（承認）。07〜attested-computation は WS ごとにくり返し、最後の WS がリリース。完了したら再現開発仕様書（`docs/reproduction-specification.md`）を最新にする。
+SDD-PROCESS_v2.md は汎用の書き方なので、このリポジトリでは次のように読み替える。食い違うときは CLAUDE.md の決まりを優先する。
 
-途中で仕様を変えるときは、依頼を `docs/requests/` に記録 → 仕様書の版を上げる → 影響する承認済みの成果物を版上げして再承認 → TD・TC・TASK を直す → 07、の順に進める（`docs/workflow.txt` の「変更の依頼」）。
+- `doc/` → `docs/`、仕様書 `doc/specification.md` → `docs/specification-ja.md`、`<PREFIX>` → `MWIZ`
+- 成果物のフォルダ（§3.1 の表）→ 下の「成果物の書式」の表（例：`doc/00-project-brief` → `docs/00_brief/`）
+- frontmatter の `type`（§3.2 の `user-story`）→ 下の書式どおり英語の見出し形（`User Story`）
+
+00 project-brief（承認）→ 01 システム構成（承認）→ 02 要件・ユーザーストーリー（承認）→ 03 画面設計（承認）→ 04 詳細設計 → 05 テスト / 06 作業計画（並行）→ 07 実装・自動テスト → 手動テスト → attested-computation（承認）・ふりかえり。07〜attested-computation は WS ごとにくり返し、最後の WS のあとリリース（承認）。完了したら再現開発仕様書（`docs/reproduction-specification.md`）を最新にし、ふりかえりをまとめる。
+
+- 工程ごとのチェックリストは SDD-PROCESS_v2.md §4、整合性チェックは §7、先に確かめておくことは §8。
+- ふりかえり（YWT）は WS の終わり・リリース・完了ごとに `docs/retrospectives/` に書く（§9）。T は次の WS の前に SDD-PROCESS_v2.md に反映する。
+
+途中で仕様を変えるときは、`docs/spec-<版>-<内容>` ブランチで依頼を `docs/requests/<日付>-spec-<版>-<内容>.md` に記録（影響の一覧つき）→ 進めるかの承認 → 仕様書の版を上げる → 影響する承認済みの成果物を版上げして再承認 → TD・TC・TST を直し修正用の WS・TASK を足す → 07、の順に進める（SDD-PROCESS_v2.md §2.2・§6）。
 
 ## Git の運用
 
@@ -27,6 +36,7 @@ This file provides guidance to Claude Code when working in this repository.
   2. 成果物を `status: review` で作ってコミットし、オーナーに承認を求める。
   3. 承認されたら `status: stable`・`verified` を記入してコミットし、push して PR を作る（本文に成果物の ID・版・承認日時を書く）。
   4. CI があるときは通ったことを確かめてから、オーナーにマージを頼む（マージはオーナーが行う）。
+  5. マージされたら、main を pull し、作業ブランチを手元と GitHub から消し、公開の実行と公開 URL を確かめる。
 - 公開リポジトリなので、ほかのプロジェクトの社内情報・個人の ID・機密を含むファイルをコミットしない。了承をとっていない人の名前を書かない。
 
 ## 成果物の書式
@@ -85,4 +95,4 @@ verified: null              # 承認されたら { by: "tsuku3dayo", at: "<日�
 
 - 作業計画（`docs/06_plan/`）の TASK の順に進める。タスクごとに `feat/<TASK 番号>-<内容>` ブランチ → PR → CI が緑 → マージ（main へのマージ = 公開）。
 - テストの名前の先頭にテストケースの確認 ID（例：`TC-0002-03`）を付ける。
-- PR の前に `npm run verify` と `npm run test:e2e` を手元で通し、画面の変更はスマートフォンの幅で表示して確かめる。
+- PR の前に `npm run verify` と `npm run test:e2e` を手元で通し、画面の変更は PC と一番小さいスマートフォンの幅でスクリーンショットを見て確かめる。
