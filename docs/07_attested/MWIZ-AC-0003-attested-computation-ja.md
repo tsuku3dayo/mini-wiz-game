@@ -2,14 +2,14 @@
 id: MWIZ-AC-0003
 type: Attested Computation
 title: 更新の帯と起動の復旧 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-TASK-0003（v1.0）
   - MWIZ-TC-0001（v1.0）
   - MWIZ-TC-0005（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T18:26:47+09:00" }
 ---
 
 # AC-0003 更新の帯と起動の復旧 の実施記録

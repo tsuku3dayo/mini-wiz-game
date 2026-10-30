@@ -2,13 +2,13 @@
 id: MWIZ-AC-0002
 type: Attested Computation
 title: PWA（manifest・アイコン・オフライン・インストールの案内）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-TASK-0002（v1.0）
   - MWIZ-TC-0002（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T18:26:47+09:00" }
 ---
 
 # AC-0002 PWA（manifest・アイコン・オフライン・インストールの案内）の実施記録

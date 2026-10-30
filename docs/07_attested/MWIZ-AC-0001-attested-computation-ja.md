@@ -2,14 +2,14 @@
 id: MWIZ-AC-0001
 type: Attested Computation
 title: 開発の土台と公開 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-TASK-0001（v1.0）
   - MWIZ-TC-0001（v1.0）
   - MWIZ-TC-0006（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T18:26:47+09:00" }
 ---
 
 # AC-0001 開発の土台と公開 の実施記録
