@@ -7,8 +7,10 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0007（v1.0）
+  - MWIZ-TC-0006（v1.0）
+  - MWIZ-TC-0010（v1.0）
+  - MWIZ-TC-0026（v1.0）
   - MWIZ-TC-0032（v1.0）
-  - MWIZ-TC-0038（v1.0）
   - MWIZ-TD-0005（v1.0）
 verified: null
 ---
@@ -17,7 +19,7 @@ verified: null
 
 - WS：[WS-0007](MWIZ-WS-0007-workstream-ja.md)
 - ブランチ：`feat/TASK-0017-sound`
-- 実施記録：AC-0017（`docs/07_attested/MWIZ-AC-0017-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0017（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0016
 
 ## やること
@@ -26,15 +28,17 @@ verified: null
 - タイトル・メニューの「おと」、`app:sound` イベント
 - `tests/helpers/fake-audio.ts`
 
-## 対象の確認 ID（21 個：自動 19・手動 2）
+## 対象の確認 ID（23 個：自動 22・手動 1）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
+| `e2e/title.spec.ts` | TC-0006-01 |
+| `e2e/menu.spec.ts` | TC-0010-06、TC-0010-11 |
+| `e2e/inn.spec.ts` | TC-0026-06 |
 | `tests/audio/sound-setting.test.ts` | TC-0032-01、TC-0032-06 |
 | `e2e/sound.spec.ts` | TC-0032-02、TC-0032-03、TC-0032-04、TC-0032-05、TC-0032-07、TC-0032-08、TC-0032-10、TC-0032-11、TC-0032-13、TC-0032-14、TC-0032-16 |
 | `tests/audio/sound.test.ts` | TC-0032-09、TC-0032-12、TC-0032-15、TC-0032-17、TC-0032-19 |
-| 実機（手動） | TC-0032-18、TC-0032-20 |
-| `e2e/debug.spec.ts` | TC-0038-08 |
+| 実機（手動） | TC-0032-20 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 

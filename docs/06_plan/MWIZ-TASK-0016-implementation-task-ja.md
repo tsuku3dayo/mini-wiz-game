@@ -7,6 +7,7 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0007（v1.0）
+  - MWIZ-TC-0027（v1.0）
   - MWIZ-TC-0031（v1.0）
   - MWIZ-TD-0003（v1.0）
 verified: null
@@ -16,7 +17,7 @@ verified: null
 
 - WS：[WS-0007](MWIZ-WS-0007-workstream-ja.md)
 - ブランチ：`feat/TASK-0016-effects`
-- 実施記録：AC-0016（`docs/07_attested/MWIZ-AC-0016-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0016（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0015
 
 ## やること
@@ -24,10 +25,11 @@ verified: null
 - `components/effect-layer.ts`、levelUp・rareDrop・bossAppear・bossDefeat・clear
 - 動きを減らす設定のときのまとめ方（`logic/message-plan.ts`）
 
-## 対象の確認 ID（11 個：自動 11・手動 0）
+## 対象の確認 ID（12 個：自動 12・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
+| `e2e/message.spec.ts` | TC-0027-09 |
 | `e2e/effects.spec.ts` | TC-0031-01、TC-0031-02、TC-0031-03、TC-0031-04、TC-0031-05、TC-0031-07、TC-0031-08、TC-0031-09、TC-0031-11 |
 | `tests/logic/message-plan.test.ts` | TC-0031-06、TC-0031-10 |
 

@@ -19,7 +19,7 @@ verified: null
 
 - WS：[WS-0002](MWIZ-WS-0002-workstream-ja.md)
 - ブランチ：`feat/TASK-0004-domain-basics`
-- 実施記録：AC-0004（`docs/07_attested/MWIZ-AC-0004-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0004（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0001
 
 ## やること
@@ -28,11 +28,11 @@ verified: null
 - `domain/character.ts`（名前・作成・経験値・やすむ）・`records.ts`（初期値・補正）
 - `tests/helpers/`（`deepFreeze`・`fake-storage`・`fixtures`）
 
-## 対象の確認 ID（7 個：自動 7・手動 0）
+## 対象の確認 ID（6 個：自動 6・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `tests/domain/character.test.ts` | TC-0007-01、TC-0007-02、TC-0007-04、TC-0008-02、TC-0008-04 |
+| `tests/domain/character.test.ts` | TC-0007-01、TC-0007-02、TC-0007-04、TC-0008-04 |
 | `tests/domain/game-state.test.ts` | TC-0009-09、TC-0012-01 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。

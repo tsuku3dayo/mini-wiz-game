@@ -7,12 +7,10 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0002（v1.0）
-  - MWIZ-TC-0006（v1.0）
+  - MWIZ-TC-0005（v1.0）
   - MWIZ-TC-0007（v1.0）
   - MWIZ-TC-0010（v1.0）
   - MWIZ-TC-0011（v1.0）
-  - MWIZ-TC-0012（v1.0）
-  - MWIZ-TC-0038（v1.0）
   - MWIZ-TD-0003（v1.0）
 verified: null
 ---
@@ -21,7 +19,7 @@ verified: null
 
 - WS：[WS-0002](MWIZ-WS-0002-workstream-ja.md)
 - ブランチ：`feat/TASK-0006-ui-core`
-- 実施記録：AC-0006（`docs/07_attested/MWIZ-AC-0006-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0006（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0005
 
 ## やること
@@ -31,18 +29,14 @@ verified: null
 - `logic/menu-model.ts`・`message-plan.ts`・`name.ts`・`version.ts`
 - `ui/debug.ts` の `writeState`・`writeSave`・`useSeed`・`setDelay`（`SwappableRng`）
 
-## 対象の確認 ID（28 個：自動 28・手動 0）
+## 対象の確認 ID（5 個：自動 5・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `tests/logic/version.test.ts` | TC-0006-02 |
+| `e2e/boot.spec.ts` | TC-0005-05 |
 | `tests/logic/name.test.ts` | TC-0007-05 |
 | `tests/logic/menu-model.test.ts` | TC-0010-01、TC-0010-09 |
-| `e2e/menu.spec.ts` | TC-0010-02、TC-0010-03、TC-0010-04、TC-0010-05、TC-0010-06、TC-0010-07、TC-0010-08、TC-0010-10、TC-0010-11 |
 | `tests/logic/message-plan.test.ts` | TC-0011-01 |
-| `e2e/message.spec.ts` | TC-0011-02、TC-0011-03、TC-0011-04、TC-0011-05、TC-0011-06、TC-0011-07、TC-0011-08、TC-0011-09、TC-0011-10 |
-| `e2e/error.spec.ts` | TC-0012-06、TC-0012-07、TC-0012-08、TC-0012-10 |
-| `e2e/debug.spec.ts` | TC-0038-01 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 

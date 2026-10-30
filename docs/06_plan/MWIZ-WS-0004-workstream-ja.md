@@ -27,12 +27,12 @@ verified: null
 
 遭遇・戦闘（たたかう・ヒール・にげる）・経験値とレベルアップ・死亡を作る。
 
-## TASK（この順に進める。確認 ID 47 個）
+## TASK（この順に進める。確認 ID 56 個）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
 | [TASK-0010](MWIZ-TASK-0010-implementation-task-ja.md) | 戦闘のルールとゲーム API | 31 | `feat/TASK-0010-battle-rules` |
-| [TASK-0011](MWIZ-TASK-0011-implementation-task-ja.md) | 戦闘の画面 | 16 | `feat/TASK-0011-battle-screen` |
+| [TASK-0011](MWIZ-TASK-0011-implementation-task-ja.md) | 戦闘の画面 | 25 | `feat/TASK-0011-battle-screen` |
 
 ## WS の終わりの手動テスト
 

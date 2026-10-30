@@ -7,6 +7,7 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0003（v1.0）
+  - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0013（v1.0）
   - MWIZ-TC-0014（v1.0）
   - MWIZ-TC-0015（v1.0）
@@ -21,20 +22,21 @@ verified: null
 
 - WS：[WS-0003](MWIZ-WS-0003-workstream-ja.md)
 - ブランチ：`feat/TASK-0008-dungeon-rules`
-- 実施記録：AC-0008（`docs/07_attested/MWIZ-AC-0008-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0008（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0005
 
 ## やること
 
 - `domain/dungeon.ts`・`floors.ts`・`explore.ts`・`view.ts`
 - ゲーム API：enterDungeon・move・stairs・returnToInn・`debugDungeon`
+- `tests/helpers/maps.ts`（`openMap`・`dungeonState`・`constantRng`）
 
 ## 対象の確認 ID（18 個：自動 18・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `tests/domain/explore.test.ts` | TC-0013-01、TC-0013-02、TC-0014-01、TC-0015-01、TC-0016-01、TC-0016-02、TC-0017-01、TC-0017-02、TC-0017-03 |
-| `tests/api/game-api.test.ts` | TC-0013-03、TC-0015-05、TC-0038-03 |
+| `tests/api/game-api.test.ts` | TC-0012-03、TC-0012-05、TC-0013-03、TC-0038-03 |
+| `tests/domain/explore.test.ts` | TC-0013-01、TC-0013-02、TC-0014-01、TC-0016-01、TC-0016-02、TC-0017-01、TC-0017-02、TC-0017-03 |
 | `tests/domain/floors.test.ts` | TC-0013-04、TC-0013-05、TC-0013-06、TC-0013-07 |
 | `tests/domain/view.test.ts` | TC-0014-06、TC-0015-02 |
 

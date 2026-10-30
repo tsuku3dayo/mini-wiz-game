@@ -22,15 +22,15 @@ verified: null
 
 オーナーが用意した 256×256 の敵の絵 6 枚を置き、戦闘画面に出す。
 
-## TASK（この順に進める。確認 ID 5 個）
+## TASK（この順に進める。確認 ID 10 個）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
-| [TASK-0018](MWIZ-TASK-0018-implementation-task-ja.md) | 敵の絵 | 5 | `feat/TASK-0018-enemy-images` |
+| [TASK-0018](MWIZ-TASK-0018-implementation-task-ja.md) | 敵の絵 | 10 | `feat/TASK-0018-enemy-images` |
 
 ## WS の終わりの手動テスト
 
-手動の確認 ID はない。公開 URL を実機で開き、この WS で作った画面が動くことだけを確かめる（AC に書く）。
+実機（iPhone 11・PC）で次の確認 ID を行い、それぞれの TASK の AC に結果を書く：TC-0003-03。
 
 Android の実機はないので、Android での確認は AC の「確認できなかったこと」に書く（E2E の `pixel7` で代わりに確かめる）。
 

@@ -25,16 +25,16 @@ verified: null
 
 ドロップ・所持品・付け替え・捨てる・入れ替えと、そうび・もちもの・入れ替えの画面を作る。
 
-## TASK（この順に進める。確認 ID 43 個）
+## TASK（この順に進める。確認 ID 59 個）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
-| [TASK-0014](MWIZ-TASK-0014-implementation-task-ja.md) | 装備のルールとゲーム API | 23 | `feat/TASK-0014-items-rules` |
-| [TASK-0015](MWIZ-TASK-0015-implementation-task-ja.md) | そうび・もちもの・入れ替えの画面 | 20 | `feat/TASK-0015-items-screens` |
+| [TASK-0014](MWIZ-TASK-0014-implementation-task-ja.md) | 装備のルールとゲーム API | 34 | `feat/TASK-0014-items-rules` |
+| [TASK-0015](MWIZ-TASK-0015-implementation-task-ja.md) | そうび・もちもの・入れ替えの画面 | 25 | `feat/TASK-0015-items-screens` |
 
 ## WS の終わりの手動テスト
 
-手動の確認 ID はない。公開 URL を実機で開き、この WS で作った画面が動くことだけを確かめる（AC に書く）。
+実機（iPhone 11・PC）で次の確認 ID を行い、それぞれの TASK の AC に結果を書く：TC-0004-04。
 
 Android の実機はないので、Android での確認は AC の「確認できなかったこと」に書く（E2E の `pixel7` で代わりに確かめる）。
 

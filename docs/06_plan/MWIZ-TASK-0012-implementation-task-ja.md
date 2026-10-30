@@ -7,6 +7,8 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0005（v1.0）
+  - MWIZ-TC-0008（v1.0）
+  - MWIZ-TC-0015（v1.0）
   - MWIZ-TC-0024（v1.0）
   - MWIZ-TC-0025（v1.0）
   - MWIZ-TD-0002（v1.0）
@@ -18,7 +20,7 @@ verified: null
 
 - WS：[WS-0005](MWIZ-WS-0005-workstream-ja.md)
 - ブランチ：`feat/TASK-0012-boss-clear`
-- 実施記録：AC-0012（`docs/07_attested/MWIZ-AC-0012-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0012（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0011
 
 ## やること
@@ -27,16 +29,15 @@ verified: null
 - `screens/clear.ts`
 - `tests/helpers/autoplayer.ts` と通しプレイ（`playthrough.test.ts`）
 
-## 対象の確認 ID（12 個：自動 12・手動 0）
+## 対象の確認 ID（10 個：自動 10・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `tests/domain/explore.test.ts` | TC-0024-01、TC-0025-04 |
-| `tests/domain/battle.test.ts` | TC-0024-02、TC-0024-03 |
-| `tests/api/game-api.test.ts` | TC-0024-04、TC-0024-06、TC-0025-01 |
+| `tests/api/game-api.test.ts` | TC-0008-05、TC-0025-01 |
+| `tests/domain/explore.test.ts` | TC-0015-01、TC-0024-01、TC-0025-04 |
+| `tests/domain/battle.test.ts` | TC-0024-02 |
 | `tests/api/playthrough.test.ts` | TC-0024-05、TC-0025-03 |
 | `e2e/clear.spec.ts` | TC-0024-07、TC-0025-02 |
-| `tests/domain/balance.test.ts` | TC-0024-08 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 

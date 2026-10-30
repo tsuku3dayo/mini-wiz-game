@@ -7,6 +7,7 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0004（v1.0）
+  - MWIZ-TC-0015（v1.0）
   - MWIZ-TC-0018（v1.0）
   - MWIZ-TC-0019（v1.0）
   - MWIZ-TC-0020（v1.0）
@@ -21,23 +22,24 @@ verified: null
 
 - WS：[WS-0004](MWIZ-WS-0004-workstream-ja.md)
 - ブランチ：`feat/TASK-0010-battle-rules`
-- 実施記録：AC-0010（`docs/07_attested/MWIZ-AC-0010-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0010（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0008
 
 ## やること
 
 - `domain/battle.ts`・`heal.ts`、遭遇判定・敵の選択（`explore.ts`）、経験値とレベルアップ・死亡
 - ゲーム API：battle・heal
+- 引いた乱数の数と `int(a, b)` の引数を記録する Rng（`tests/helpers/`）
 
 ## 対象の確認 ID（31 個：自動 31・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
+| `tests/api/game-api.test.ts` | TC-0015-05、TC-0020-06、TC-0021-02、TC-0023-02 |
 | `tests/domain/explore.test.ts` | TC-0018-01、TC-0018-02、TC-0018-03、TC-0018-04 |
 | `tests/domain/constants.test.ts` | TC-0018-07 |
 | `tests/domain/rng.test.ts` | TC-0018-08、TC-0018-09 |
-| `tests/domain/battle.test.ts` | TC-0019-02、TC-0019-03、TC-0019-04、TC-0019-05、TC-0019-06、TC-0019-07、TC-0019-08、TC-0020-01、TC-0020-02、TC-0020-04、TC-0020-05、TC-0022-01、TC-0023-01 |
-| `tests/api/game-api.test.ts` | TC-0020-06、TC-0021-02、TC-0023-02 |
+| `tests/domain/battle.test.ts` | TC-0019-02、TC-0019-03、TC-0019-04、TC-0019-05、TC-0019-06、TC-0019-07、TC-0019-08、TC-0020-01、TC-0020-02、TC-0020-04、TC-0020-05、TC-0022-01 |
 | `tests/domain/heal.test.ts` | TC-0021-01、TC-0021-05 |
 | `tests/domain/character.test.ts` | TC-0022-02、TC-0022-03、TC-0022-04、TC-0022-05、TC-0022-06、TC-0022-07 |
 

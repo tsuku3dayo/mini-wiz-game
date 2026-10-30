@@ -24,12 +24,12 @@ verified: null
 
 ボス撃破・ゲームクリア・自動セーブ・周回・実績と、ステータス画面（広い画面では宿屋の実績）を作る。
 
-## TASK（この順に進める。確認 ID 19 個）
+## TASK（この順に進める。確認 ID 16 個）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
-| [TASK-0012](MWIZ-TASK-0012-implementation-task-ja.md) | ボス・ゲームクリア・周回 | 12 | `feat/TASK-0012-boss-clear` |
-| [TASK-0013](MWIZ-TASK-0013-implementation-task-ja.md) | 実績とステータス画面 | 7 | `feat/TASK-0013-records-status` |
+| [TASK-0012](MWIZ-TASK-0012-implementation-task-ja.md) | ボス・ゲームクリア・周回 | 10 | `feat/TASK-0012-boss-clear` |
+| [TASK-0013](MWIZ-TASK-0013-implementation-task-ja.md) | 実績とステータス画面 | 6 | `feat/TASK-0013-records-status` |
 
 ## WS の終わりの手動テスト
 

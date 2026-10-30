@@ -7,6 +7,8 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0008（v1.0）
+  - MWIZ-TC-0001（v1.0）
+  - MWIZ-TC-0003（v1.0）
   - MWIZ-TC-0033（v1.0）
   - MWIZ-TD-0003（v1.0）
   - MWIZ-TD-0005（v1.0）
@@ -17,7 +19,7 @@ verified: null
 
 - WS：[WS-0008](MWIZ-WS-0008-workstream-ja.md)
 - ブランチ：`feat/TASK-0018-enemy-images`
-- 実施記録：AC-0018（`docs/07_attested/MWIZ-AC-0018-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0018（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0011
 
 ## やること
@@ -26,10 +28,12 @@ verified: null
 - `components/enemy-image.ts`・`logic/enemy-image.ts`（256px、読めなければ消す）
 - `tests/assets/enemy-images.test.ts`、`check-dist` で 6 枚を確かめる
 
-## 対象の確認 ID（5 個：自動 5・手動 0）
+## 対象の確認 ID（10 個：自動 9・手動 1）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
+| `e2e/pwa.spec.ts` | TC-0001-03、TC-0001-04、TC-0003-01、TC-0003-02 |
+| 実機（手動） | TC-0003-03 |
 | `e2e/battle.spec.ts` | TC-0033-01、TC-0033-02、TC-0033-03、TC-0033-04 |
 | `tests/assets/enemy-images.test.ts` | TC-0033-05 |
 

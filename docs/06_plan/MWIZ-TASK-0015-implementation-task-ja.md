@@ -7,7 +7,10 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0006（v1.0）
-  - MWIZ-TC-0027（v1.0）
+  - MWIZ-TC-0004（v1.0）
+  - MWIZ-TC-0006（v1.0）
+  - MWIZ-TC-0009（v1.0）
+  - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0028（v1.0）
   - MWIZ-TC-0029（v1.0）
   - MWIZ-TC-0030（v1.0）
@@ -21,7 +24,7 @@ verified: null
 
 - WS：[WS-0006](MWIZ-WS-0006-workstream-ja.md)
 - ブランチ：`feat/TASK-0015-items-screens`
-- 実施記録：AC-0015（`docs/07_attested/MWIZ-AC-0015-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0015（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0013、TASK-0014
 
 ## やること
@@ -30,11 +33,15 @@ verified: null
 - `screens/swap.ts`、`fitItemList`、メッセージ欄を置かない画面の結果の文をキューに入れる
 - `logic/item-text.ts`・`sort-items.ts`・`stat-diff.ts`
 
-## 対象の確認 ID（20 個：自動 20・手動 0）
+## 対象の確認 ID（25 個：自動 24・手動 1）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `e2e/message.spec.ts` | TC-0027-09 |
+| `e2e/pwa.spec.ts` | TC-0004-02 |
+| 実機（手動） | TC-0004-04 |
+| `e2e/title.spec.ts` | TC-0006-07 |
+| `e2e/boot.spec.ts` | TC-0009-07、TC-0009-08 |
+| `e2e/error.spec.ts` | TC-0012-08 |
 | `tests/logic/stat-diff.test.ts` | TC-0028-01、TC-0028-10 |
 | `e2e/equipment.spec.ts` | TC-0028-02、TC-0028-04、TC-0028-09、TC-0028-11、TC-0028-14 |
 | `tests/logic/sort-items.test.ts` | TC-0028-08、TC-0029-02 |

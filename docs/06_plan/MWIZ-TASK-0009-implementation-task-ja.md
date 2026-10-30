@@ -7,6 +7,9 @@ version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-WS-0003（v1.0）
+  - MWIZ-TC-0002（v1.0）
+  - MWIZ-TC-0010（v1.0）
+  - MWIZ-TC-0011（v1.0）
   - MWIZ-TC-0014（v1.0）
   - MWIZ-TC-0015（v1.0）
   - MWIZ-TC-0016（v1.0）
@@ -21,7 +24,7 @@ verified: null
 
 - WS：[WS-0003](MWIZ-WS-0003-workstream-ja.md)
 - ブランチ：`feat/TASK-0009-dungeon-screen`
-- 実施記録：AC-0009（`docs/07_attested/MWIZ-AC-0009-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0009（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0007、TASK-0008
 
 ## やること
@@ -31,17 +34,20 @@ verified: null
 - `fitDungeon`（TD-0003 §6）、矢印キー（入力欄・IME 変換中のキーは捨てる）
 - `logic/view-to-segments.ts`・`map-to-shapes.ts`・`describe-view.ts`・`arrival.ts`
 - `__wiz.debugDungeon()`
+- 宿屋の「ダンジョンへ」を `enterDungeon` につなぐ
 
-## 対象の確認 ID（15 個：自動 14・手動 1）
+## 対象の確認 ID（19 個：自動 17・手動 2）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
+| 実機（手動） | TC-0002-07、TC-0014-08 |
+| `e2e/menu.spec.ts` | TC-0010-07 |
+| `e2e/message.spec.ts` | TC-0011-08 |
 | `e2e/dungeon.spec.ts` | TC-0014-02、TC-0014-03、TC-0014-05、TC-0014-07、TC-0015-04、TC-0016-03、TC-0016-04、TC-0016-06、TC-0017-04 |
 | `tests/logic/view-to-segments.test.ts` | TC-0014-04 |
-| 実機（手動） | TC-0014-08 |
 | `tests/logic/map-to-shapes.test.ts` | TC-0015-03 |
 | `tests/logic/arrival.test.ts` | TC-0016-05 |
-| `e2e/debug.spec.ts` | TC-0038-02、TC-0038-04 |
+| `e2e/debug.spec.ts` | TC-0038-01、TC-0038-02、TC-0038-04 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 

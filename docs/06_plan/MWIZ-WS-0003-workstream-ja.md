@@ -26,16 +26,16 @@ verified: null
 
 5 階層のダンジョンを生成し、疑似3D と自動地図を見ながら歩き、階段で昇り降りし、宿屋に戻れるようにする。
 
-## TASK（この順に進める。確認 ID 33 個）
+## TASK（この順に進める。確認 ID 37 個）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
 | [TASK-0008](MWIZ-TASK-0008-implementation-task-ja.md) | ダンジョンのルールとゲーム API | 18 | `feat/TASK-0008-dungeon-rules` |
-| [TASK-0009](MWIZ-TASK-0009-implementation-task-ja.md) | ダンジョンの画面 | 15 | `feat/TASK-0009-dungeon-screen` |
+| [TASK-0009](MWIZ-TASK-0009-implementation-task-ja.md) | ダンジョンの画面 | 19 | `feat/TASK-0009-dungeon-screen` |
 
 ## WS の終わりの手動テスト
 
-実機（iPhone 11・PC）で次の確認 ID を行い、それぞれの TASK の AC に結果を書く：TC-0014-08。
+実機（iPhone 11・PC）で次の確認 ID を行い、それぞれの TASK の AC に結果を書く：TC-0002-07、TC-0014-08。
 
 Android の実機はないので、Android での確認は AC の「確認できなかったこと」に書く（E2E の `pixel7` で代わりに確かめる）。
 

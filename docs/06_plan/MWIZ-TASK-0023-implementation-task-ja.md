@@ -17,7 +17,7 @@ verified: null
 
 - WS：[WS-0010](MWIZ-WS-0010-workstream-ja.md)
 - ブランチ：`feat/TASK-0023-performance`
-- 実施記録：AC-0023（`docs/07_attested/MWIZ-AC-0023-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0023（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：TASK-0022
 
 ## やること

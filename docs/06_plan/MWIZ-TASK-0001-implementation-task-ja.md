@@ -8,6 +8,7 @@ updated: 2026-10-30
 sources:
   - MWIZ-WS-0001（v1.0）
   - MWIZ-TC-0001（v1.0）
+  - MWIZ-TC-0006（v1.0）
   - MWIZ-TD-0001（v1.0）
   - MWIZ-TD-0005（v1.0）
 verified: null
@@ -17,7 +18,7 @@ verified: null
 
 - WS：[WS-0001](MWIZ-WS-0001-workstream-ja.md)
 - ブランチ：`feat/TASK-0001-foundation`
-- 実施記録：AC-0001（`docs/07_attested/MWIZ-AC-0001-attested-computation-ja.md`。PR に draft で入れ、WS の終わりに手動の結果を足して review）
+- 実施記録：AC-0001（`docs/07_attested/` に置く。PR に draft で入れ、WS の終わりに手動の結果を足して review）
 - 前の TASK：なし（最初）
 
 ## やること
@@ -30,13 +31,12 @@ verified: null
 - `.github/workflows/pages.yml` を本物（`dist/` を公開）に置き換える。試作の公開はやめる
 - アプリ識別子 `mini-wiz-game`（保存のキー・キャッシュを分ける）
 
-## 対象の確認 ID（5 個：自動 5・手動 0）
+## 対象の確認 ID（2 個：自動 2・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `e2e/title.spec.ts` | TC-0001-01、TC-0001-02 |
-| `e2e/pwa.spec.ts` | TC-0001-03、TC-0001-04 |
-| `e2e/boot.spec.ts` | TC-0001-05 |
+| `e2e/title.spec.ts` | TC-0001-02 |
+| `tests/logic/version.test.ts` | TC-0006-02 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 
