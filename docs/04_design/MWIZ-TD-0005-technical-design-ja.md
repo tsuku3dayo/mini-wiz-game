@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.1
+version: 1.2
 updated: 2026-10-30
 sources:
   - MWIZ-TD-0001（v1.0）
@@ -41,7 +41,7 @@ verified: null
 | `vite.config.ts` の `VitePWA` | manifest（名前「WIZ」・`standalone`・`portrait`・アイコン）、Workbox の事前キャッシュ（`enemies/*.png` を含む全ファイル）、`registerType: 'prompt'` |
 | `platform/pwa.ts` | Service Worker の登録（本番のビルドだけ）。新しい版を受け取ったら `update-banner` を出せる状態にし、ルーターがタイトル・宿屋のときだけ出す。「更新」で切り替えて読み込み直す |
 | `platform/install.ts` | 端末の判定（iPhone／Android／PC）、`beforeinstallprompt` を持っておき「今すぐインストール」に使う、インストール済みの判定（`display-mode: standalone`） |
-| `public/boot.js` | 起動の見張り（8 秒）。失敗したらこのアプリのキャッシュと Service Worker だけを消して 1 回読み込み直す。2 分以内に続けて失敗したら `#boot-error` |
+| `public/boot.js` | 起動の見張り（8 秒）。失敗したらこのアプリのキャッシュと Service Worker だけを消して 1 回読み込み直す。2 分以内に続けて失敗したら `#boot-error`。**「なおす」を押したら、2 分の制限を待たずに、自動の復旧と同じこと（時刻を書く・このアプリの Service Worker とキャッシュだけ消す・読み込み直す）をすぐ行う**（仕様書 §30.4 に書かれていなかったので TASK-0003 で決めた。v1.2） |
 
 ### 2.1 アイコンの図柄の値（`scripts/make-icons.mjs`）
 

@@ -57,6 +57,22 @@ body {
 .title-sub { display: flex; align-items: center; justify-content: space-between; gap: var(--wiz-gap); }
 .version { margin: 0 0 0 auto; text-align: right; color: var(--wiz-color-text-sub); }
 
+/* 更新の帯（画面の上端に固定。安全領域の内側。GUI-0007 §2） */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wiz-gap);
+  padding: calc(env(safe-area-inset-top) + 4px) var(--wiz-gutter-r) 4px var(--wiz-gutter-l);
+  background: var(--wiz-color-background);
+  border-bottom: 2px solid var(--wiz-color-frame);
+}
+
 /* インストールの案内（<dialog> のモーダル。二重線のウィンドウと同じ見た目。GUI-0007 §3） */
 .install-dialog {
   width: min(92vw, 480px);
