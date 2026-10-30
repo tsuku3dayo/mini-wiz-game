@@ -109,9 +109,8 @@ ul.menu li .sub { color: var(--wiz-color-text-sub); margin-left: 16px; }
 @media (hover: hover) { .btn:hover { color: var(--wiz-color-secondary); border-color: var(--wiz-color-secondary); } }
 .btn[disabled] { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); }
 
-/* メッセージ欄：高さは 5 行分で固定（戦闘は 4 行分。GUI-0001 §4.2） */
-.log { --log-lines: 5; height: calc(var(--log-lines) * 1.6em); overflow: hidden; position: relative; }
-.log.l4 { --log-lines: 4; }
+/* メッセージ欄：高さは 5 行分で固定（どの画面も。GUI-0001 §4.2） */
+.log { height: calc(5 * 1.6em); overflow: hidden; position: relative; }
 .log p { margin: 0; white-space: pre-wrap; }
 .log .success { color: var(--wiz-color-success); }
 .log .danger { color: var(--wiz-color-error); }
@@ -162,9 +161,8 @@ dl.status .warn { color: var(--wiz-color-warning); }
 
 /* 戦闘 */
 .enemy { text-align: center; }
-/* 敵の絵 128×128：ふつうは 1 倍、広い画面は 2 倍（変更の依頼 2026-10-27） */
-.enemy-img { display: block; width: 128px; height: 128px; margin: 0 auto 8px; image-rendering: pixelated; }
-@media (min-width: 600px) and (min-height: 744px) { .enemy-img { width: 256px; height: 256px; } }
+/* 敵の絵 128×128：どの画面も 2 倍（256px）で出す（GUI-0005 §1） */
+.enemy-img { display: block; width: 256px; height: 256px; margin: 0 auto 8px; image-rendering: pixelated; }
 .enemy-name { margin: 0; font-size: 24px; line-height: 1.3; }
 .enemy-name.boss { color: var(--wiz-color-error); }
 
@@ -222,8 +220,8 @@ const CHAR = { name: 'ゆうしゃ', lv: 12, exp: 1584, next: 288, hp: 120, maxH
 const pad3 = (n) => String(n).padStart(3, ' ');
 const $ = (s, r = document) => r.querySelector(s);
 const app = $('#app');
-let lines = [];   // メッセージ欄に出ている行（最大 logMax 行）
-let logMax = 5;   // メッセージ欄の行数（戦闘だけ 4）
+let lines = [];   // メッセージ欄に出ている行（最大 LOG_MAX 行）
+const LOG_MAX = 5;
 let lowHp = false;
 let soundOn = false;
 
@@ -270,7 +268,7 @@ function menu(label, items, { initial = 0, onCancel } = {}) {
 }
 function logWin() {
   const w = win(null); w.dataset.testid = 'message-window';
-  const box = el('div', { class: 'log' + (logMax === 4 ? ' l4' : ''), role: 'log', 'aria-live': 'polite' });
+  const box = el('div', { class: 'log', role: 'log', 'aria-live': 'polite' });
   for (const l of lines) box.append(el('p', { class: l.tone || '', text: l.text }));
   w.append(box);
   w.addEventListener('click', () => {});
@@ -279,7 +277,7 @@ function logWin() {
 }
 // 折り返しで枠に入りきらないときは、古い行から消す（新しい行をいつも見せる）
 function trimLog() { const box = $('.log'); while (box && box.children.length > 1 && box.scrollHeight > box.clientHeight + 1) box.firstChild.remove(); }
-function say(text, tone) { lines = [...lines, { text, tone }].slice(-logMax); const old = $('[data-testid="message-window"]'); if (old) { old.replaceWith(logWin()); trimLog(); } }
+function say(text, tone) { lines = [...lines, { text, tone }].slice(-LOG_MAX); const old = $('[data-testid="message-window"]'); if (old) { old.replaceWith(logWin()); trimLog(); } }
 function statusFull() {
   const warn = CHAR.hp <= CHAR.maxHp * 0.25;
   const dl = el('dl', { class: 'status' },
@@ -346,7 +344,7 @@ function mapSvg() {
 
 // ---- 画面 ----
 const screens = {};
-function show(name, ...args) { app.replaceChildren(); window.scrollTo(0, 0); logMax = name === 'battle' || name === 'bossBattle' ? 4 : 5; lines = lines.slice(-logMax); screens[name](...args); trimLog(); document.body.dataset.screen = name; fit(); $('#proto-vp').textContent = vpText(); }
+function show(name, ...args) { app.replaceChildren(); window.scrollTo(0, 0); screens[name](...args); trimLog(); document.body.dataset.screen = name; fit(); $('#proto-vp').textContent = vpText(); }
 
 screens.title = () => {
   lines = [];
@@ -417,7 +415,7 @@ screens.dungeon = (keep) => {
     mv('前進', 'up', '↑ 前進', () => { say('（試作）まえへ すすんだ'); }),
     mv('左を向く', 'l', '← 左', () => say('（試作）ひだりを むいた')),
     mv('右を向く', 'r', '右 →', () => say('（試作）みぎを むいた')),
-    mv('後退', 'down', '↓ 後退', () => { bump = true; lines = [...lines, { text: 'かべだ' }].slice(-logMax); show('dungeon', true); }));
+    mv('後退', 'down', '↓ 後退', () => { bump = true; lines = [...lines, { text: 'かべだ' }].slice(-LOG_MAX); show('dungeon', true); }));
   const controls = el('div', { class: 'controls' }, win(null, mapSvg()), pad);
   controls.firstChild.classList.add('map-win');
   const actions = el('div', { class: 'actions' },
@@ -444,7 +442,7 @@ screens.battle = (boss) => {
     { text: 'ヒール', go: () => say('ゆうしゃは ヒールを となえた！ HP が 15 かいふくした', 'success') },
     { text: 'にげる', disabled: !!boss, reason: 'にげられない！', go: () => { lines = [{ text: 'うまく にげきれた' }]; show('dungeon', true); } },
   ]));
-  // 上から 敵 → メッセージ欄（4 行）→ ステータス → コマンド。間を空けずに詰める（GUI-0005 §1）
+  // 上から 敵 → メッセージ欄 → ステータス → コマンド。間を空けずに詰める（GUI-0005 §1）
   m.append(enemy, logWin(), statusRow(), cmd); app.append(m);
 };
 screens.clear = () => {
