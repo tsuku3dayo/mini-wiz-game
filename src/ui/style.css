@@ -1,0 +1,57 @@
+/* 全体のスタイル（仕様書 §11.3）。TASK-0001 ではタイトルの仮の画面の分だけ。部品のスタイルは各 TASK で足す */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--wiz-color-background);
+  color: var(--wiz-color-primary);
+  font-family: var(--wiz-font);
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+  min-height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+}
+[hidden] { display: none !important; }
+*:focus-visible { outline: 2px solid var(--wiz-color-secondary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ボタン（.wiz-button） */
+.wiz-button {
+  font: inherit;
+  letter-spacing: inherit;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--wiz-color-primary);
+  border: 2px solid var(--wiz-color-primary);
+  border-radius: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.wiz-button:hover, .wiz-button:focus-visible { color: var(--wiz-color-secondary); border-color: var(--wiz-color-secondary); }
+.wiz-button:active { background: var(--wiz-color-secondary); color: var(--wiz-color-background); border-color: var(--wiz-color-secondary); }
+.wiz-button:disabled { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); }
+
+/* タイトル（GameFrame を使わず、縦の中央に寄せる。仕様書 §11.3） */
+.title-main {
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: max(32px, env(safe-area-inset-top)) var(--wiz-gutter-r) max(32px, env(safe-area-inset-bottom)) var(--wiz-gutter-l);
+  display: grid;
+  gap: 16px;
+  align-content: center;
+}
+.deco { width: 60%; margin: 0 auto; display: flex; align-items: center; gap: 8px; color: var(--wiz-color-blood); }
+.deco::before, .deco::after { content: ""; flex: 1; border-top: 1px solid var(--wiz-color-blood); }
+.logo { margin: 0; text-align: center; font-size: 36px; line-height: 1.2; font-weight: normal; color: var(--wiz-color-frame); letter-spacing: 0.5em; padding-left: 0.5em; }
+@media (min-width: 600px) { .logo { font-size: 48px; } }
+.subtitle { margin: 0; text-align: center; color: var(--wiz-color-arcane); }
+.title-menu { width: 100%; max-width: 360px; margin: 0 auto; display: grid; }
+.version { margin: 0; text-align: right; color: var(--wiz-color-text-sub); }

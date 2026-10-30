@@ -1,0 +1,18 @@
+node_modules/
+dist/
+dev-dist/
+playwright-report/
+test-results/
+coverage/
+
+# 機密ファイル
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.crt
+credentials.json
+
+.claude/settings.local.json
