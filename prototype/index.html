@@ -130,6 +130,8 @@ dl.status .name { color: var(--wiz-color-frame); }
 .status-row { display: flex; flex-wrap: wrap; column-gap: 14px; white-space: pre; }
 .status-row .name { color: var(--wiz-color-frame); }
 .status-row .warn { color: var(--wiz-color-warning); }
+/* 狭い画面の 1 行のステータスは、見出しの下の余白を詰める（iPhone 11 の Safari で 1 画面に収めるため。GUI-0001 §4.4） */
+@media (max-width: 599px) { .win.titled.status-win { padding-top: 8px; padding-bottom: 6px; } }
 
 /* タイトル */
 .title-main { max-width: 800px; margin: 0 auto; padding: max(32px, env(safe-area-inset-top)) var(--gutter-r) max(32px, env(safe-area-inset-bottom)) var(--gutter-l); display: grid; gap: 16px; min-height: 100dvh; align-content: center; }
@@ -168,8 +170,8 @@ dl.status .name { color: var(--wiz-color-frame); }
 /* 戦闘 */
 .enemy { text-align: center; }
 /* 敵の絵 128×128：どの画面も 2 倍（256px）で出す（GUI-0005 §1） */
-.enemy-img { display: block; width: 256px; height: 256px; margin: 0 auto 4px; image-rendering: pixelated; }
-.enemy-name { margin: 0; font-size: 24px; line-height: 1.3; }
+.enemy-img { display: block; width: 256px; height: 256px; margin: 0 auto; image-rendering: pixelated; }
+.enemy-name { margin: 0; font-size: 24px; line-height: 1.1; }
 .enemy-name.boss { color: var(--wiz-color-error); }
 
 /* 2 カラム（広い画面だけ） */
@@ -317,14 +319,13 @@ function records() {
   const rec = el('dl', { class: 'status' }, ...[['そうせんとう', '128 回'], ['とうばつ', '120 体'], ['しぼう', '3 回'], ['しゅうかい', '2 周目'], ['ボスとうばつ', '1 回']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
   return win('じっせき', el('p', { style: 'margin:0 0 8px;color:var(--wiz-color-arcane)', text: 'このキャラクターの きろく' }), rec);
 }
-// 1 行のステータス：名前を行の先頭に置く（GUI-0001 §4.4）。狭い画面は見出しなし、広い画面は見出し「ステータス」
+// 1 行のステータス：見出し「ステータス」、名前を行の先頭に置く（GUI-0001 §4.4）
 function statusRow() {
   const warn = CHAR.hp <= CHAR.maxHp * 0.25;
   const row = el('div', { class: 'status-row' },
     el('span', { class: 'name', text: CHAR.name }), el('span', { text: `Lv${pad3(CHAR.lv)}` }),
     el('span', { class: warn ? 'warn' : '', text: `HP${pad3(CHAR.hp)}/${pad3(CHAR.maxHp)}${warn ? '！' : ''}` }), el('span', { text: `MP${pad3(CHAR.mp)}/${pad3(CHAR.maxMp)}` }));
-  if (isWide()) return win('ステータス', row);
-  const w = win(null, row); w.style.padding = '6px 12px'; return w;
+  const w = win('ステータス', row); w.classList.add('status-win'); return w;
 }
 
 // ---- 疑似3D（仕様書 §11.5 の枠の座標。見本の視界） ----
@@ -521,8 +522,6 @@ const ITEMS = [
   { slot: 'アクセ', name: 'ウィンドブーツ', r: 'n', R: 'N', b: ['すばやさ +3'] },
   { slot: 'よろい', name: 'クロースアーマー', r: 'r', R: 'R', b: ['ぼうぎょ +2'] },
 ];
-// そうび・もちものの画面は、広い画面ではメッセージ欄を置かない（GUI-0006）
-const logIfNarrow = () => (isWide() ? [] : [logWin()]);
 const itemLabel = (it, showSlot) => el('span', { class: 'item' }, showSlot ? el('span', { class: 'slot', text: `［${it.slot}］` }) : null, el('span', { class: 'rar-' + it.r, text: `${it.name}［${it.R}］` }), it.b.map((t) => el('span', { class: 'bonus', text: t })));
 screens.equip = (where) => {
   const m = frame('そうび');
@@ -531,7 +530,7 @@ screens.equip = (where) => {
   const ul = menu('そうび', slots, { initial: 1, onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') });
   [...ul.children].slice(1).forEach((li, i) => { const s = slots[i + 1]; li.append(el('span', { class: 'slot-row' }, el('span', { text: s.slot }), s.it ? itemLabel(s.it) : el('span', { class: 'slot', style: 'color:var(--wiz-color-text-sub)', text: '―― なし ――' }))); });
   const abil = el('dl', { class: 'status' }, ...[['こうげき', ' 58 =  28 + 30'], ['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
-  m.append(el('div', { class: 'cols' }, win('そうび', ul), win('のうりょく', abil)), ...logIfNarrow()); app.append(m); $('li.cur').focus();
+  m.append(el('div', { class: 'cols' }, win('そうび', ul), win('のうりょく', abil))); app.append(m); $('li.cur').focus();
 };
 screens.equipCand = (where) => {
   const m = frame('そうび');
@@ -540,7 +539,7 @@ screens.equipCand = (where) => {
   const ul = menu('そうび', items, { initial: 2, onCancel: () => show('equip', where) });
   [...ul.children].slice(2).forEach((li, i) => li.append(itemLabel(cands[i])));
   const abil = el('dl', { class: 'status' }, el('dt', { text: 'こうげき' }), el('dd', { class: 'diff-up', text: ' 58 →  76 ↑' }), ...[['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
-  m.append(el('div', { class: 'cols' }, win('ぶき', el('p', { style: 'margin:0;color:var(--wiz-color-text-sub)', text: 'つよい じゅん' }), ul), win('のうりょく', abil)), ...logIfNarrow()); app.append(m); $('li.cur').focus();
+  m.append(el('div', { class: 'cols' }, win('ぶき', el('p', { style: 'margin:0;color:var(--wiz-color-text-sub)', text: 'つよい じゅん' }), ul), win('のうりょく', abil))); app.append(m); $('li.cur').focus();
 };
 function itemList(onSelect, onBack) {
   let f = 0; const F = ['すべて', 'ぶき', 'よろい', 'たて', 'アクセ'];
@@ -561,11 +560,11 @@ function itemList(onSelect, onBack) {
 screens.inventory = (where) => {
   const m = frame('もちもの');
   const back = () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu');
-  m.append(win('もちもの', el('p', { style: 'margin:0', text: 'もちもの 23／50' }), itemList((it) => show('confirmDiscard', where, it), back)), ...logIfNarrow()); app.append(m); $('li.cur')?.focus();
+  m.append(win('もちもの', el('p', { style: 'margin:0', text: 'もちもの 23／50' }), itemList((it) => show('confirmDiscard', where, it), back))); app.append(m); $('li.cur')?.focus();
 };
 screens.confirmDiscard = (where, it) => {
   const m = frame('もちもの');
-  m.append(win('かくにん', el('p', { style: 'margin:0 0 8px', text: `${it.name}［${it.R}］を すてますか？` }), menu('かくにん', [{ text: 'はい', go: () => { say(`${it.name}［${it.R}］を すてた`); show('inventory', where); } }, { text: 'いいえ', go: () => show('inventory', where) }], { initial: 1, onCancel: () => show('inventory', where) })), ...logIfNarrow());
+  m.append(win('かくにん', el('p', { style: 'margin:0 0 8px', text: `${it.name}［${it.R}］を すてますか？` }), menu('かくにん', [{ text: 'はい', go: () => { say(`${it.name}［${it.R}］を すてた`); show('inventory', where); } }, { text: 'いいえ', go: () => show('inventory', where) }], { initial: 1, onCancel: () => show('inventory', where) })));
   app.append(m); $('li.cur').focus();
 };
 screens.swap = () => {
@@ -581,9 +580,9 @@ screens.swapList = () => {
 };
 screens.statusScreen = (where) => {
   const m = frame('ステータス');
-  // 狭い画面だけの画面（広い画面は宿屋に出す。GUI-0003 §3）
+  // 狭い画面だけの画面（広い画面は宿屋に出す。GUI-0003 §3）。メッセージ欄は置かない
   m.append(el('div', { class: 'cols' }, statusFull(), records()),
-    win(null, menu('ステータス', [{ text: 'もどる', go: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') }], { onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') })), logWin());
+    win(null, menu('ステータス', [{ text: 'もどる', go: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') }], { onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') })));
   app.append(m);
 };
 screens.error = () => {
@@ -612,7 +611,7 @@ function fit() {
     const fpvMax = top ? top.clientWidth - (MAP_MIN + frameOf(mapWin)) - 8 : 320;
     fpv.style.setProperty('--fpv-w', fpvMax + 'px');
     const over = document.documentElement.scrollHeight - window.innerHeight;
-    if (over > 0) { const h = Math.max(150, fpv.offsetHeight - over); fpv.style.setProperty('--fpv-w', Math.floor(h * 4 / 3) + 'px'); }
+    if (over > 0) { const h = Math.max(130, fpv.offsetHeight - over); fpv.style.setProperty('--fpv-w', Math.floor(h * 4 / 3) + 'px'); }
     // 広い画面の地図：疑似3D の右に残った幅と、上の段の高さの小さい方の 9 割にする（一回り小さく。GUI-0004 §1.3）
     if (mapSvgEl) {
       const left = top.firstElementChild, room = Math.min(top.clientWidth - left.offsetWidth - 8, left.offsetHeight) - frameOf(mapWin);
