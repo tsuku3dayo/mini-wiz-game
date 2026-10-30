@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-EP-0009（v1.0）
-  - docs/specification-ja.md (v1.1) §12.2、§16.5、§26
+  - docs/specification-ja.md (v1.2) §12.2、§16.5、§26
 verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 

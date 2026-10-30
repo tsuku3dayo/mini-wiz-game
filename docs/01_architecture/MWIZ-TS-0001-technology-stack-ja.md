@@ -3,14 +3,14 @@ id: MWIZ-TS-0001
 type: Technology Stack
 title: WIZ 技術スタック
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-10-30
 sources:
-  - MWIZ-PB-0001（v1.0）
+  - MWIZ-PB-0001（v1.1）
   - MWIZ-SA-0001（v1.0）
-  - docs/specification-ja.md (v1.1) §18、§19、§29、§30
+  - docs/specification-ja.md (v1.2) §18、§19、§29、§30
   - mini-blockbreaking-game package.json (v1.0.0)、doc/01_architecture/MBRK-TS-0001（v1.0）
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # 技術スタック（technology-stack）
@@ -31,7 +31,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 | 効果音・BGM | Web Audio API（ブラウザ標準） | — | 音声ファイル・音のライブラリなし。[ADR-0008](MWIZ-ADR-0008-architecture-decision-ja.md) |
 | 保存 | localStorage（ブラウザ標準）、`navigator.storage.persist()` | — | [ADR-0006](MWIZ-ADR-0006-architecture-decision-ja.md) |
 | フォント | 端末のフォント | — | 同梱しない。[ADR-0010](MWIZ-ADR-0010-architecture-decision-ja.md) |
-| 画像 | 敵の絵 6 枚（PNG、64×64。オーナーが持ち込む）、アイコン（スクリプトで作る） | — | 仕様書 §13・§30.5 |
+| 画像 | 敵の絵 6 枚（PNG、256×256。オーナーが用意した）、アイコン（スクリプトで作る） | — | 仕様書 §13・§30.5 |
 
 **実行時の依存はない**（`dependencies` は空）。外部のライブラリ（UI フレームワーク・状態管理・ルーター・ゲームエンジン・3D・音・アニメーション・乱数・Web フォント）は使わない。
 
@@ -45,7 +45,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 | アクセシビリティの検査 | @axe-core/playwright | ^4.10 | 各画面と主な状態を E2E から検査（`mini-blockbreaking-game` にはない追加） |
 | Lint | ESLint + typescript-eslint | ^10.12 / ^8.71 | `innerHTML` / `outerHTML` への代入の禁止、層の決まり（[ADR-0003](MWIZ-ADR-0003-architecture-decision-ja.md)）。フォーマッタは入れない |
 | 成果物の検査 | `scripts/check-dist.mjs`（`mini-blockbreaking-game` から流用） | — | manifest・アイコン・`boot.js`・アプリ識別子・敵の絵・Web フォントがないこと |
-| 成果物の整合性の検査 | `scripts/check-docs.mjs`（同上。接頭辞 `MWIZ`・置き場所 `docs/` に合わせる） | — | `docs/workflow.txt` の「整合性チェックの自動化」 |
+| 成果物の整合性の検査 | `scripts/check-docs.mjs`（同上。接頭辞 `MWIZ`・置き場所 `docs/` に合わせる） | — | `docs/SDD-PROCESS_v3.md` §7.2「自動化」 |
 | アイコン生成 | `scripts/make-icons.mjs`（同上。図柄だけ変える） | — | 192 / 512 / maskable / apple-touch-icon / SVG |
 
 ## 3. 道具とプラットフォーム

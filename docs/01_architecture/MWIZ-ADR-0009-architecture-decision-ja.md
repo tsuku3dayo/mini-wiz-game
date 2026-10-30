@@ -3,21 +3,21 @@ id: MWIZ-ADR-0009
 type: Architecture Decision
 title: 新しい版は「更新」で切り替え、起動に失敗したらこのアプリのキャッシュだけ消して直す
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-10-30
 sources:
-  - MWIZ-PB-0001（v1.0）§9
-  - docs/specification-ja.md (v1.1) §11.12、§16.6、§30.1、§30.3、§30.4
-  - docs/workflow.txt（01 で先に確かめておくこと）
+  - MWIZ-PB-0001（v1.1）§9
+  - docs/specification-ja.md (v1.2) §11.12、§16.6、§30.1、§30.3、§30.4
+  - docs/SDD-PROCESS_v3.md §8「00〜02」（v1.0 では docs/workflow.txt「01 で先に確かめておくこと」）
   - mini-blockbreaking-game public/boot.js・src/pwa.ts（v1.0.0）
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # ADR-0009 新しい版は「更新」で切り替え、起動に失敗したらこのアプリのキャッシュだけ消して直す
 
 ## 状況
 
-PWA は Service Worker で全ファイルをキャッシュするので、新しい版を公開しても、利用者の端末では古い版が動き続ける。勝手に切り替えると、遊んでいる途中で画面が読み込み直される。古いキャッシュと新しいファイルが食い違うと、起動しなくなることがある。workflow.txt は、PWA の更新の切り替え方と起動に失敗したときの復旧を 01 で決めておくよう求めている。同じサイトにはほかのアプリ（`mini-blockbreaking-game`）も載る。
+PWA は Service Worker で全ファイルをキャッシュするので、新しい版を公開しても、利用者の端末では古い版が動き続ける。勝手に切り替えると、遊んでいる途中で画面が読み込み直される。古いキャッシュと新しいファイルが食い違うと、起動しなくなることがある。開発の手順書（SDD-PROCESS_v3.md §8。この ADR を決めたときは workflow.txt）は、PWA の更新の切り替え方と起動に失敗したときの復旧を先に決めておくよう求めている。同じサイトにはほかのアプリ（`mini-blockbreaking-game`）も載る。
 
 ## 決定
 
