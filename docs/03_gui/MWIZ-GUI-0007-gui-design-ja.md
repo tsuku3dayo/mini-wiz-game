@@ -6,14 +6,14 @@ status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
-  - MWIZ-GUI-0001（v1.0）
+  - MWIZ-GUI-0001（v1.1）
   - MWIZ-US-0002（v1.0）
   - MWIZ-US-0004（v1.0）
   - MWIZ-US-0005（v1.0）
-  - MWIZ-US-0012（v1.0）
+  - MWIZ-US-0012（v1.1）
   - MWIZ-US-0019（v1.0）
   - MWIZ-US-0031（v1.0）
-  - docs/specification-ja.md (v1.1) §11.8、§11.9、§11.12、§30.2、§30.4
+  - docs/specification-ja.md (v1.2) §11.8、§11.9、§11.12、§30.2、§30.4
 verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 

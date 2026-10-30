@@ -6,8 +6,8 @@ status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
-  - MWIZ-PB-0001（v1.0）
-  - docs/specification-ja.md (v1.1) §4.3、§6.3、§9、§11.5、§11.7、§16.1、§16.2
+  - MWIZ-PB-0001（v1.1）
+  - docs/specification-ja.md (v1.2) §4.3、§6.3、§9、§11.5、§11.7、§16.1、§16.2
 verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ---
 
