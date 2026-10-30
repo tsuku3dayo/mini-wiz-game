@@ -96,6 +96,12 @@ ul.menu li.cur { color: var(--wiz-color-secondary); }
 ul.menu li.cur::before { content: "▶"; }
 ul.menu li[aria-disabled="true"] { color: var(--wiz-color-disabled); }
 ul.menu li .sub { color: var(--wiz-color-text-sub); margin-left: 16px; }
+/* マウスで操作する広い画面（PC）は、行間を詰めてメッセージ欄・ステータスと同じ行の高さにする（GUI-0001 §4.1）。
+   指で触る画面は 44px のまま（スマートフォンで押し間違えたため） */
+@media (min-width: 600px) and (pointer: fine) {
+  ul.menu li { min-height: 0; padding: 0; }
+  ul.menu li:focus-visible { outline: none; }  /* 枠が上下の行に重なるので、カーソルは ▶ と色で示す */
+}
 @media (hover: hover) { ul.menu li:hover { color: var(--wiz-color-secondary); } }
 
 /* ボタン */
@@ -168,6 +174,15 @@ dl.status .warn { color: var(--wiz-color-warning); }
 /* 2 カラム（広い画面だけ） */
 .cols { display: grid; gap: 16px; }
 @media (min-width: 600px) { .cols { grid-template-columns: 1fr 1fr; align-items: start; } }
+.cols.tight { gap: var(--gap); }
+.stack { display: grid; gap: var(--gap); align-content: start; }
+/* 広い画面のダンジョン：右上に地図、右下に小さい移動ボタンと階段・メニューのボタン（GUI-0004 §1.3） */
+.cols > .map-win { justify-self: end; }
+.btns { display: flex; gap: var(--gap); justify-content: flex-end; }
+.btns .movepad { grid-template-columns: repeat(3, minmax(48px, auto)); grid-template-rows: 48px 48px; }
+.btns .movepad .btn { padding: 0 8px; white-space: nowrap; }
+.btns .actions-col { display: grid; gap: var(--gap); grid-template-rows: 48px 48px; }
+.btns .actions-col .btn { padding: 0 8px; white-space: nowrap; }
 
 /* 装備 */
 .slot-row { display: grid; grid-template-columns: 3.5em 1fr; }
@@ -343,7 +358,12 @@ function mapSvg() {
 
 // ---- 画面 ----
 const screens = {};
-function show(name, ...args) { app.replaceChildren(); window.scrollTo(0, 0); screens[name](...args); trimLog(); document.body.dataset.screen = name; fit(); $('#proto-vp').textContent = vpText(); }
+// 広い画面（600px 以上）は並べ方を変える。幅が境目をまたいだら、いまの画面を描き直す
+const wideMq = matchMedia('(min-width: 600px)');
+const isWide = () => wideMq.matches;
+let lastShow = ['title', []];
+wideMq.addEventListener('change', () => show(lastShow[0], ...lastShow[1]));
+function show(name, ...args) { lastShow = [name, args]; app.replaceChildren(); window.scrollTo(0, 0); screens[name](...args); trimLog(); document.body.dataset.screen = name; fit(); $('#proto-vp').textContent = vpText(); }
 
 screens.title = () => {
   lines = [];
@@ -386,12 +406,16 @@ screens.inn = (keep) => {
     { text: 'ダンジョンへ', go: () => { lines = [{ text: 'ダンジョンに ふみこんだ' }]; show('dungeon', true); } },
     { text: 'タイトルへ戻る', go: () => show('confirmQuit') },
   ]);
-  // 上から ステータス → メッセージ欄 → コマンド。間を空けずに詰める（GUI-0003 §1）
-  m.append(statusFull(), logWin(), win(null, cmd)); app.append(m);
+  innLayout(m, win(null, cmd)); app.append(m);
 };
+// 狭い画面：上から ステータス → メッセージ欄 → 操作。広い画面：左にステータス・右に操作、その下にメッセージ欄（GUI-0003 §1）
+function innLayout(m, ops) {
+  if (isWide()) m.append(el('div', { class: 'cols tight' }, statusFull(), ops), logWin());
+  else m.append(statusFull(), logWin(), ops);
+}
 screens.confirmQuit = () => {
   const m = frame('宿屋');
-  m.append(statusFull(), logWin(), win('かくにん', el('p', { style: 'margin:0 0 8px', text: 'プレイ中の ぼうけんは きえます。よろしいですか？' }),
+  innLayout(m, win('かくにん', el('p', { style: 'margin:0 0 8px', text: 'プレイ中の ぼうけんは きえます。よろしいですか？' }),
     menu('かくにん', [{ text: 'はい', go: () => show('title') }, { text: 'いいえ', go: () => show('inn', true) }], { initial: 1, onCancel: () => show('inn', true) })));
   app.append(m); $('li.cur').focus();
 };
@@ -401,7 +425,7 @@ function gameMenu(where) {
   items.push({ text: 'そうび', go: () => show('equip', where) }, { text: 'もちもの', go: () => show('inventory', where) }, { text: 'ステータス', go: () => show('statusScreen', where) }, { text: 'おと：オフ', go: () => say('おとを オンにした') });
   return win('メニュー', menu(`メニュー（${where === 'dungeon' ? 'ダンジョン' : '宿屋'}）`, items, { initial: 1, onCancel: () => show(where, true) }));
 }
-screens.innMenu = () => { const m = frame('宿屋'); m.append(statusFull(), logWin(), gameMenu('inn')); app.append(m); $('li.cur').focus(); };
+screens.innMenu = () => { const m = frame('宿屋'); innLayout(m, gameMenu('inn')); app.append(m); $('li.cur').focus(); };
 
 let bump = false;
 screens.dungeon = (keep) => {
@@ -415,19 +439,28 @@ screens.dungeon = (keep) => {
     mv('左を向く', 'l', '← 左', () => say('（試作）ひだりを むいた')),
     mv('右を向く', 'r', '右 →', () => say('（試作）みぎを むいた')),
     mv('後退', 'down', '↓ 後退', () => { bump = true; lines = [...lines, { text: 'かべだ' }].slice(-LOG_MAX); show('dungeon', true); }));
-  const controls = el('div', { class: 'controls' }, win(null, mapSvg()), pad);
-  controls.firstChild.classList.add('map-win');
-  const actions = el('div', { class: 'actions' },
-    el('button', { class: 'btn', type: 'button', text: '↓ おりる', onclick: () => { lines = [{ text: 'スライムが あらわれた！' }]; show('battle'); } }),
-    el('button', { class: 'btn menu-btn', type: 'button', text: '≡ メニュー', onclick: () => show('dungeonMenu') }));
-  // 上から 階と向き → 疑似3D → メッセージ欄 → ステータス → 地図と移動ボタン → 操作の行（GUI-0004 §1）
-  m.append(head, fpv, logWin(), statusRow(), controls, actions);
+  const mapWin = win(null, mapSvg()); mapWin.classList.add('map-win');
+  const stairs = el('button', { class: 'btn', type: 'button', text: '↓ おりる', onclick: () => { lines = [{ text: 'スライムが あらわれた！' }]; show('battle'); } });
+  const menuBtn = el('button', { class: 'btn menu-btn', type: 'button', text: '≡ メニュー', onclick: () => show('dungeonMenu') });
+  if (isWide()) {
+    // 広い画面：右上に地図。下は左にメッセージ欄、右にステータスと小さい移動ボタン・階段・メニューのボタン（GUI-0004 §1.3）
+    m.append(el('div', { class: 'cols tight' }, el('div', { class: 'stack' }, head, fpv), mapWin),
+      el('div', { class: 'cols tight' }, logWin(), el('div', { class: 'stack' }, statusRow(), el('div', { class: 'btns' }, pad, el('div', { class: 'actions-col' }, stairs, menuBtn)))));
+  } else {
+    // 上から 階と向き → 疑似3D → メッセージ欄 → ステータス → 地図と移動ボタン → 操作の行（GUI-0004 §1）
+    m.append(head, fpv, logWin(), statusRow(), el('div', { class: 'controls' }, mapWin, pad), el('div', { class: 'actions' }, stairs, menuBtn));
+  }
   app.append(m);
 };
-// 狭い画面のメニュー：地図・移動ボタンの場所に出す（GUI-0004 §3）
+// メニュー：狭い画面は地図・移動ボタンの場所、広い画面は右下のボタンの場所に出す（GUI-0004 §3）
 screens.dungeonMenu = () => {
   const m = frame('ダンジョン', { hideNarrow: true });
-  m.append(el('h2', { class: 'loc', text: '3F　北' }), el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS)), logWin(), statusRow(), gameMenu('dungeon'));
+  const loc = el('h2', { class: 'loc', text: '3F　北' }), fpv = el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS));
+  if (isWide()) {
+    const mapWin = win(null, mapSvg()); mapWin.classList.add('map-win');
+    m.append(el('div', { class: 'cols tight' }, el('div', { class: 'stack' }, loc, fpv), mapWin),
+      el('div', { class: 'cols tight' }, logWin(), el('div', { class: 'stack' }, statusRow(), gameMenu('dungeon'))));
+  } else m.append(loc, fpv, logWin(), statusRow(), gameMenu('dungeon'));
   app.append(m); $('li.cur').focus();
 };
 screens.battle = (boss) => {
@@ -442,8 +475,11 @@ screens.battle = (boss) => {
     { text: 'ヒール', go: () => say('ゆうしゃは ヒールを となえた！ HP が 15 かいふくした', 'success') },
     { text: 'にげる', disabled: !!boss, reason: 'にげられない！', go: () => { lines = [{ text: 'うまく にげきれた' }]; show('dungeon', true); } },
   ]));
-  // 上から 敵 → メッセージ欄 → ステータス → コマンド。間を空けずに詰める（GUI-0005 §1）
-  m.append(enemy, logWin(), statusRow(), cmd); app.append(m);
+  // 狭い画面：上から 敵 → メッセージ欄 → ステータス → コマンド。間を空けずに詰める（GUI-0005 §1）
+  // 広い画面：敵の下を左右に分け、左にメッセージ欄、右の上にステータス・右の下にコマンド（GUI-0005 §1.1）
+  if (isWide()) m.append(enemy, el('div', { class: 'cols tight' }, logWin(), el('div', { class: 'stack' }, statusRow(), cmd)));
+  else m.append(enemy, logWin(), statusRow(), cmd);
+  app.append(m);
 };
 screens.clear = () => {
   lines = [{ text: 'ダンジョンに 平和が もどった', tone: 'success' }];
@@ -466,6 +502,8 @@ const ITEMS = [
   { slot: 'アクセ', name: 'ウィンドブーツ', r: 'n', R: 'N', b: ['すばやさ +3'] },
   { slot: 'よろい', name: 'クロースアーマー', r: 'r', R: 'R', b: ['ぼうぎょ +2'] },
 ];
+// そうび・もちものの画面は、広い画面ではメッセージ欄を置かない（GUI-0006）
+const logIfNarrow = () => (isWide() ? [] : [logWin()]);
 const itemLabel = (it, showSlot) => el('span', { class: 'item' }, showSlot ? el('span', { class: 'slot', text: `［${it.slot}］` }) : null, el('span', { class: 'rar-' + it.r, text: `${it.name}［${it.R}］` }), it.b.map((t) => el('span', { class: 'bonus', text: t })));
 screens.equip = (where) => {
   const m = frame('そうび');
@@ -474,7 +512,7 @@ screens.equip = (where) => {
   const ul = menu('そうび', slots, { initial: 1, onCancel: () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu') });
   [...ul.children].slice(1).forEach((li, i) => { const s = slots[i + 1]; li.append(el('span', { class: 'slot-row' }, el('span', { text: s.slot }), s.it ? itemLabel(s.it) : el('span', { class: 'slot', style: 'color:var(--wiz-color-text-sub)', text: '―― なし ――' }))); });
   const abil = el('dl', { class: 'status' }, ...[['こうげき', ' 58 =  28 + 30'], ['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
-  m.append(el('div', { class: 'cols' }, win('そうび', ul), win('のうりょく', abil)), logWin()); app.append(m); $('li.cur').focus();
+  m.append(el('div', { class: 'cols' }, win('そうび', ul), win('のうりょく', abil)), ...logIfNarrow()); app.append(m); $('li.cur').focus();
 };
 screens.equipCand = (where) => {
   const m = frame('そうび');
@@ -483,7 +521,7 @@ screens.equipCand = (where) => {
   const ul = menu('そうび', items, { initial: 2, onCancel: () => show('equip', where) });
   [...ul.children].slice(2).forEach((li, i) => li.append(itemLabel(cands[i])));
   const abil = el('dl', { class: 'status' }, el('dt', { text: 'こうげき' }), el('dd', { class: 'diff-up', text: ' 58 →  76 ↑' }), ...[['ぼうぎょ', ' 55 =  25 + 30'], ['すばやさ', ' 22 =  22 + 0'], ['さいだいHP', '135 = 120 + 15'], ['さいだいMP', ' 43 =  43 + 0']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })]));
-  m.append(el('div', { class: 'cols' }, win('ぶき', el('p', { style: 'margin:0;color:var(--wiz-color-text-sub)', text: 'つよい じゅん' }), ul), win('のうりょく', abil)), logWin()); app.append(m); $('li.cur').focus();
+  m.append(el('div', { class: 'cols' }, win('ぶき', el('p', { style: 'margin:0;color:var(--wiz-color-text-sub)', text: 'つよい じゅん' }), ul), win('のうりょく', abil)), ...logIfNarrow()); app.append(m); $('li.cur').focus();
 };
 function itemList(onSelect, onBack) {
   let f = 0; const F = ['すべて', 'ぶき', 'よろい', 'たて', 'アクセ'];
@@ -504,11 +542,11 @@ function itemList(onSelect, onBack) {
 screens.inventory = (where) => {
   const m = frame('もちもの');
   const back = () => show(where === 'dungeon' ? 'dungeonMenu' : 'innMenu');
-  m.append(win('もちもの', el('p', { style: 'margin:0', text: 'もちもの 23／50' }), itemList((it) => show('confirmDiscard', where, it), back)), logWin()); app.append(m); $('li.cur')?.focus();
+  m.append(win('もちもの', el('p', { style: 'margin:0', text: 'もちもの 23／50' }), itemList((it) => show('confirmDiscard', where, it), back)), ...logIfNarrow()); app.append(m); $('li.cur')?.focus();
 };
 screens.confirmDiscard = (where, it) => {
   const m = frame('もちもの');
-  m.append(win('かくにん', el('p', { style: 'margin:0 0 8px', text: `${it.name}［${it.R}］を すてますか？` }), menu('かくにん', [{ text: 'はい', go: () => { say(`${it.name}［${it.R}］を すてた`); show('inventory', where); } }, { text: 'いいえ', go: () => show('inventory', where) }], { initial: 1, onCancel: () => show('inventory', where) })), logWin());
+  m.append(win('かくにん', el('p', { style: 'margin:0 0 8px', text: `${it.name}［${it.R}］を すてますか？` }), menu('かくにん', [{ text: 'はい', go: () => { say(`${it.name}［${it.R}］を すてた`); show('inventory', where); } }, { text: 'いいえ', go: () => show('inventory', where) }], { initial: 1, onCancel: () => show('inventory', where) })), ...logIfNarrow());
   app.append(m); $('li.cur').focus();
 };
 screens.swap = () => {
