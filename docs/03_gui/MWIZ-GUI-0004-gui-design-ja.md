@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0004
 type: GUI Design
 title: ダンジョン画面
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
@@ -15,7 +15,7 @@ sources:
   - MWIZ-US-0018（v1.0）
   - MWIZ-US-0021（v1.0）
   - docs/specification-ja.md (v1.1) §4.8、§11.4、§11.5、§11.8
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 
 # GUI-0004 ダンジョン画面（`#/dungeon`）

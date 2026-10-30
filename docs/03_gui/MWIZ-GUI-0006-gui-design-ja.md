@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0006
 type: GUI Design
 title: 装備画面・もちもの画面・入れ替えの画面
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-US-0029（v1.0）
   - MWIZ-US-0030（v1.0）
   - docs/specification-ja.md (v1.1) §8.4、§8.6、§8.7、§11.5、§11.7
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 
 # GUI-0006 装備画面・もちもの画面・入れ替えの画面

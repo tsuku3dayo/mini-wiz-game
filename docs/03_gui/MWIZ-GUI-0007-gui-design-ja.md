@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0007
 type: GUI Design
 title: 演出・エラー・更新の帯・インストールの案内・起動の失敗
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
@@ -14,7 +14,7 @@ sources:
   - MWIZ-US-0019（v1.0）
   - MWIZ-US-0031（v1.0）
   - docs/specification-ja.md (v1.1) §11.8、§11.9、§11.12、§30.2、§30.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 
 # GUI-0007 演出・エラー・更新の帯・インストールの案内・起動の失敗

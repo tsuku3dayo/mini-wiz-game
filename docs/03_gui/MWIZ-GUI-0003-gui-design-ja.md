@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0003
 type: GUI Design
 title: 宿屋・メニュー・ステータス画面
-status: review
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
@@ -14,7 +14,7 @@ sources:
   - MWIZ-US-0026（v1.0）
   - MWIZ-US-0032（v1.0）
   - docs/specification-ja.md (v1.1) §7.2、§9.4、§11.4、§11.5、§11.6、§11.7
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 
 # GUI-0003 宿屋・メニュー・ステータス画面
