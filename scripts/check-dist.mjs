@@ -1,5 +1,5 @@
 // npm run build の後に dist/ を確かめる（仕様書 §29.4）
-// TASK ごとに確かめることを足していく：boot.js（TASK-0003）・敵の絵（TASK-0018）
+// TASK ごとに確かめることを足していく：敵の絵（TASK-0018）
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,7 +19,12 @@ if (!exists('index.html')) {
   if (!html.includes(`<meta name="app-id" content="${pkg.name}"`)) errors.push(`index.html に <meta name="app-id" content="${pkg.name}"> がない`);
   if (html.includes('__APP_ID__')) errors.push('index.html に __APP_ID__ が置き換わらずに残っている');
   if (!html.includes('<html lang="ja">')) errors.push('index.html の <html> に lang="ja" がない');
+  // 起動の見張り（仕様書 §30.4）
+  if (!html.includes('id="boot-error"')) errors.push('index.html に #boot-error がない');
+  if (!/<script src="\.\/boot\.js"><\/script>/.test(html)) errors.push('index.html が boot.js を読み込んでいない');
 }
+if (!exists('boot.js')) errors.push('boot.js がない');
+else if (!read('boot.js').includes('__appStarted')) errors.push('boot.js が __appStarted を見ていない');
 
 // manifest と Service Worker（仕様書 §30.1）
 if (!exists('manifest.webmanifest')) errors.push('manifest.webmanifest がない');

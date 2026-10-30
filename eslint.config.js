@@ -70,6 +70,8 @@ export default tseslint.config(
   {
     files: ['public/**/*.js'],
     languageOptions: { sourceType: 'script', globals: globals.browser },
+    // ES5 相当で書くので catch の引数を省けない（使わなくてよい）
+    rules: { '@typescript-eslint/no-unused-vars': ['error', { caughtErrors: 'none' }] },
   },
   {
     files: ['tests/**/*.ts', 'scripts/**/*.mjs', '*.config.{js,ts}'],

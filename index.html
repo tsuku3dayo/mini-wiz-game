@@ -13,9 +13,12 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <title>WIZ ～死霊術師の迷宮～</title>
+    <!-- 起動の見張り（ビルドを通さない。main.ts より先に読む。仕様書 §27.1・§30.4） -->
+    <script src="./boot.js"></script>
   </head>
   <body>
     <div id="app"></div>
+    <div id="boot-error" hidden></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
