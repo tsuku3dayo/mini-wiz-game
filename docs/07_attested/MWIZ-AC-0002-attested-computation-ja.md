@@ -2,7 +2,7 @@
 id: MWIZ-AC-0002
 type: Attested Computation
 title: PWA（manifest・アイコン・オフライン・インストールの案内）の実施記録
-status: draft
+status: review
 version: 1.0
 updated: 2026-10-30
 sources:
@@ -49,8 +49,20 @@ verified: null
 
 CI の結果（PR #28、2026-10-30）：`check`（verify）OK 14 秒、`e2e` OK 32 秒。
 
+### WS-0001 の終わりの手動テスト（2026-10-30、オーナー）
+
+WS-0001 には手動の確認 ID がない（作業計画の点検で、あとの TASK に移した）。そのため、公開 URL を実機で開き、この WS で作ったものが動くことだけを確かめた。
+
+| # | 確かめたこと | 端末 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 公開 URL（https://tsuku3dayo.github.io/mini-wiz-game/ ）が開く | iPhone 11 の Safari | OK |
+| 2 | タイトル画面（WIZ・はじめから・インストール・v1.0）が出る | iPhone 11 の Safari | OK |
+| 3 | 「インストール」で案内が開き、iPhone の手順が開いている | iPhone 11 の Safari | OK |
+| 4 | 1〜3 と同じように開く | PC のブラウザ | OK |
+
 ## 3. 確認できなかったこと
 
+- Android の実機はないので、Android での確認はしていない（E2E の pixel7 で代わりに確かめた。TST-0001 §6）。
 - 手動の確認 ID はこの TASK にない（ホーム画面への追加の実機の確認 TC-0002-07 は、作業計画の点検で TASK-0009 に移した）。
 - 「今すぐインストール」で、ブラウザの本物のインストールの確認が出ることは、E2E では作れない（偽のイベントで `prompt()` が呼ばれることまで確かめた）。
 
@@ -66,4 +78,4 @@ CI の結果（PR #28、2026-10-30）：`check`（verify）OK 14 秒、`e2e` OK 
 - [x] 設計と違う作りにしたら、TD・GUI を直した（アイコンの値を TD-0005 §2.1 に足した）
 - [x] AC-0002（draft）に自動テストの結果を書き、同じ PR に入れた
 - [x] PR の CI が緑（PR #28）
-- [ ] マージされた（マージ = 公開）
+- [x] マージされた（マージ = 公開。公開 URL で開けることを WS の終わりの手動テストで確かめた）
