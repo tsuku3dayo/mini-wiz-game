@@ -420,13 +420,14 @@ screens.dungeon = (keep) => {
   const actions = el('div', { class: 'actions' },
     el('button', { class: 'btn', type: 'button', text: '↓ おりる', onclick: () => { lines = [{ text: 'スライムが あらわれた！' }]; show('battle'); } }),
     el('button', { class: 'btn menu-btn', type: 'button', text: '≡ メニュー', onclick: () => show('dungeonMenu') }));
-  m.append(head, fpv, statusRow(), logWin(), controls, actions);
+  // 上から 階と向き → 疑似3D → メッセージ欄 → ステータス → 地図と移動ボタン → 操作の行（GUI-0004 §1）
+  m.append(head, fpv, logWin(), statusRow(), controls, actions);
   app.append(m);
 };
 // 狭い画面のメニュー：地図・移動ボタンの場所に出す（GUI-0004 §3）
 screens.dungeonMenu = () => {
   const m = frame('ダンジョン', { hideNarrow: true });
-  m.append(el('h2', { class: 'loc', text: '3F　北' }), el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS)), statusRow(), logWin(), gameMenu('dungeon'));
+  m.append(el('h2', { class: 'loc', text: '3F　北' }), el('div', { class: 'fpv', id: 'fpv' }, fpvSvg(SAMPLE_DEPTHS)), logWin(), statusRow(), gameMenu('dungeon'));
   app.append(m); $('li.cur').focus();
 };
 screens.battle = (boss) => {
