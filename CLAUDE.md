@@ -16,9 +16,9 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## 開発フロー
 
-`docs/SDD-PROCESS_v2.md` に沿って進める（2026-10-30 に `docs/workflow.txt` から切り替えた。workflow.txt は、それを根拠にした承認済みの成果物のために残す）。**「承認」の地点では、オーナーが承認するまで次の段階に進まない。** 成果物を作ったら、承認を求めて止まる。
+`docs/SDD-PROCESS_v3.md` に沿って進める（2026-10-30 に `docs/workflow.txt` から v2 に切り替え、同じ日に日本語と解説の決まりを足して v3 にした。workflow.txt は、それを根拠にした承認済みの成果物のために残す）。**「承認」の地点では、オーナーが承認するまで次の段階に進まない。** 成果物を作ったら、承認を求めて止まる。
 
-SDD-PROCESS_v2.md は汎用の書き方なので、このリポジトリでは次のように読み替える。食い違うときは CLAUDE.md の決まりを優先する。
+SDD-PROCESS_v3.md は汎用の書き方なので、このリポジトリでは次のように読み替える。食い違うときは CLAUDE.md の決まりを優先する。
 
 - `doc/` → `docs/`、仕様書 `doc/specification.md` → `docs/specification-ja.md`、`<PREFIX>` → `MWIZ`
 - 成果物のフォルダ（§3.1 の表）→ 下の「成果物の書式」の表（例：`doc/00-project-brief` → `docs/00_brief/`）
@@ -26,10 +26,10 @@ SDD-PROCESS_v2.md は汎用の書き方なので、このリポジトリでは�
 
 00 project-brief（承認）→ 01 システム構成（承認）→ 02 要件・ユーザーストーリー（承認）→ 03 画面設計（承認）→ 04 詳細設計 → 05 テスト / 06 作業計画（並行）→ 07 実装・自動テスト → 手動テスト → attested-computation（承認）・ふりかえり。07〜attested-computation は WS ごとにくり返し、最後の WS のあとリリース（承認）。完了したら再現開発仕様書（`docs/reproduction-specification.md`）を最新にし、ふりかえりをまとめる。
 
-- 工程ごとのチェックリストは SDD-PROCESS_v2.md §4、整合性チェックは §7、先に確かめておくことは §8。
-- ふりかえり（YWT）は WS の終わり・リリース・完了ごとに `docs/retrospectives/` に書く（§9）。T は次の WS の前に SDD-PROCESS_v2.md に反映する。
+- 工程ごとのチェックリストは SDD-PROCESS_v3.md §4、整合性チェックは §7、先に確かめておくことは §8。
+- ふりかえり（YWT）は WS の終わり・リリース・完了ごとに `docs/retrospectives/` に書く（§9）。T は次の WS の前に SDD-PROCESS_v3.md に反映する。
 
-途中で仕様を変えるときは、`docs/spec-<版>-<内容>` ブランチで依頼を `docs/requests/<日付>-spec-<版>-<内容>.md` に記録（影響の一覧つき）→ 進めるかの承認 → 仕様書の版を上げる → 影響する承認済みの成果物を版上げして再承認 → TD・TC・TST を直し修正用の WS・TASK を足す → 07、の順に進める（SDD-PROCESS_v2.md §2.2・§6）。
+途中で仕様を変えるときは、`docs/spec-<版>-<内容>` ブランチで依頼を `docs/requests/<日付>-spec-<版>-<内容>.md` に記録（影響の一覧つき）→ 進めるかの承認 → 仕様書の版を上げる → 影響する承認済みの成果物を版上げして再承認 → TD・TC・TST を直し修正用の WS・TASK を足す → 07、の順に進める（SDD-PROCESS_v3.md §2.2・§6）。
 
 ## Git の運用
 
