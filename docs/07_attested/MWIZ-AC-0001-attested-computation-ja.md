@@ -2,14 +2,14 @@
 id: MWIZ-AC-0001
 type: Attested Computation
 title: 開発の土台と公開 の実施記録
-status: draft
+status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
   - MWIZ-TASK-0001（v1.0）
   - MWIZ-TC-0001（v1.0）
   - MWIZ-TC-0006（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T18:26:47+09:00" }
 ---
 
 # AC-0001 開発の土台と公開 の実施記録
@@ -46,14 +46,25 @@ verified: null
 
 CI の結果（PR #25、2026-10-30）：`check`（verify）OK 16 秒、`e2e` OK 28 秒。
 
+### WS-0001 の終わりの手動テスト（2026-10-30、オーナー）
+
+WS-0001 には手動の確認 ID がない（作業計画の点検で、あとの TASK に移した）。そのため、公開 URL を実機で開き、この WS で作ったものが動くことだけを確かめた。
+
+| # | 確かめたこと | 端末 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 公開 URL（https://tsuku3dayo.github.io/mini-wiz-game/ ）が開く | iPhone 11 の Safari | OK |
+| 2 | タイトル画面（WIZ・はじめから・インストール・v1.0）が出る | iPhone 11 の Safari | OK |
+| 3 | 「インストール」で案内が開き、iPhone の手順が開いている | iPhone 11 の Safari | OK |
+| 4 | 1〜3 と同じように開く | PC のブラウザ | OK |
+
 ## 3. 確認できなかったこと
 
-- 公開（`pages.yml`）は main にマージされるまで動かない。公開 URL で開けるかは、マージの後に確かめる。
+- Android の実機はないので、Android での確認はしていない（E2E の pixel7 で代わりに確かめた。TST-0001 §6）。
 - 手動の確認 ID はこの TASK にない。
 
 ## 4. 後片付け
 
-- 手元の `vite preview`（スクリーンショット用）を止める。
+- 手元の `vite preview`（スクリーンショット用）を止めた。
 - `dist/`・`playwright-report/`・`test-results/` は `.gitignore` に入っている。
 
 ## 5. 完了の定義
@@ -64,4 +75,4 @@ CI の結果（PR #25、2026-10-30）：`check`（verify）OK 16 秒、`e2e` OK 
 - [x] 設計と違う作りにしたら、TD・GUI を直した（違う作りはない）
 - [x] AC-0001（draft）に自動テストの結果を書き、同じ PR に入れた
 - [x] PR の CI が緑（PR #25）
-- [ ] マージされた（マージ = 公開）
+- [x] マージされた（マージ = 公開。公開 URL で開けることを WS の終わりの手動テストで確かめた）
