@@ -1,5 +1,5 @@
 // npm run build の後に dist/ を確かめる（仕様書 §29.4）
-// TASK ごとに確かめることを足していく：アイコン（TASK-0002）・boot.js（TASK-0003）・敵の絵（TASK-0018）
+// TASK ごとに確かめることを足していく：boot.js（TASK-0003）・敵の絵（TASK-0018）
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,7 +30,16 @@ else {
   if (!m.start_url) errors.push('manifest に start_url がない');
   if (m.orientation !== 'portrait') errors.push('manifest の orientation が portrait でない');
   if (exists('index.html') && !read('index.html').includes('manifest.webmanifest')) errors.push('index.html が manifest.webmanifest を読み込んでいない');
+  // アイコン 192（any）・512（any）・512（maskable）が manifest にあり、ファイルもある
+  for (const [size, purpose] of [['192x192', 'any'], ['512x512', 'any'], ['512x512', 'maskable']]) {
+    const icon = (m.icons || []).find((i) => i.sizes === size && (i.purpose || 'any').split(' ').includes(purpose));
+    if (!icon) errors.push(`manifest にアイコン ${size}（${purpose}）がない`);
+    else if (!exists(icon.src)) errors.push(`アイコンのファイル ${icon.src} がない`);
+  }
 }
+// apple-touch-icon（iPhone のホーム画面）
+if (!exists('icons/apple-touch-icon.png')) errors.push('icons/apple-touch-icon.png がない');
+if (exists('index.html') && !/rel="apple-touch-icon"/.test(read('index.html'))) errors.push('index.html に apple-touch-icon の link がない');
 if (!exists('sw.js')) errors.push('sw.js がない');
 
 // Web フォントを同梱しない（端末のフォントを使う。ADR-0010）

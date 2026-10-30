@@ -54,4 +54,29 @@ body {
 @media (min-width: 600px) { .logo { font-size: 48px; } }
 .subtitle { margin: 0; text-align: center; color: var(--wiz-color-arcane); }
 .title-menu { width: 100%; max-width: 360px; margin: 0 auto; display: grid; }
-.version { margin: 0; text-align: right; color: var(--wiz-color-text-sub); }
+.title-sub { display: flex; align-items: center; justify-content: space-between; gap: var(--wiz-gap); }
+.version { margin: 0 0 0 auto; text-align: right; color: var(--wiz-color-text-sub); }
+
+/* インストールの案内（<dialog> のモーダル。二重線のウィンドウと同じ見た目。GUI-0007 §3） */
+.install-dialog {
+  width: min(92vw, 480px);
+  max-width: none;
+  padding: 16px;
+  background: var(--wiz-color-background);
+  color: var(--wiz-color-primary);
+  font: inherit;
+  border: 2px solid var(--wiz-window-line);
+  outline: 1px solid var(--wiz-window-line);
+  outline-offset: -6px;
+}
+.install-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.install-title { margin: 0 0 8px; font-size: 18px; line-height: 1.4; font-weight: normal; color: var(--wiz-color-frame); }
+.install-lead { margin: 0; }
+.install-dialog details { margin: 8px 0; }
+.install-dialog details p { margin: 4px 0 0 1em; }
+.install-dialog summary { min-height: 44px; display: flex; align-items: center; gap: 4px; cursor: pointer; list-style: none; }
+.install-dialog summary::-webkit-details-marker { display: none; }
+/* 開閉の印（▶ 閉じている・▼ 開いている。GUI-0007 §3） */
+.install-dialog summary::before { content: "▶"; color: var(--wiz-color-text-sub); }
+.install-dialog details[open] > summary::before { content: "▼"; }
+.install-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--wiz-gap); margin: 8px 0 0; }
