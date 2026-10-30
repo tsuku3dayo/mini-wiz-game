@@ -2,13 +2,13 @@
 id: MWIZ-US-0011
 type: User Story
 title: メッセージを読む
-status: review
+status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
   - MWIZ-EP-0002（v1.0）
   - docs/specification-ja.md (v1.2) §11.8、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # US-0011 メッセージを読む

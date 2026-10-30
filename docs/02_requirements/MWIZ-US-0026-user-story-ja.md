@@ -2,13 +2,13 @@
 id: MWIZ-US-0026
 type: User Story
 title: 実績とステータスを見る
-status: review
+status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
   - MWIZ-EP-0005（v1.0）
   - docs/specification-ja.md (v1.2) §9.4、§11.5、§11.7、§16.1
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # US-0026 実績とステータスを見る

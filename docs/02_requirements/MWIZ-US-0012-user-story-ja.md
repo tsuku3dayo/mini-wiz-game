@@ -2,13 +2,13 @@
 id: MWIZ-US-0012
 type: User Story
 title: できない操作・保存の失敗が分かる
-status: review
+status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
   - MWIZ-EP-0002（v1.0）
   - docs/specification-ja.md (v1.2) §10.3、§11.9、§16.2、§16.4、§21、§22.3
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # US-0012 できない操作・保存の失敗が分かる

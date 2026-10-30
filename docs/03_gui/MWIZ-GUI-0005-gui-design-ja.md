@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0005
 type: GUI Design
 title: 戦闘画面・ゲームクリア画面
-status: review
+status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
@@ -17,7 +17,7 @@ sources:
   - MWIZ-US-0025（v1.0）
   - MWIZ-US-0033（v1.1）
   - docs/specification-ja.md (v1.2) §5.8、§11.5、§11.6、§11.8、§13.2
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
 # GUI-0005 戦闘画面・ゲームクリア画面
