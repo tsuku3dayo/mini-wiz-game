@@ -3,8 +3,8 @@ id: MWIZ-TC-0005
 type: Test Case
 title: 起動に失敗しても直る
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-US-0005（v1.0）
   - MWIZ-TST-0001（v1.0）
@@ -29,6 +29,9 @@ verified: null
 | TC-0005-03 | 2 | 前の復旧から 2 分以内にまた失敗すると、読み込み直さずに `#boot-error` が見え、「うまく起動できませんでした。」「なおす」（`#boot-repair`）「きろくは消えません。」が出る。「なおす」の高さが 48px 以上 | E2E | `e2e/boot.spec.ts` |
 | TC-0005-04 | 2 | `mini-wiz-game:boot-repair-at` が 2 分より前（今 − 121,000ms）のときに失敗すると、`#boot-error` を出さずに自動で読み込み直す | E2E | `e2e/boot.spec.ts` |
 | TC-0005-05 | 3 | TC-0005-02・03 のどちらのあとも、`localStorage` の `mini-wiz-game-game`・`mini-wiz-game-save`・`mini-wiz-game-sound` の値が失敗の前と同じ文字列 | E2E | `e2e/boot.spec.ts` |
+| TC-0005-06 | 2 | `#boot-error` が出ているときに「なおす」を押すと、2 分を待たずにすぐ、`mini-wiz-game:boot-repair-at` を新しい時刻に書き、範囲を含むキャッシュを消して読み込み直す。読み込み直したあとに起動できれば、タイトル画面が出て `#boot-error` は出ない。`localStorage` の 3 つの値は押す前と同じ（TD-0005 v1.2 §2） | E2E | `e2e/boot.spec.ts` |
+
+- TC-0005-06 は v1.1 で足した（「なおす」を押したあとの動きは TASK-0003 で決めて TD-0005 に書いたが、確認 ID がなかったため）。
 
 ## 2. 準備
 
@@ -45,6 +48,7 @@ verified: null
 | TC-0005-02 | 入口の `.js` を止めて開く → 読み込み直しを待つ（`framenavigated` が 2）→ `boot-repair-at` があり、範囲を含むキャッシュがない → 2 回目は通し、`body[data-screen="title"]` |
 | TC-0005-03 | 入口の `.js` をずっと止める → 開く → 自動の読み込み直し（1 回）→ もう一度失敗 → `#boot-error` が見え、そのあと 1,500ms 待っても `framenavigated` が増えない。文と「なおす」の `getBoundingClientRect().height` を確かめる |
 | TC-0005-04 | `addInitScript` で、最初の読み込みのときだけ（テスト用の印が `sessionStorage` になければ）`sessionStorage.setItem('mini-wiz-game:boot-repair-at', String(Date.now() - 121000))` → 入口の `.js` を止めて開く → `#boot-error` が出ずに読み込み直し（`framenavigated` が 2）、`boot-repair-at` が新しい時刻に書き替わる |
+| TC-0005-06 | 入口の `.js` を 2 回だけ止める → 開く → 自動の読み込み直し（1 回）→ もう一度失敗 → `#boot-error` が見える → `boot-repair-at` を覚え、範囲を含むキャッシュを作る → 「なおす」を押す → 読み込み直す（`framenavigated` が 3）→ `body[data-screen="title"]`、`#boot-error` が見えない、`boot-repair-at` が押す前より新しい、範囲を含むキャッシュがない、`localStorage` の 3 つの値が押す前と同じ |
 
 ## 4. 手動の手順
 

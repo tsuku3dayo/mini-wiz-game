@@ -3,11 +3,11 @@ id: MWIZ-TASK-0006
 type: Implementation Task
 title: 画面の共通の仕組み
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
-  - MWIZ-WS-0002（v1.0）
-  - MWIZ-TC-0005（v1.0）
+  - MWIZ-WS-0002（v1.1）
+  - MWIZ-TC-0005（v1.1）
   - MWIZ-TC-0007（v1.0）
   - MWIZ-TC-0010（v1.0）
   - MWIZ-TC-0011（v1.0）
@@ -29,15 +29,16 @@ verified: null
 - `logic/menu-model.ts`・`message-plan.ts`・`name.ts`・`version.ts`
 - `ui/debug.ts` の `writeState`・`writeSave`・`useSeed`・`setDelay`（`SwappableRng`）
 
-## 対象の確認 ID（5 個：自動 5・手動 0）
+## 対象の確認 ID（6 個：自動 6・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
-| `e2e/boot.spec.ts` | TC-0005-05 |
+| `e2e/boot.spec.ts` | TC-0005-05、TC-0005-06 |
 | `tests/logic/name.test.ts` | TC-0007-05 |
 | `tests/logic/menu-model.test.ts` | TC-0010-01、TC-0010-09 |
 | `tests/logic/message-plan.test.ts` | TC-0011-01 |
 
+- TC-0005-06（「なおす」を押したあと）は v1.1 で足した。TC-0005-05 と同じく保存の値（`writeState`・`writeSave`）を使うので、この TASK に入れた。
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 
 ## 完了の定義
