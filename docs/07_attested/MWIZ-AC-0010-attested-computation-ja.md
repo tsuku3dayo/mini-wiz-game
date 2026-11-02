@@ -2,7 +2,7 @@
 id: MWIZ-AC-0010
 type: Attested Computation
 title: 戦闘のルールとゲーム API の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -15,7 +15,7 @@ sources:
   - MWIZ-TC-0022（v1.0）
   - MWIZ-TC-0023（v1.0）
   - MWIZ-TD-0002（v1.5）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T16:09:43+09:00" }
 ---
 
 # AC-0010 戦闘のルールとゲーム API の実施記録
