@@ -3,8 +3,8 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-GUI-0001（v1.1）
@@ -117,6 +117,7 @@ fitItemList(screen)         … 狭い画面だけ
 
 - 矢印キー（ダンジョン）・Enter／Space のスキップ（メッセージ）は `window` で受ける（仕様書 §11.5・§11.8）。**入力欄（`input`・`textarea`）から来たキーと、IME の変換中（`isComposing`）のキーは捨てる**（名前入力で誤って動かないように）。
 - 初めのフォーカスは各画面の CommandMenu の `autoFocus`（仕様書 §27.4 の 4）。
+- 表示を更新するときは、押される要素（メニューの行・ボタン）を作り直さず、文字・class・属性だけを書き替える。押し始め（フォーカスが移る）と押し終わりで要素が替わると、クリック・タップが届かない。`commandMenu` は、項目が変わったときだけ行を作り直し、カーソルの移動と無効・有効の切り替えでは作り直さない（v1.1。WS-0002 のふりかえり）。
 - 操作する場所（ボタン・メニュー・メッセージ欄）は `touch-action: manipulation` と `-webkit-tap-highlight-color: transparent`。長押しの選択は `user-select: none`。ページの拡大は禁止しない（仕様書 §11.11）。
 
 ## 8. 演出・体力わずかの枠・点滅
