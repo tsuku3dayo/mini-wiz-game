@@ -1,6 +1,6 @@
 // 宿屋（#/inn。仕様書 §11.5、GUI-0003 §1、TD-0004 §3）
 // 操作の場所は 1 つの入れ物で、中身を替える：宿屋のメニュー／GameMenu／タイトルへ戻るの確認
-// まだ作っていないもの：「ダンジョンへ」（TASK-0009）、そうび・もちもの（TASK-0010 以降）、
+// まだ作っていないもの：そうび・もちもの（TASK-0010 以降）、
 // ステータス画面と広い画面の実績（TASK-0013）、「おと」（TASK-0017）。項目は出すが、選んでも何もしない
 import { commandMenu, type CommandMenu } from '../components/command-menu';
 import { confirmMenu } from '../components/confirm-menu';
@@ -79,7 +79,7 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
           { label: 'やすむ', onSelect: () => void command.run(() => api.rest()) },
           { label: 'セーブ', onSelect: () => void command.run(() => api.save(), { refetchSave: true }) },
           { label: 'メニュー', onSelect: () => setMode('gameMenu', INDEX_MENU) },
-          { label: 'ダンジョンへ' },
+          { label: 'ダンジョンへ', onSelect: () => void command.run(() => api.enterDungeon()) },
           { label: 'タイトルへ戻る', onSelect: () => setMode('confirm', INDEX_QUIT) },
         ],
         initialIndex: cursor ?? 0,

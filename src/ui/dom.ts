@@ -34,6 +34,22 @@ export function isTypingKey(e: KeyboardEvent): boolean {
   return e.isComposing || (t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable));
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** SVG の要素を作る（attrs の扱いは el と同じ） */
+export function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Attrs = {}, ...children: Child[]): SVGElementTagNameMap[K] {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attrs)) {
+    if (value === false || value === null || value === undefined) continue;
+    node.setAttribute(name, value === true ? '' : String(value));
+  }
+  for (const child of children) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(typeof child === 'string' ? document.createTextNode(child) : child);
+  }
+  return node;
+}
+
 /** 要素を作る。attrs の値が false・null・undefined の属性は付けない。true は空の値で付ける */
 export function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = {}, ...children: Child[]): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);

@@ -1,7 +1,63 @@
-import { expect, test } from '@playwright/test';
-import { logLines, startAt } from './helpers';
+import { expect, test, type Page } from '@playwright/test';
+import { dungeonMap, logLines, openDebug, startAt } from './helpers';
+
+/** debugDungeon を呼び、reject したら { status, message } を返す */
+const debugResult = (page: Page) => page.evaluate(async () => {
+  try {
+    return { ok: await window.__wiz!.debugDungeon() };
+  } catch (e) {
+    const err = e as { status: number; message: string };
+    return { status: err.status, message: err.message };
+  }
+});
 
 test.describe('テスト用の入口', () => {
+  test('TC-0038-01 ?debug=1 のときだけ window.__wiz があり、6 つの関数を持つ', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    expect(await page.evaluate(() => typeof window.__wiz)).toBe('undefined');
+    await openDebug(page);
+    const kinds = await page.evaluate(() => {
+      const w = window.__wiz as unknown as Record<string, unknown>;
+      return ['debugDungeon', 'useSeed', 'writeState', 'writeSave', 'setDelay', 'showUpdateBanner'].map((k) => typeof w[k]);
+    });
+    expect(kinds).toEqual(Array(6).fill('function'));
+  });
+
+  test('TC-0038-02 debugDungeon は今の階の全情報を返し、画面の階と向きと合う。ゲームなしは 404、宿屋では 409', async ({ page }) => {
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 4, y: 6, floor: 3, facing: 'N' }) } });
+    const r = await debugResult(page);
+    const d = r.ok!;
+    expect(Object.keys(d).sort()).toEqual(['boss', 'down', 'floor', 'player', 'up', 'visited', 'walls']);
+    expect(d.walls).toHaveLength(100);
+    expect(d.visited).toHaveLength(100);
+    expect(d).toMatchObject({ floor: 3, player: { x: 4, y: 6, facing: 'N' }, up: { x: 0, y: 9 }, down: { x: 9, y: 0 }, boss: null });
+    await expect(page.getByTestId('location-label')).toHaveText(new RegExp(`^${d.floor}F\\s北$`));
+
+    await page.evaluate(() => localStorage.clear());
+    await openDebug(page);
+    expect(await debugResult(page)).toMatchObject({ status: 404 });
+
+    await startAt(page, 'INN');
+    expect(await debugResult(page)).toEqual({ status: 409, message: 'ダンジョンに いません' });
+  });
+
+  test('TC-0038-04 useSeed で同じシードなら「ダンジョンへ」で同じ迷宮、違うシードなら違う迷宮', async ({ page }) => {
+    const enterWith = async (seed: number) => {
+      await startAt(page, 'INN');
+      await page.evaluate((s) => window.__wiz!.useSeed(s), seed);
+      await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
+      await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+      const { walls, up, down, boss, player } = (await debugResult(page)).ok!;
+      return { walls, up, down, boss, player };
+    };
+    const first = await enterWith(7);
+    const second = await enterWith(7);
+    expect(second).toEqual(first);
+    const other = await enterWith(8);
+    expect(other.walls).not.toEqual(first.walls);
+  });
+
   test('TC-0038-06 setDelay(1000) のあいだ data-busy が true で、300ms を過ぎると ▼ が出る。応答のあとで消える', async ({ page }) => {
     await page.clock.install();
     await startAt(page, 'INN', { state: { hp: 10 } });

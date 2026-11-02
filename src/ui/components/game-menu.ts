@@ -55,8 +55,11 @@ export function gameMenu(opts: GameMenuOptions): GameMenu {
     el: win.el,
     menu,
     update(next) {
+      const changed = (next.canHeal !== undefined && next.canHeal !== state.canHeal)
+        || (next.soundOn !== undefined && next.soundOn !== state.soundOn);
       state = { canHeal: next.canHeal ?? state.canHeal, soundOn: next.soundOn ?? state.soundOn };
-      menu.update({ items: build(), disabled: next.disabled });
+      // 項目が変わったときだけ行を作り直す（押している途中の行を作り直さない。TD-0003 §7）
+      menu.update({ items: changed ? build() : undefined, disabled: next.disabled });
     },
     destroy: () => win.destroy(),
   };

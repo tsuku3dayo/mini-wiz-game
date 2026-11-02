@@ -236,6 +236,60 @@ body {
 .wiz-input-help { margin: 0; color: var(--wiz-color-error); white-space: pre-wrap; }
 .wiz-input-count { margin: 0; font-size: 13px; line-height: 1.5; color: var(--wiz-color-text-sub); white-space: nowrap; }
 
+/* ダンジョン（仕様書 §11.5、GUI-0004） */
+.wiz-location { margin: 0; font-size: 18px; line-height: 1.4; font-weight: normal; color: var(--wiz-color-frame); }
+.wiz-fpv { aspect-ratio: 4 / 3; width: 320px; max-width: 100%; margin: 0 auto; }
+.wiz-fpv-svg { display: block; width: 100%; height: 100%; background: var(--wiz-color-background); }
+.wiz-fpv-line { stroke: var(--wiz-color-primary); stroke-width: 2; fill: none; vector-effect: non-scaling-stroke; }
+.wiz-fpv-line.flash { animation: wiz-blink 200ms step-end 1; }
+.wiz-fpv-label { fill: var(--wiz-color-info); font-size: 12px; text-anchor: middle; dominant-baseline: middle; }
+.wiz-map-window.wiz-window { padding: 8px; }
+.wiz-map-svg { display: block; margin: 0 auto; background: var(--wiz-color-background); }
+.wiz-map-frame { fill: none; stroke: var(--wiz-color-map-frame); stroke-width: 1; }
+.wiz-map-cell { fill: var(--wiz-color-floor); }
+.wiz-map-wall { stroke: var(--wiz-color-primary); stroke-width: 2; }
+.wiz-map-symbol { font-size: 12px; text-anchor: middle; dominant-baseline: central; }
+.wiz-map-symbol.stairs { fill: var(--wiz-color-info); }
+.wiz-map-symbol.player { fill: var(--wiz-color-secondary); }
+
+/* 移動ボタン：左右は 2 段ぶんの高さ */
+.wiz-move-pad {
+  display: grid;
+  grid-template-areas: "left up right" "left down right";
+  grid-template-columns: repeat(3, minmax(48px, 1fr));
+  grid-template-rows: repeat(2, minmax(48px, 1fr));
+  gap: var(--wiz-gap);
+}
+.wiz-move { white-space: nowrap; padding: 0 4px; }
+.wiz-move.left { grid-area: left; }
+.wiz-move.up { grid-area: up; }
+.wiz-move.right { grid-area: right; }
+.wiz-move.down { grid-area: down; }
+.wiz-stairs, .wiz-menu-button { padding: 0 8px; white-space: nowrap; }
+
+/* 狭い画面：［地図｜移動ボタン］→ 操作の行［階段（8.5em）｜メニュー（右端）］ */
+.dungeon-controls { display: grid; gap: var(--wiz-gap); }
+.dungeon-map-row { display: grid; grid-template-columns: auto 1fr; gap: var(--wiz-gap); }
+.dungeon-ops { display: grid; grid-template-columns: 8.5em 1fr; column-gap: var(--wiz-gap); }
+.dungeon-ops .wiz-menu-button { justify-self: end; }
+.wiz-stairs-slot { display: grid; }
+.dungeon-log-slot, .dungeon-action { display: flex; flex-direction: column; }
+.dungeon-log-slot > .wiz-window, .dungeon-action > .wiz-window { flex: 1 1 auto; }
+
+/* 広い画面：上 ［階と向き・疑似3D］｜地図、下 メッセージ欄｜［ステータス・［移動ボタン｜階段／メニュー］］ */
+@media (min-width: 600px) {
+  .dungeon-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--wiz-gap); align-items: end; }
+  .dungeon-view { display: grid; gap: var(--wiz-gap); }
+  .dungeon-view .wiz-fpv { margin: 0; max-width: none; }
+  .dungeon-map { display: flex; justify-content: flex-end; }
+  .wiz-columns.stretch > .wiz-column > .wiz-status { flex: 0 0 auto; }
+  .dungeon-action { flex: 1 1 auto; }
+  .dungeon-action > .dungeon-controls { flex: 1 1 auto; grid-template-columns: minmax(0, 1fr) 8.5em; }
+  .dungeon-action .dungeon-ops { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 1fr; row-gap: var(--wiz-gap); }
+  .dungeon-action .dungeon-ops .wiz-menu-button { justify-self: stretch; }
+  .dungeon-action .wiz-stairs { height: 100%; }
+}
+
 /* StatusPanel（仕様書 §11.6） */
 .wiz-status-full { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; margin: 0; }
 .wiz-status-full dt, .wiz-status-full dd { margin: 0; }
