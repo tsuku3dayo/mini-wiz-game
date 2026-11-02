@@ -2,7 +2,7 @@
 id: MWIZ-AC-0013
 type: Attested Computation
 title: 実績とステータス画面 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TD-0003（v1.1）
   - MWIZ-TD-0004（v1.1）
   - MWIZ-GUI-0003（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T17:49:25+09:00" }
 ---
 
 # AC-0013 実績とステータス画面 の実施記録

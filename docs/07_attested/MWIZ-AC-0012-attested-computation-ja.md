@@ -2,7 +2,7 @@
 id: MWIZ-AC-0012
 type: Attested Computation
 title: ボス・ゲームクリア・周回 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -14,7 +14,7 @@ sources:
   - MWIZ-TD-0002（v1.5）
   - MWIZ-TD-0004（v1.1）
   - MWIZ-GUI-0005（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T17:49:25+09:00" }
 ---
 
 # AC-0012 ボス・ゲームクリア・周回 の実施記録
