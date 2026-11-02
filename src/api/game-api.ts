@@ -1,5 +1,5 @@
 // ゲーム API（仕様書 §21.5、§21.6、§22、TD-0002 §3）
-// 操作は作る TASK ごとに足す。応答の遅れ（delayMs、§28）は TASK-0006 で足す
+// 操作は作る TASK ごとに足す
 import { createCharacter, rest } from '../domain/character';
 import { DomainError, GameNotFoundError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { assertLocation, fromSaveData, migrateSave, toSaveData, type GameStateData, type StepResult } from '../domain/game-state';
@@ -13,6 +13,8 @@ export interface GameApiDeps {
   store: KeyValueStore;
   rng: Rng;
   now: () => string;
+  /** 応答を返す前に待つ（テスト用の入口の setDelay。§28）。api ではタイマーを使わないので、待つ関数を受け取る */
+  delay?: () => Promise<void>;
 }
 
 /** 例外を GameError に変える（TD-0001 §4） */
@@ -27,17 +29,23 @@ function toGameError(e: unknown): GameError {
   return new GameError({ status: 500, error: 'internal_error', message: '内部エラー' });
 }
 
-/** 中身は同期で動かし、結果はマイクロタスクで返す。失敗は GameError で reject */
-function respond<T>(fn: () => T): Promise<T> {
-  try {
-    return Promise.resolve(fn());
-  } catch (e) {
-    return Promise.reject(toGameError(e));
-  }
-}
-
 export function createGameApi(deps: GameApiDeps): GameApi {
   const repo = createRepository(deps.store, deps.now);
+
+  /** 中身は同期で動かし、結果はマイクロタスクで返す（delay があれば待ってから）。失敗は GameError で reject */
+  function respond<T>(fn: () => T): Promise<T> {
+    // 待つ間に reject のままの Promise を置かない（未処理の reject として報告されないように）
+    let settle: () => T;
+    try {
+      const value = fn();
+      settle = () => value;
+    } catch (e) {
+      const error = toGameError(e);
+      settle = () => { throw error; };
+    }
+    const wait = deps.delay?.() ?? Promise.resolve();
+    return wait.then(settle);
+  }
 
   function requireGame() {
     const found = repo.findGame();

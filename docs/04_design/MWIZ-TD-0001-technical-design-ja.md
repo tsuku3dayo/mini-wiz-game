@@ -3,8 +3,8 @@ id: MWIZ-TD-0001
 type: Technical Design
 title: 詳細設計 全体（層・モジュール・依存・起動・エラーの流れ）
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-SA-0001（v1.0）
   - MWIZ-TS-0001（v1.1）
@@ -76,8 +76,8 @@ import './ui/theme.css'; import './ui/style.css';
 const storage = createLocalStorage(APP_ID);          // platform/storage
 storage.migrateStorage(); requestPersist();
 const debug = new URLSearchParams(location.search).has('debug');
-const rng = debug ? new SwappableRng(new MathRandomRng()) : new MathRandomRng();
-const api = createGameApi({ storage, rng, now: clock.nowIso });
+const debugRng = debug ? createDebugRng() : null;      // platform/math-rng（SwappableRng を包む。v1.1）
+const api = createGameApi({ store: storage, rng: debugRng?.rng ?? new MathRandomRng(), now: clock.nowIso, delay });
 const sound = createSoundSetting(storage);           // audio/sound-setting
 const store = createStore(api);                       // ui/store（getGame・getSave を読み始める）
 const queue = createMessageQueue({ reducedMotion, sound });
@@ -85,9 +85,12 @@ mountLowHpFrame(store); mountEffectLayer(queue); createBgmDirector({ store, queu
 const router = createRouter({ store, queue, api, sound });
 router.start();
 registerPwa(); prepareInstall();                      // 本番のビルドだけ（import.meta.env.PROD）
-if (debug) attachDebug({ api, rng, store, storage });  // ui/debug（仕様書 §28）
+if (debug) attachDebug({ store, write, useSeed: debugRng.useSeed, setDelay });  // ui/debug（仕様書 §28）
 window.__appStarted = true;
 ```
+
+- 画面層（`main.ts` を含む）は `src/domain/` を import しない（仕様書 §19.4）。テスト用の入口の乱数（`SwappableRng`・`SeededRng`）は、`src/domain/rng.ts` を import してよい基盤の `platform/math-rng.ts` の `createDebugRng()` で組み立てて渡す（v1.1。TASK-0006 で決めた）。
+- 応答の遅れは、ゲーム API に「待つ関数」`delay` を渡す（ゲーム API の中ではタイマーを使わないため。TD-0002 §3.1）。
 
 - 例外が起動の途中で出たら、`__appStarted` を立てない（`public/boot.js` が 8 秒後に復旧する。仕様書 §30.4）。
 

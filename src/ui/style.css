@@ -1,4 +1,4 @@
-/* 全体のスタイル（仕様書 §11.3）。TASK-0001 ではタイトルの仮の画面の分だけ。部品のスタイルは各 TASK で足す */
+/* 全体のスタイル（仕様書 §11.3）と共通部品のスタイル。画面ごとのスタイルは各 TASK で足す */
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -96,3 +96,141 @@ body {
 .install-dialog summary::before { content: "▶"; color: var(--wiz-color-text-sub); }
 .install-dialog details[open] > summary::before { content: "▼"; }
 .install-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--wiz-gap); margin: 8px 0 0; }
+
+/* 見た目で隠す（読み上げには残す） */
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* 画面の外枠（GameFrame。仕様書 §11.3） */
+.wiz-frame {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--wiz-safe-top) var(--wiz-gutter-r) var(--wiz-safe-bottom) var(--wiz-gutter-l);
+  display: grid;
+  gap: var(--wiz-gap);
+  align-content: start;
+}
+.wiz-frame-name { margin: 0; font-size: 24px; line-height: 1.3; font-weight: normal; color: var(--wiz-color-frame); }
+@media (max-width: 599px) {
+  .wiz-frame-name.hide-on-narrow {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+}
+.wiz-frame-content { display: grid; gap: var(--wiz-gap); align-content: start; }
+.wiz-columns { display: grid; gap: var(--wiz-gap); grid-template-columns: minmax(0, 1fr); align-items: start; }
+.wiz-column { display: grid; gap: var(--wiz-gap); align-content: start; min-width: 0; }
+@media (min-width: 600px) {
+  .wiz-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .wiz-columns.stretch { align-items: stretch; }
+}
+
+/* ウィンドウ（GameWindow、二重線。仕様書 §11.3） */
+.wiz-window {
+  position: relative;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--wiz-color-background);
+  border: 2px solid var(--wiz-window-line);
+  outline: 1px solid var(--wiz-window-line);
+  outline-offset: -6px;
+}
+.wiz-window.has-title { margin-top: 12px; padding-top: 12px; }
+.wiz-window[data-variant="danger"] { border-color: var(--wiz-color-error); }
+@media (min-width: 600px) {
+  .wiz-window { padding: 12px 16px; }
+  .wiz-window.has-title { padding-top: 16px; }
+}
+@media (max-width: 599px) {
+  .wiz-window.compact.has-title { padding-top: 8px; padding-bottom: 6px; }
+}
+.wiz-window-title {
+  position: absolute;
+  top: -0.8em;
+  left: 12px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: normal;
+  color: var(--wiz-color-frame);
+  background: var(--wiz-color-background);
+}
+
+/* CommandMenu（仕様書 §11.4） */
+.wiz-menu { list-style: none; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+.wiz-menu.scroll { overflow-y: auto; }
+.wiz-menu-item {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 0;
+  white-space: pre;
+  color: var(--wiz-color-primary);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.wiz-menu-item:hover, .wiz-menu-item.active { color: var(--wiz-color-secondary); }
+.wiz-menu-item[aria-disabled="true"], .wiz-menu[aria-disabled="true"] .wiz-menu-item { color: var(--wiz-color-disabled); cursor: default; }
+.wiz-menu-item.active .wiz-cursor { color: var(--wiz-color-secondary); }
+@media (min-width: 600px) and (pointer: fine) {
+  .wiz-menu-item { min-height: 0; padding: 0; }
+  .wiz-menu-item:focus-visible { outline: none; }
+}
+
+/* 確認（ConfirmMenu） */
+.wiz-confirm-text { margin: 0 0 8px; }
+
+/* メッセージ欄（MessageLog。仕様書 §11.8、TD-0003 §3） */
+.wiz-message-window { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.wiz-log { height: calc(var(--rows, 5) * 1.6em); overflow: hidden; }
+.wiz-line { overflow-wrap: anywhere; }
+.wiz-line.tone-normal { color: var(--wiz-color-primary); }
+.wiz-line.tone-success { color: var(--wiz-color-success); }
+.wiz-line.tone-danger { color: var(--wiz-color-error); }
+.wiz-line.rarity-n { color: var(--wiz-color-rarity-n); }
+.wiz-line.rarity-r { color: var(--wiz-color-rarity-r); }
+.wiz-line.rarity-sr { color: var(--wiz-color-rarity-sr); }
+.wiz-line.rarity-ur { color: var(--wiz-color-rarity-ur); }
+.wiz-line.rarity-lg { color: var(--wiz-color-rarity-lg); }
+.wiz-line.effect-levelUp { color: var(--wiz-color-secondary); font-weight: bold; transform-origin: left center; animation: wiz-level-up 600ms ease-out; }
+.wiz-line.effect-rareDrop { animation: wiz-blink 400ms step-end 2; }
+.wiz-line.effect-rareDrop.rarity-lg { animation-iteration-count: 3; }
+@keyframes wiz-level-up { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+@keyframes wiz-blink { 50% { opacity: 0; } }
+.wiz-waiting { position: absolute; right: 12px; bottom: 4px; color: var(--wiz-color-primary); animation: wiz-blink 1s step-end infinite; }
+
+/* TextInput（仕様書 §11.5「名前入力」） */
+.wiz-text-input { display: grid; gap: 4px; }
+.wiz-input-label { color: var(--wiz-color-primary); }
+.wiz-input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: inherit;
+  padding: 8px;
+  color: var(--wiz-color-primary);
+  background: var(--wiz-color-background);
+  border: 2px solid var(--wiz-color-primary);
+  border-radius: 0;
+}
+.wiz-input:focus { outline: none; border-color: var(--wiz-color-secondary); }
+.wiz-text-input.has-error .wiz-input { border-color: var(--wiz-color-error); }
+.wiz-input:disabled { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); }
+.wiz-input-foot { display: flex; justify-content: space-between; gap: var(--wiz-gap); }
+.wiz-input-help { margin: 0; color: var(--wiz-color-error); white-space: pre-wrap; }
+.wiz-input-count { margin: 0; font-size: 13px; line-height: 1.5; color: var(--wiz-color-text-sub); white-space: nowrap; }
+
+/* StatusPanel（仕様書 §11.6） */
+.wiz-status-full { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; margin: 0; }
+.wiz-status-full dt, .wiz-status-full dd { margin: 0; }
+.wiz-status-full dd, .wiz-status-compact span { white-space: pre; }
+.wiz-status-compact { display: flex; flex-wrap: wrap; column-gap: 14px; margin: 0; }
+.wiz-status-name { color: var(--wiz-color-frame); }
+.wiz-status [data-warning="true"] { color: var(--wiz-color-warning); }
+
+/* ErrorPanel（仕様書 §11.9） */
+.wiz-error-text { margin: 0 0 8px; }

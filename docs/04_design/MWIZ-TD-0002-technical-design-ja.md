@@ -3,10 +3,10 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.2
+version: 1.3
 updated: 2026-11-02
 sources:
-  - MWIZ-TD-0001（v1.0）
+  - MWIZ-TD-0001（v1.1）
   - MWIZ-SA-0001（v1.0）
   - MWIZ-ADR-0004（v1.0）
   - MWIZ-ADR-0006（v1.0）
@@ -79,11 +79,11 @@ verified: null
 ### 3.1 作り
 
 ```ts
-export function createGameApi(deps: { store: KeyValueStore; rng: Rng; now: () => string; delayMs?: () => number }): GameApi
+export function createGameApi(deps: { store: KeyValueStore; rng: Rng; now: () => string; delay?: () => Promise<void> }): GameApi
 ```
 
 - `store` の名前と形は仕様書 §22.1・§21.7 のとおり（v1.2 で `storage: Storage` から直した）。型 `KeyValueStore` は `api/repository.ts` に置く。`platform/storage.ts` は同じ形のものを作り、`main.ts` が渡す（層の決まりで、api と platform は互いを import しないため）。
-- 操作は、それを使う TASK で足す（TASK-0005 は getGame・getSave・startGame・quitGame・rest・save・load）。`delayMs` は `__wiz.setDelay` と一緒に TASK-0006 で足す。GameView の `dungeon` は、視界と地図（`view.ts`）を作る TASK-0008 までは null。
+- 操作は、それを使う TASK で足す（TASK-0005 は getGame・getSave・startGame・quitGame・rest・save・load）。応答の遅れ `delay` は `__wiz.setDelay` と一緒に TASK-0006 で足した（v1.3。ゲーム API の中ではタイマーを使わない（仕様書 §19.4）ので、`delayMs: () => number` ではなく「待つ関数」を受け取る）。GameView の `dungeon` は、視界と地図（`view.ts`）を作る TASK-0008 までは null。
 
 - 操作は仕様書 §22.2 の 20 個。どれも `run(step)` を呼ぶだけにする：
 
@@ -99,7 +99,7 @@ run(step)
 ```
 
 - `getGame`・`getSave`・`startGame`・`quitGame`・`load`・`save` は `run` を通らない専用の流れ（仕様書 §22.2 の表）。
-- テスト用の応答の遅れ（`__wiz.setDelay`）は、`deps.delayMs` を `await` で待つだけにする（`?debug=1` のときだけ `main.ts` が渡す）。
+- テスト用の応答の遅れ（`__wiz.setDelay`）は、操作の中身を動かしたあと `deps.delay()` を待ってから結果を返すだけにする（`?debug=1` のときだけ `main.ts` が渡す）。
 
 ### 3.2 GameView（`game-view.ts`）
 
