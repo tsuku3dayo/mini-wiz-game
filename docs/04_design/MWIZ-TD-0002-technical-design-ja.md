@@ -3,8 +3,8 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.0）
   - MWIZ-SA-0001（v1.0）
@@ -53,6 +53,10 @@ verified: null
 - 入力を凍らせて（`deepFreeze`。`tests/helpers/` に置く）呼び、入力が変わらないことを確かめる。
 - 乱数は `SequenceRng`（決まった値の列）で境界を、`SeededRng` で生成物の不変条件（全マス到達・階段の位置など）を確かめる。
 - 仕様書 §16.1〜§16.3 の受け入れ基準の数値の例（「経験値 0 に 72 を加えると Lv3」など）は、そのまま単体テストにする。
+
+### 1.4 仕様書で決まっていなかったこと（v1.1。TASK-0004 で決めた）
+
+- `normalizeInventory` で、装備中の枠に **部位の合わない個体**（例：よろいの枠に `weapon1`）があったら、形の違う値として黙って捨てる（その枠は空にする）。ID は `nextId` の計算に含める。
 
 ## 2. 表示の計算（`src/logic/`）
 
@@ -121,7 +125,7 @@ run(step)
 ## 5. 作る順（06 作業計画の目安）
 
 1. `rng`・`constants`・`errors`・`game-state` の型
-2. `character`・`heal`・`records`
+2. `character`・`heal`・`records`（`rest` と `normalizeInventory` が使うので、`items` のマスタ・`conformItem`、`equipment` の `effectiveStats`、`loot` の `emptyInventory` もここで作る。v1.1）
 3. `dungeon`・`floors`・`explore`・`view`
 4. `battle`
 5. `items`・`loot`・`equipment`
