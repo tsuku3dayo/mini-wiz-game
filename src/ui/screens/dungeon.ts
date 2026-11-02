@@ -2,7 +2,7 @@
 // 狭い画面：階と向き → 疑似3D → メッセージ欄 → ステータス → ［地図｜移動ボタン］→ 操作の行［階段｜≡ メニュー］
 // 広い画面：上 ［階と向き・疑似3D］｜地図、下 メッセージ欄（6 行）｜［ステータス・［移動ボタン｜階段／メニュー］］
 // メニューを開くと、操作の場所（狭い画面は地図と移動ボタン・操作の行、広い画面は右下のボタン）を GameMenu に替える
-// ヒールは TASK-0011、そうび・もちもの・ステータス画面・おとは、それぞれの TASK でつなぐ
+// そうび・もちもの・ステータス画面・おとは、それぞれの TASK でつなぐ
 import type { MoveAction, StairsView } from '../../api/types';
 import { autoMap, type AutoMap } from '../components/auto-map';
 import { errorPanel } from '../components/error-panel';
@@ -87,6 +87,8 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
         soundOn: false,
         disabled: command.locked,
         onClose: () => setMenu(false),
+        // 使ってもメニューは開いたまま、カーソルもそのまま（仕様書 §11.4）
+        onHeal: () => void command.run(() => api.heal()),
         onEquip: () => undefined,
         onItems: () => undefined,
         onStatus: () => undefined,

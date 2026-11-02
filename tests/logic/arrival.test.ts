@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { GameView, Location, StairsView } from '../../src/api/types';
-import { arrival } from '../../src/logic/arrival';
+import { arrival, isEncounter } from '../../src/logic/arrival';
 
 function view(location: Location, at?: { floor: number; x: number; y: number; facing?: 'N' | 'E'; underfoot: StairsView }): GameView {
   return {
@@ -13,6 +13,16 @@ function view(location: Location, at?: { floor: number; x: number; y: number; fa
       : null,
   } as unknown as GameView;
 }
+
+describe('遭遇の判定', () => {
+  test('TC-0018-05 前の状態がない、または前が BATTLE でなく新しい場所が BATTLE のとき真。BATTLE → BATTLE・DUNGEON → DUNGEON は偽', () => {
+    expect(isEncounter(null, view('BATTLE'))).toBe(true);
+    expect(isEncounter(view('DUNGEON'), view('BATTLE'))).toBe(true);
+    expect(isEncounter(view('BATTLE'), view('BATTLE'))).toBe(false);
+    expect(isEncounter(view('DUNGEON'), view('DUNGEON'))).toBe(false);
+    expect(isEncounter(view('BATTLE'), view('DUNGEON'))).toBe(false);
+  });
+});
 
 describe('足元の案内', () => {
   test('TC-0016-05 階段・入口のマスに着いたときだけ 1 行。向きだけの変化・足元が null のときは出さない', () => {

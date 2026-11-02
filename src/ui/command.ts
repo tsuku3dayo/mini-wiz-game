@@ -1,5 +1,6 @@
 // 操作の共通の流れ（仕様書 §11.8「操作の結果の扱い」、§11.9、§11.10。v1.0 の useGameCommand）
 import { GameError, type CommandResult, type GameView, type Message } from '../api/types';
+import { isEncounter } from '../logic/arrival';
 import type { MessageQueue } from './message-queue';
 import type { Store } from './store';
 
@@ -50,7 +51,7 @@ export function createCommand(deps: CommandDeps): Command {
   function onSuccess(result: CommandResult, opts?: RunOptions) {
     const prev = store.game.state;
     const next = result.state;
-    if (next.location === 'BATTLE' && prev?.location !== 'BATTLE') {
+    if (isEncounter(prev, next)) {
       queue.clear();
       deps.onEncounter?.(next);
     }
