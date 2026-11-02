@@ -40,12 +40,46 @@ export async function writeScene(page: Page, scene: { state?: Record<string, unk
   }, scene);
 }
 
-/** 場所ごとの画面の名前（body[data-screen]） */
-const SCREEN_OF = { INN: 'inn' } as const;
+/**
+ * 歩いても遭遇しないシード：SeededRng(11350) は最初の 40 回の int(1,100) がすべて 21 以上
+ * （遭遇は 20 以下。仕様書 §4.3）。決まった結果になるシードは、使う TASK で足していく
+ */
+export const SEEDS = { noEncounter: 11350 } as const;
+
+type Facing = 'N' | 'E' | 'S' | 'W';
+
+/**
+ * テスト用のダンジョン（tests/helpers/maps.ts の openMap と同じ形）：外周だけが壁の 10×10。
+ * 上り (0,9)、下り (9,0)、5F は下りの代わりにボス (9,0)。今の位置だけ踏破済み（ボスのマスは除く）。
+ * walls で、その階の壁の配列を差し替えられる
+ */
+export function dungeonMap(opts: { x: number; y: number; facing?: Facing; floor?: number; walls?: number[] }): Record<string, unknown> {
+  const size = 10;
+  const floor = opts.floor ?? 1;
+  const outer = Array.from({ length: size * size }, (_, i) => {
+    const x = i % size;
+    const y = Math.floor(i / size);
+    return (y === 0 ? 1 : 0) | (x === size - 1 ? 2 : 0) | (y === size - 1 ? 4 : 0) | (x === 0 ? 8 : 0);
+  });
+  const floors = Array.from({ length: 5 }, (_, i) => {
+    const onBoss = i === 4 && opts.x === 9 && opts.y === 0;
+    return {
+      walls: i === floor - 1 && opts.walls ? opts.walls : [...outer],
+      up: { x: 0, y: 9 },
+      down: i === 4 ? null : { x: 9, y: 0 },
+      boss: i === 4 ? { x: 9, y: 0 } : null,
+      visited: Array.from({ length: size * size }, (_, j) => i === floor - 1 && !onBoss && j === opts.y * size + opts.x),
+    };
+  });
+  return { width: size, height: size, floors, floor, player: { x: opts.x, y: opts.y, facing: opts.facing ?? 'N' } };
+}
+
+/** 場所ごとの画面の名前（body[data-screen]）。場所は使う TASK で足す */
+const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon' } as const;
 
 /**
  * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
- * 場所は使う TASK で足す（今は INN だけ）
+ * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。乱数は SEEDS.noEncounter（歩いても遭遇しない）
  */
 export async function startAt(
   page: Page,
@@ -53,7 +87,11 @@ export async function startAt(
   opts: { state?: Record<string, unknown>; save?: Record<string, unknown> } = {},
 ): Promise<void> {
   await openDebug(page);
-  await writeScene(page, { state: storedInn(opts.state), save: opts.save });
+  const state = location === 'DUNGEON'
+    ? storedInn({ location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }), ...opts.state })
+    : storedInn(opts.state);
+  await writeScene(page, { state, save: opts.save });
+  if (location === 'DUNGEON') await page.evaluate((seed) => window.__wiz!.useSeed(seed), SEEDS.noEncounter);
   await page.locator(`body[data-screen="${SCREEN_OF[location]}"]`).waitFor({ state: 'attached' });
 }
 

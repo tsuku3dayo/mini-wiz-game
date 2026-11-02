@@ -1,9 +1,11 @@
 // テスト用の入口（仕様書 §28、TD-0005 §3）。URL に ?debug=1 があるときだけ main.ts が付ける
-// debugDungeon は TASK-0009 で足す
+import type { DebugDungeon } from '../api/types';
 import { simulateUpdate } from '../platform/pwa';
 import type { Store } from './store';
 
 export interface DebugApi {
+  /** 今の階の全情報（ゲームがなければ 404、ダンジョンがなければ 409 で reject） */
+  debugDungeon(): Promise<DebugDungeon>;
   /** 「新しい版があります」の帯を出す（新しい版を受け取ったことにする） */
   showUpdateBanner(): void;
   /** 保存にプレイ中の状態（StoredGameState の形）を直接書き、ストアを取り直す */
@@ -22,6 +24,7 @@ export interface DebugDeps {
   write(name: string, value: unknown): boolean;
   useSeed(seed: number): void;
   setDelay(ms: number): void;
+  debugDungeon(): Promise<DebugDungeon>;
 }
 
 export function attachDebug(deps: DebugDeps): void {
@@ -35,6 +38,7 @@ export function attachDebug(deps: DebugDeps): void {
     writeSave: (stored) => writeAndRefetch('save', stored),
     useSeed: (seed) => deps.useSeed(seed),
     setDelay: (ms) => deps.setDelay(ms),
+    debugDungeon: () => deps.debugDungeon(),
   };
   window.__wiz = api;
 }

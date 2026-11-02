@@ -46,7 +46,7 @@ export function messageLog(opts: MessageLogOptions): MessageLog {
     win.setVariant(shown.some((l) => l.tone === 'danger') ? 'danger' : 'default');
   }
 
-  // 応答待ちが 300ms を超えたら ▼ を出す
+  // 応答待ちが 300ms を超えたら ▼ を出す（ちょうど 300ms では出さないので、1ms 足して待つ。TC-0011-08）
   let waitTimer: ReturnType<typeof setTimeout> | null = null;
   let wasPending = false;
   function onCommand() {
@@ -55,7 +55,7 @@ export function messageLog(opts: MessageLogOptions): MessageLog {
     wasPending = pending;
     if (waitTimer !== null) clearTimeout(waitTimer);
     waitTimer = null;
-    if (pending) waitTimer = setTimeout(() => { waiting.hidden = false; }, WAITING_MARK_MS);
+    if (pending) waitTimer = setTimeout(() => { waiting.hidden = false; }, WAITING_MARK_MS + 1);
     else waiting.hidden = true;
   }
 

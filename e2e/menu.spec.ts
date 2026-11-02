@@ -26,7 +26,26 @@ test.describe('メニューとコマンド', () => {
     expect(await screenText()).toBe(before);
   });
 
-  test('TC-0010-10 確認を開くとフォーカスは「いいえ」。Tab・Shift+Tab で外へ出ない。Esc で宿屋のメニューに戻る', async ({ page }, info) => {
+  test('TC-0010-07 メニューで Esc を押すと閉じて、宿屋は「メニュー」の行、ダンジョンは「≡ メニュー」のボタンにフォーカスが戻る', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
+    await startAt(page, 'INN');
+    const innMenu = page.getByRole('menu', { name: '宿屋' });
+    await innMenu.getByRole('menuitem').filter({ hasText: 'メニュー' }).click();
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toHaveCount(0);
+    await expect(innMenu.getByRole('menuitem').filter({ hasText: 'メニュー' })).toBeFocused();
+
+    await startAt(page, 'DUNGEON');
+    const button = page.getByRole('button', { name: '≡ メニュー' });
+    await button.click();
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toHaveCount(0);
+    await expect(button).toBeFocused();
+  });
+
+  test('TC-0010-10確認を開くとフォーカスは「いいえ」。Tab・Shift+Tab で外へ出ない。Esc で宿屋のメニューに戻る', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
     await startAt(page, 'INN');
     await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'タイトルへ戻る' }).click();
