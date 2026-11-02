@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createGameApi } from '../../src/api/game-api';
 import { GameError, type GameApi } from '../../src/api/types';
-import type { GameStateData } from '../../src/domain/game-state';
+import { toSaveData, type GameStateData } from '../../src/domain/game-state';
 import { SeededRng, SequenceRng, SwappableRng, type Rng } from '../../src/domain/rng';
 import { createFakeStorage, type FakeStorage } from '../helpers/fake-storage';
 import { LOCATIONS, makeItem, makeState } from '../helpers/fixtures';
@@ -317,6 +317,227 @@ describe('戦闘とヒール（ゲーム API）', () => {
     expect(game.inventory).toEqual(inventory);
     expect(game.inventory.nextId).toBe(5);
     expect(store.raw('save')).toBe(save);
+  });
+});
+
+/** 所持品つきの状態の材料：装備 2 枠・所持品 2 個・nextId 10（読み込みの補正で変わらないよう、段階で出るレアリティと範囲の値にする） */
+const GEAR = {
+  equipped: { weapon: makeItem(1, 'weapon3', 'R', 9), armor: null, shield: null, accessory: makeItem(2, 'accessory8', 'LG', 20) },
+  items: [makeItem(3, 'weapon1', 'R', 2), makeItem(4, 'armor1', 'N', 1)],
+  nextId: 10,
+  pending: null,
+};
+
+/** n 個の所持品（ショートソード［N］を先頭に、残りはクロースアーマー［N］） */
+const fullItems = (n: number) => Array.from({ length: n }, (_, i) => makeItem(i + 1, i === 0 ? 'weapon1' : 'armor1', 'N', 1));
+
+/** Lv12・累計 1584 で、残り HP 1 のボスを倒す乱数（成長 3 回分・ボスのドロップ：エクスカリバー［LG］） */
+const BOSS_KILL = [100, 0, ...Array.from({ length: 15 }, (_, i) => [8, 2, 1, 1, 1][i % 5]), 1, 0, 8, 1, 20];
+const bossState = (overrides: Partial<GameStateData> = {}) =>
+  battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, maxMp: 40, mp: 30, ...overrides });
+
+describe('エラーの形（ゲーム API）', () => {
+  test('TC-0012-02 §10.3 の表で許されない場所から呼ぶと 409 invalid_state。保存（revision を含む）は同じ', async () => {
+    const ops: [string, (api: GameApi) => Promise<unknown>, string[]][] = [
+      ['rest', (a) => a.rest(), ['INN']],
+      ['save', (a) => a.save(), ['INN']],
+      ['enterDungeon', (a) => a.enterDungeon(), ['INN']],
+      ['move', (a) => a.move({ action: 'forward' }), ['DUNGEON']],
+      ['stairs', (a) => a.stairs({ direction: 'down' }), ['DUNGEON']],
+      ['returnToInn', (a) => a.returnToInn(), ['DUNGEON']],
+      ['heal', (a) => a.heal(), ['DUNGEON']],
+      ['equip', (a) => a.equip({ itemId: 3 }), ['INN', 'DUNGEON']],
+      ['unequip', (a) => a.unequip({ slot: 'weapon' }), ['INN', 'DUNGEON']],
+      ['discard', (a) => a.discard({ itemId: 3 }), ['INN', 'DUNGEON']],
+      ['battle', (a) => a.battle({ command: 'attack' }), ['BATTLE']],
+      ['lootTake', (a) => a.lootTake({ discardId: 3 }), ['SWAP']],
+      ['lootAbandon', (a) => a.lootAbandon(), ['SWAP']],
+      ['continueGame', (a) => a.continueGame(), ['CLEARED']],
+      ['quitGame', (a) => a.quitGame(), ['INN', 'CLEARED']],
+    ];
+    for (const [name, call, allowed] of ops) {
+      for (const location of LOCATIONS.filter((l) => !allowed.includes(l))) {
+        const { api, store } = setup({ game: storedGame(makeState(location, { inventory: { ...GEAR, pending: location === 'SWAP' ? makeState('SWAP').inventory.pending : null } })), save: storedSave() });
+        const before = [store.raw('game'), store.raw('save')];
+        const err = await caught(call(api));
+        expect({ op: name, location, status: err.status, error: err.error }).toEqual({ op: name, location, status: 409, error: 'invalid_state' });
+        expect([store.raw('game'), store.raw('save')]).toEqual(before);
+      }
+    }
+  });
+
+  test('TC-0012-04 どのエラーも GameError で status・error・message を持ち、details は 400 のときだけ', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const check = (e: GameError, status: number, error: string) => {
+      expect(e).toBeInstanceOf(GameError);
+      expect({ status: e.status, error: e.error }).toEqual({ status, error });
+      expect(typeof e.message).toBe('string');
+      if (error === 'validation_error') {
+        expect(e.details!.length).toBeGreaterThan(0);
+        for (const d of e.details!) expect(Object.keys(d).sort()).toEqual(['field', 'message']);
+      } else {
+        expect(e.details).toBeUndefined();
+      }
+    };
+    const dungeon = () => setup({ game: storedGame(dungeonState(openMap({ x: 4, y: 5 }))) });
+    check(await caught(dungeon().api.move({ action: 'jump' } as never)), 400, 'validation_error');
+    check(await caught(setup().api.move({ action: 'forward' })), 404, 'game_not_found');
+    check(await caught(setup().api.load()), 404, 'save_not_found');
+    check(await caught(dungeon().api.rest()), 409, 'invalid_state');
+    const conflict = dungeon();
+    conflict.store.onRead = (name, n) => { if (name === 'game' && n === 2) conflict.store.put('game', storedGame(dungeonState(), 9)); };
+    check(await caught(conflict.api.move({ action: 'forward' })), 409, 'conflict');
+    const rule = await caught(setup({ game: storedGame(makeState('INN')) }).api.unequip({ slot: 'shield' }));
+    check(rule, 409, 'rule_violation');
+    expect(rule.message).toBe('なにも そうびしていない');
+    const fail = dungeon();
+    fail.store.failWrites.add('game');
+    check(await caught(fail.api.move({ action: 'forward' })), 500, 'storage_error');
+    check(await caught(setup({ save: { ...storedSave(), schemaVersion: 9 } }).api.load()), 500, 'internal_error');
+  });
+});
+
+describe('装備と所持品（ゲーム API）', () => {
+  test('TC-0028-06 BATTLE・SWAP・CLEARED で equip・unequip・discard は 409「その操作は いまは できない」、保存は同じ', async () => {
+    for (const location of ['BATTLE', 'SWAP', 'CLEARED'] as const) {
+      for (const call of [(a: GameApi) => a.equip({ itemId: 3 }), (a: GameApi) => a.unequip({ slot: 'weapon' }), (a: GameApi) => a.discard({ itemId: 3 })]) {
+        const { api, store } = setup({ game: storedGame(makeState(location, { inventory: { ...GEAR, pending: makeState(location).inventory.pending } })) });
+        const before = store.raw('game');
+        const err = await caught(call(api));
+        expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 409, error: 'invalid_state', message: 'その操作は いまは できない' });
+        expect(store.raw('game')).toBe(before);
+      }
+    }
+  });
+
+  test('TC-0029-08 セーブに装備・所持品・nextId が入り、つづきからでその時点に戻る。SWAP から作ったセーブ・自動セーブの pending は null', async () => {
+    const { api, store } = setup({ game: storedGame(makeState('INN', { inventory: GEAR })) });
+    await api.save();
+    const save = JSON.parse(store.raw('save')!);
+    expect(save.inventory).toEqual({ ...GEAR, pending: null });
+    await api.discard({ itemId: 3 });
+    await api.unequip({ slot: 'weapon' });
+    const r = await api.load();
+    expect(r.state.inventory.equipped.weapon!.id).toBe(1);
+    expect(r.state.inventory.items.map((i) => i.id)).toEqual([4, 3]);
+    expect(JSON.parse(store.raw('game')!).inventory).toEqual({ ...GEAR, pending: null });
+    expect(toSaveData(makeState('SWAP')).inventory.pending).toBeNull();
+
+    const boss = setupWith({ game: storedGame(bossState()) }, new SequenceRng(BOSS_KILL));
+    await boss.api.battle({ command: 'attack' });
+    expect(JSON.parse(boss.store.raw('save')!).inventory.pending).toBeNull();
+  });
+
+  test('TC-0029-09 倒れても装備・所持品・nextId は同じ。startGame では装備なし・所持品 0・nextId 1', async () => {
+    const { api, store } = setupWith({ game: storedGame(battleState('goblin', 18, { hp: 1, inventory: GEAR })) }, new SequenceRng([100, 0]));
+    const r = await api.battle({ command: 'attack' });
+    expect(r.state.location).toBe('INN');
+    expect(JSON.parse(store.raw('game')!).inventory).toEqual(GEAR);
+    await api.startGame({ name: 'あ' });
+    expect(JSON.parse(store.raw('game')!).inventory).toEqual({ equipped: { weapon: null, armor: null, shield: null, accessory: null }, items: [], nextId: 1, pending: null });
+  });
+
+  test('TC-0029-11 マスタにない個体は警告して取り除き、形の違う個体は黙って捨てる。所持品 null は空。nextId は取り除いた個体の id + 1 以上', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const raw = {
+      equipped: { weapon: { id: 20, itemId: 'weapon9', rarity: 'N', value: 1 }, armor: null, shield: null, accessory: null },
+      items: [
+        { id: 21, itemId: 'weapon9', rarity: 'N', value: 1 },
+        { id: 1.5, itemId: 'weapon1', rarity: 'N', value: 1 },
+        { id: 22, itemId: 'weapon1', rarity: 'N', value: 1.2 },
+        { id: 23, itemId: 'weapon1', rarity: 'XX', value: 1 },
+        { id: 5, itemId: 'weapon1', rarity: 'N', value: 1 },
+      ],
+      nextId: 3,
+      pending: { item: { id: 30, itemId: 'weapon9', rarity: 'N', value: 1 }, thenClear: false },
+    };
+    const { api } = setup({ game: { ...storedGame(makeState('SWAP')), inventory: raw } });
+    const g = (await api.getGame()).state!;
+    expect(warn).toHaveBeenCalled();
+    expect(g.inventory.equipped.weapon).toBeNull();
+    expect(g.inventory.items.map((i) => i.id)).toEqual([5]);
+    expect(g.pendingDrop).toBeNull();
+    warn.mockRestore();
+
+    const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const empty = setup({ game: { ...storedGame(makeState('INN')), inventory: null } });
+    expect((await empty.api.getGame()).state!.inventory).toMatchObject({ count: 0, items: [] });
+    expect(quiet).not.toHaveBeenCalled();
+    // nextId は取り除いた個体（30）を含めて + 1 以上：次に拾うと 31
+    const swap = setupWith({ game: { ...storedGame(battleState('slime', 1)), inventory: { ...raw, pending: null } } }, new SequenceRng([100, 0, 15, 0, 1, 1, 1]));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const won = await swap.api.battle({ command: 'attack' });
+    expect(won.state.inventory.items[0].id).toBe(22);
+  });
+});
+
+describe('満杯の入れ替え（ゲーム API）', () => {
+  test('TC-0030-02 SWAP のあいだ、ほかの操作は 409 で状態は変わらない。getGame の pendingDrop はいつも同じ個体', async () => {
+    const { api, store } = setup({ game: storedGame(makeState('SWAP')) });
+    const before = store.raw('game');
+    const calls = [
+      () => api.move({ action: 'forward' }), () => api.heal(), () => api.rest(), () => api.equip({ itemId: 1 }),
+      () => api.unequip({ slot: 'weapon' }), () => api.discard({ itemId: 1 }), () => api.stairs({ direction: 'down' }), () => api.returnToInn(),
+    ];
+    for (const call of calls) expect((await caught(call())).error).toBe('invalid_state');
+    expect(store.raw('game')).toBe(before);
+    const a = (await api.getGame()).state!.pendingDrop!;
+    const b = (await api.getGame()).state!.pendingDrop!;
+    expect(a.id).toBe(b.id);
+    expect(a).toEqual(b);
+  });
+
+  test('TC-0030-07 50 個のままボスを倒すと SWAP・laps 2・bossKills 1・クリアの行なし・セーブなし。あきらめると CLEARED・クリアの行・laps 2 のまま・セーブを書く', async () => {
+    const inventory = { equipped: GEAR.equipped, items: fullItems(50), nextId: 60, pending: null };
+    const { api, store } = setupWith({ game: storedGame(bossState({ inventory })) }, new SequenceRng(BOSS_KILL));
+    const r = await api.battle({ command: 'attack' });
+    expect(r.state.location).toBe('SWAP');
+    expect(r.state.records).toMatchObject({ laps: 2, bossKills: 1 });
+    expect(r.messages.some((m) => m.text === 'ダンジョンに 平和が もどった')).toBe(false);
+    expect(store.raw('save')).toBeNull();
+    const done = await api.lootAbandon();
+    expect(done.state.location).toBe('CLEARED');
+    expect(done.messages.at(-1)!.text).toBe('ダンジョンに 平和が もどった');
+    expect(done.state.records.laps).toBe(2);
+    const save = JSON.parse(store.raw('save')!);
+    expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
+    expect(save.inventory.pending).toBeNull();
+    expect(save.level).toBe(15);
+  });
+});
+
+describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
+  test('TC-0024-04 ボスを倒すと、セーブがクリア時点の値で上書きされる（Lv15・2584・LG の個体・pending null・laps 2・bossKills 1）。autoSaved は true', async () => {
+    const { api, store } = setupWith({ game: storedGame(bossState()), save: storedSave() }, new SequenceRng(BOSS_KILL));
+    const r = await api.battle({ command: 'attack' });
+    expect(r.state.location).toBe('CLEARED');
+    const save = JSON.parse(store.raw('save')!);
+    const game = JSON.parse(store.raw('game')!);
+    expect(save).toMatchObject({ name: 'ゆうしゃ', level: 15, exp: 2584, hp: game.hp, maxHp: game.maxHp, mp: game.mp, maxMp: game.maxMp, attack: game.attack, defense: game.defense, speed: game.speed });
+    expect(save.inventory.items.at(-1)).toMatchObject({ itemId: 'weapon8', rarity: 'LG' });
+    expect(save.inventory.pending).toBeNull();
+    expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
+    expect((await api.getGame()).state!.clear).toEqual({ autoSaved: true });
+  });
+
+  test('TC-0024-06 ボスを倒す操作でセーブかプレイ中状態が書けないと 500 で、両方とも前のまま。入れ替えで CLEARED になるときも同じ', async () => {
+    for (const key of ['save', 'game']) {
+      const { api, store } = setupWith({ game: storedGame(bossState()), save: storedSave() }, new SequenceRng(BOSS_KILL));
+      store.failWrites.add(key);
+      const before = [store.raw('game'), store.raw('save')];
+      const err = await caught(api.battle({ command: 'attack' }));
+      expect({ key, status: err.status, error: err.error }).toEqual({ key, status: 500, error: 'storage_error' });
+      expect([store.raw('game'), store.raw('save')]).toEqual(before);
+    }
+    const pending = { item: makeItem(70, 'weapon8', 'LG', 60), thenClear: true };
+    for (const [key, call] of [['save', (a: GameApi) => a.lootTake({ discardId: 1 })], ['game', (a: GameApi) => a.lootAbandon()]] as const) {
+      const swap = makeState('SWAP', { dungeon: null, inventory: { equipped: GEAR.equipped, items: fullItems(50), nextId: 71, pending } });
+      const { api, store } = setup({ game: storedGame(swap), save: storedSave() });
+      store.failWrites.add(key);
+      const before = [store.raw('game'), store.raw('save')];
+      expect((await caught(call(api))).error).toBe('storage_error');
+      expect([store.raw('game'), store.raw('save')]).toEqual(before);
+    }
   });
 });
 

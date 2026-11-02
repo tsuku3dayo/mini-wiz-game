@@ -53,6 +53,10 @@ export const SEEDS = {
    * 敵が先なら敵の攻撃が当たり、プレイヤーが先ならプレイヤーの攻撃が当たる。倒してもドロップしない
    */
   hits: 1,
+  /** HP 1 のスライムを先攻で倒し、［R］を落とす（tests/domain/loot.test.ts で確かめている） */
+  slimeDropR: 131,
+  /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、特例で段階 8・［LG］を落とす（同上） */
+  darkKnightDropLG: 66,
 } as const;
 
 type Facing = 'N' | 'E' | 'S' | 'W';

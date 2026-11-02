@@ -80,6 +80,29 @@ test.describe('宿屋', () => {
     expect(await page.evaluate(() => localStorage.getItem('mini-wiz-game-game'))).toBeNull();
   });
 
+  test('TC-0022-09 宿屋のステータス（full）：狭い画面は見出しが名前で 3 桁右揃え、補正があれば「 (+n)」。広い画面は見出し「ステータス」と「なまえ」の行', async ({ page }, info) => {
+    const lv3 = { level: 3, exp: 80, hp: 25, maxHp: 46, mp: 10, maxMp: 16, attack: 7, defense: 7, speed: 7 };
+    await startAt(page, 'INN', { state: lv3 });
+    const status = page.getByTestId('status-panel');
+    const values = async () => {
+      const dts = await status.locator('dt').allTextContents();
+      const dds = await status.locator('dd').allTextContents();
+      return Object.fromEntries(dts.map((t, i) => [t, dds[i]]));
+    };
+    if (info.project.name === 'desktop') {
+      await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
+      expect((await values()).なまえ).toBe('ゆうしゃ');
+    } else {
+      await expect(status.locator('.wiz-window-title')).toContainText('ゆうしゃ');
+    }
+    expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7' });
+
+    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」
+    const life = { id: 1, itemId: 'accessory4', rarity: 'R', value: 15 };
+    await startAt(page, 'INN', { state: { ...lv3, inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [], nextId: 2, pending: null } } });
+    expect((await values()).HP).toBe(' 25/ 61 (+15)');
+  });
+
   test('TC-0009-06 確認で Esc を押すと宿屋のメニューに戻り、カーソルとフォーカスが「タイトルへ戻る」にある', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
     await startAt(page, 'INN');

@@ -161,6 +161,36 @@ test.describe('メッセージ欄', () => {
     await expect(page.getByRole('button', { name: '前進', exact: true })).toBeEnabled();
   });
 
+  test('TC-0011-09 行の文字の色：normal は primary、success は緑、danger は赤、ドロップの行はレアリティの色（R は青・LG は赤）', async ({ page }, info) => {
+    const lineColor = (text: RegExp) => page.locator('[role="log"] .wiz-line').filter({ hasText: text }).last().evaluate((e) => getComputedStyle(e).color);
+
+    // normal（短い「かべだ」の行。戦闘の行は折り返して、狭い画面では欄から押し出されることがある）
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 4, y: 0 }) } });
+    await choose(page, info, page.getByRole('button', { name: '前進', exact: true }));
+    await expect.poll(() => lineColor(/かべだ/)).toBe('rgb(232, 220, 192)');
+
+    // success（たおした）と R のドロップ
+    await startAt(page, 'BATTLE', { state: { battle: battleOf('slime', 1) }, seed: SEEDS.slimeDropR });
+    await choose(page, info, attackItem(page));
+    await page.getByTestId('message-window').click({ force: true }).catch(() => undefined);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    expect(await lineColor(/おとした！/)).toBe('rgb(91, 140, 255)');
+    expect(await lineColor(/たおした！/)).toBe('rgb(92, 214, 92)');
+
+    // LG のドロップ
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999, battle: battleOf('darkKnight', 1) }, seed: SEEDS.darkKnightDropLG });
+    await choose(page, info, attackItem(page));
+    await page.getByTestId('message-window').click({ force: true }).catch(() => undefined);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    expect(await lineColor(/おとした！/)).toBe('rgb(255, 77, 109)');
+
+    // danger（倒れた行。宿屋のメッセージ欄で見る）
+    await startAt(page, 'BATTLE', { state: { hp: 1 }, seed: SEEDS.hits });
+    await choose(page, info, attackItem(page));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+    await expect.poll(() => lineColor(/たおれた…/)).toBe('rgb(255, 90, 78)');
+  });
+
   test('TC-0011-10 表示中の行に danger があると欄が danger（外側の線が赤、内側はそのまま）。消えると default', async ({ page }, info) => {
     await startAt(page, 'BATTLE', { state: { hp: 1 }, seed: SEEDS.hits });
     await choose(page, info, attackItem(page));

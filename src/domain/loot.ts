@@ -1,8 +1,9 @@
 // ドロップ・所持品（仕様書 §8.4、§8.5）
 // 抽選・追加・勝利時の反映は、戦闘に勝つ処理の中で乱数を引く順が決まっているので TASK-0010 で前倒しした（TD-0002 v1.5 §5）。
-// 入れ替え（takeLoot・abandonLoot）は TASK-0014 で足す
 import type { EnemyKind } from './constants';
-import type { GameStateData, InventoryData, ItemInstance, Location, Message } from './game-state';
+import { assertPending, itemLabel } from './equipment';
+import { RuleViolationError } from './errors';
+import type { GameStateData, InventoryData, ItemInstance, Location, Message, StepResult } from './game-state';
 import { HIGH_RARITY_FROM, INVENTORY_CAPACITY, ITEMS, RARITY_BY_TIER, RARITY_MULTIPLIER, SLOTS, statName, type ItemId } from './items';
 import type { Rng } from './rng';
 
@@ -71,6 +72,33 @@ export function dropMessage(enemyName: string, item: Drop): Message {
   return item.rarity === 'UR' || item.rarity === 'LG'
     ? { text, tone: 'normal', rarity: item.rarity, effect: 'rareDrop' }
     : { text, tone: 'normal', rarity: item.rarity };
+}
+
+/** 入れ替えを終えたとき：pending を消し、ボスの後なら CLEARED と「平和が もどった」、そうでなければ DUNGEON */
+function finishSwap(state: GameStateData, inv: InventoryData, thenClear: boolean, messages: Message[]): StepResult {
+  const next: GameStateData = { ...state, inventory: { ...inv, pending: null }, location: thenClear ? 'CLEARED' : 'DUNGEON' };
+  return {
+    state: next,
+    messages: thenClear ? [...messages, { text: 'ダンジョンに 平和が もどった', tone: 'success', effect: 'clear' }] : messages,
+  };
+}
+
+/** 拾う：指定した所持品の個体を捨て、落ちている個体を末尾に加える（50 個のまま） */
+export function takeLoot(state: GameStateData, discardId: number): StepResult {
+  const p = assertPending(state);
+  const inv = state.inventory;
+  const out = inv.items.find((i) => i.id === discardId);
+  if (!out) throw new RuleViolationError('その もちものは ない');
+  const items = [...inv.items.filter((i) => i.id !== discardId), p.item];
+  return finishSwap(state, { ...inv, items }, p.thenClear, [
+    { text: `${itemLabel(out)}を すてて ${itemLabel(p.item)}を ひろった`, tone: 'normal' },
+  ]);
+}
+
+/** あきらめる：所持品は変えない（nextId も戻さない） */
+export function abandonLoot(state: GameStateData): StepResult {
+  const p = assertPending(state);
+  return finishSwap(state, state.inventory, p.thenClear, [{ text: `${itemLabel(p.item)}を あきらめた`, tone: 'normal' }]);
 }
 
 /** 勝利時の反映：落とさなければ next へ。空きがあれば加えて next へ、満杯なら SWAP（入れ替え待ち） */

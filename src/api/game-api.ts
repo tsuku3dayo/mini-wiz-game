@@ -2,7 +2,9 @@
 // 操作は作る TASK ごとに足す
 import { resolveTurn } from '../domain/battle';
 import { continueToInn, createCharacter, rest } from '../domain/character';
+import { discard, equip, unequip } from '../domain/equipment';
 import { fieldHeal } from '../domain/heal';
+import { abandonLoot, takeLoot } from '../domain/loot';
 import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
 import { assertLocation, fromSaveData, migrateSave, toSaveData, type GameStateData, type StepResult } from '../domain/game-state';
@@ -10,7 +12,7 @@ import type { Rng } from '../domain/rng';
 import { toGameView } from './game-view';
 import { createRepository, StorageError, warnDropped, type KeyValueStore } from './repository';
 import { GameError, type CommandResult, type GameApi } from './types';
-import { validateBattle, validateMove, validateStairs, validateStartGame } from './validate';
+import { validateBattle, validateDiscardId, validateItemId, validateMove, validateSlot, validateStairs, validateStartGame } from './validate';
 
 export interface GameApiDeps {
   store: KeyValueStore;
@@ -126,6 +128,16 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     heal: () => run(fieldHeal),
 
     battle: (input) => run((state) => resolveTurn(state, validateBattle(input), deps.rng)),
+
+    equip: (input) => run((state) => equip(state, validateItemId(input))),
+
+    unequip: (input) => run((state) => unequip(state, validateSlot(input))),
+
+    discard: (input) => run((state) => discard(state, validateItemId(input))),
+
+    lootTake: (input) => run((state) => takeLoot(state, validateDiscardId(input))),
+
+    lootAbandon: () => run(abandonLoot),
 
     debugDungeon: () => respond(() => {
       const { state } = requireGame();
