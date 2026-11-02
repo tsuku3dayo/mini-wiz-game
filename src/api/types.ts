@@ -175,6 +175,12 @@ export interface GameApi {
   /** ダンジョンのヒール */
   heal(): Promise<CommandResult>;
   battle(input: { command: BattleCommand }): Promise<CommandResult>;
+  equip(input: { itemId: number }): Promise<CommandResult>;
+  unequip(input: { slot: Slot }): Promise<CommandResult>;
+  discard(input: { itemId: number }): Promise<CommandResult>;
+  /** 満杯のときの入れ替え：所持品の discardId を捨てて拾う */
+  lootTake(input: { discardId: number }): Promise<CommandResult>;
+  lootAbandon(): Promise<CommandResult>;
   /** テスト用の入口（?debug=1）からだけ呼ぶ。今の階の全情報（仕様書 §28） */
   debugDungeon(): Promise<DebugDungeon>;
 }

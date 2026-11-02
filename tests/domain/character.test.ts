@@ -157,6 +157,20 @@ describe('経験値とレベルアップ・周回', () => {
   });
 });
 
+describe('宿屋で休む（装備込み）', () => {
+  test('TC-0008-02 やすむと HP・MP が装備込みの最大になる（さいだいHP +15 で 46 → HP 10 が 61）。最大でも実行でき、1 行', () => {
+    const life = makeItem(1, 'accessory4', 'R', 15);
+    const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [], nextId: 2, pending: null };
+    const s = deepFreeze(makeState('INN', { level: 3, exp: 72, hp: 10, maxHp: 46, mp: 1, maxMp: 16, inventory }));
+    const r = rest(s);
+    expect(r.state).toMatchObject({ hp: 61, mp: 16, maxHp: 46 });
+    expect(r.messages).toEqual([{ text: 'HP と MP が かいふくした', tone: 'success' }]);
+    const again = rest(deepFreeze(r.state));
+    expect(again.state).toMatchObject({ hp: 61, mp: 16 });
+    expect(again.messages).toHaveLength(1);
+  });
+});
+
 describe('経験値を得て強くなる', () => {
   const growthLine = (a: number, b: number, c: number, d: number, e: number) => `HP +${a} MP +${b} こうげき +${c} ぼうぎょ +${d} すばやさ +${e}`;
 

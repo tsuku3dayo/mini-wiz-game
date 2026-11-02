@@ -1,6 +1,6 @@
 // 操作の引数の検査（仕様書 §22.1、§22.2。v1.0 の DTO と同じ規則）。違反は ValidationError
-// 装備の引数は、その操作を作る TASK で足す
 import type { BattleCommand } from '../domain/battle';
+import { SLOTS, type Slot } from '../domain/items';
 import { validateName } from '../domain/character';
 import type { MoveAction } from '../domain/dungeon';
 import { ValidationError } from '../domain/errors';
@@ -26,6 +26,20 @@ function oneOf<T extends string>(input: unknown, field: string, values: readonly
 
 export const MOVE_ACTIONS: readonly MoveAction[] = ['forward', 'backward', 'turnLeft', 'turnRight'];
 export const STAIRS_DIRECTIONS: readonly StairsDirection[] = ['down', 'up'];
+
+/** 整数 ≥ 1 の引数（v1.0 の DTO の IsInt・Min(1) と同じ既定の文。TD-0002 §1.5） */
+function positiveInt(input: unknown, field: string): number {
+  const v = isObject(input) ? input[field] : undefined;
+  if (typeof v !== 'number' || !Number.isInteger(v)) {
+    throw new ValidationError([{ field, message: `${field} must be an integer number` }]);
+  }
+  if (v < 1) throw new ValidationError([{ field, message: `${field} must not be less than 1` }]);
+  return v;
+}
+
+export const validateItemId = (input: unknown): number => positiveInt(input, 'itemId');
+export const validateDiscardId = (input: unknown): number => positiveInt(input, 'discardId');
+export const validateSlot = (input: unknown): Slot => oneOf(input, 'slot', SLOTS);
 
 export const BATTLE_COMMANDS: readonly BattleCommand[] = ['attack', 'heal', 'flee'];
 export const validateBattle = (input: unknown): BattleCommand => oneOf(input, 'command', BATTLE_COMMANDS);

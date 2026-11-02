@@ -78,7 +78,7 @@ test.describe('メニューとコマンド', () => {
     expect(await labels()).toEqual(['もどる', 'ヒール', 'そうび', 'もちもの', 'おと：オフ']);
   });
 
-  test('TC-0010-04ダンジョンで MP 2 のとき「ヒール」は無効。選ぶと「MP が たりない」が通常の色で出て、ゲーム API を呼ばない', async ({ page }, info) => {
+  test('TC-0010-04 ダンジョンで MP 2 のとき「ヒール」は無効。選ぶと「MP が たりない」が通常の色で出て、ゲーム API を呼ばない', async ({ page }, info) => {
     await startAt(page, 'DUNGEON', { state: { mp: 2 } });
     const menu = await openDungeonMenu(page, info);
     const heal = menu.getByRole('menuitem').filter({ hasText: 'ヒール' });

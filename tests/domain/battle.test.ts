@@ -6,6 +6,7 @@ import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
 import { makeItem } from '../helpers/fixtures';
 import { battleState, noRng } from '../helpers/maps';
+import { recordingRng } from '../helpers/rng';
 
 describe('敵と戦う', () => {
   test('TC-0019-02 toBattleView のキーは 5 つだけで、敵の HP がない', () => {
@@ -113,6 +114,59 @@ describe('経験値を得て強くなる', () => {
     expect(r.state).toMatchObject({ location: 'DUNGEON', battle: null, exp: 7, hp: 20 });
     expect(r.state.dungeon!.player).toEqual(start.dungeon!.player);
     expect(r.state.records.kills).toBe(start.records.kills + 1);
+  });
+});
+
+describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
+  test('TC-0023-01 HP が 0 になると宿屋で目覚め、HP・MP は装備込みの最大（61/61）。Lv・経験値・基礎値・装備・所持品は同じ、死亡 +1、最後の 2 行。ボス戦でも同じ', () => {
+    const life = makeItem(1, 'accessory4', 'R', 15);
+    const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [makeItem(2, 'armor1', 'N', 1)], nextId: 3, pending: null };
+    const lv3 = { level: 3, exp: 80, hp: 1, maxHp: 46, mp: 2, maxMp: 16, attack: 7, defense: 7, speed: 5, inventory };
+    for (const [kind, hp] of [['goblin', 18], ['necromancer', 260]] as const) {
+      const start = deepFreeze(battleState(kind, hp, lv3));
+      const r = resolveTurn(start, 'attack', new SequenceRng([100, 0]));
+      expect(r.outcome).toBe('defeat');
+      expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, hp: 61, mp: 16, level: 3, exp: 80, maxHp: 46, attack: 7, defense: 7, speed: 5 });
+      expect(r.state.inventory).toEqual(inventory);
+      expect(r.state.records.deaths).toBe(start.records.deaths + 1);
+      expect(r.messages.slice(-2)).toEqual([
+        { text: 'ゆうしゃは たおれた…', tone: 'danger' },
+        { text: '気がつくと 宿屋に いた', tone: 'normal' },
+      ]);
+    }
+  });
+
+  test('TC-0024-03 Lv12・累計 1584 でボスを倒すと 10 行（たおした・経験値・レベルアップ 6 行・ドロップ・平和）。effect の並び。CLEARED・ダンジョンと戦闘は null', () => {
+    const growth = Array.from({ length: 3 * 5 }, (_, i) => [8, 2, 1, 1, 1][i % 5]);
+    const rng = new SequenceRng([100, 0, ...growth, 1, 0, 8, 1, 20]);
+    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100 })), 'attack', rng);
+    const lines = r.messages.slice(1); // 先頭はプレイヤーの攻撃の行
+    expect(lines.map((m) => m.text)).toEqual([
+      '暗黒のネクロマンサーを たおした！',
+      '経験値 1000 を かくとく',
+      'レベルが あがった！ Lv13', 'HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1',
+      'レベルが あがった！ Lv14', 'HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1',
+      'レベルが あがった！ Lv15', 'HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1',
+      '暗黒のネクロマンサーは エクスカリバー［LG］（こうげき +60）を おとした！',
+      'ダンジョンに 平和が もどった',
+    ]);
+    expect(lines.map((m) => m.effect).filter(Boolean)).toEqual(['bossDefeat', 'levelUp', 'levelUp', 'levelUp', 'rareDrop', 'clear']);
+    expect(r.state).toMatchObject({ location: 'CLEARED', dungeon: null, battle: null });
+  });
+
+  test('TC-0027-07 乱数を引く順：（成長 5 個）→ ドロップ判定 → 特例（ダークナイトだけ）→ 部位 → 段階 → レアリティ → 補正値', () => {
+    // スライム（レベルアップなし）
+    const slime = recordingRng(new SequenceRng([100, 0, 15, 2, 1, 50, 1]));
+    resolveTurn(deepFreeze(battleState('slime', 1)), 'attack', slime);
+    expect(slime.calls.map(({ min, max }) => [min, max])).toEqual([[1, 100], [0, 2], [1, 100], [0, 3], [1, 1], [1, 100], [1, 2]]);
+    // ダークナイト（HP 1）をプレイヤーが先に倒す。経験値 50 で Lv2（成長 5 個）→ ドロップ（特例あり）
+    const dk = recordingRng(new SequenceRng([100, 0, 8, 2, 1, 1, 1, 35, 6, 1, 7, 50, 13]));
+    resolveTurn(deepFreeze(battleState('darkKnight', 1, { speed: 20, attack: 30 })), 'attack', dk);
+    expect(dk.calls.map(({ min, max }) => [min, max])).toEqual([
+      [1, 100], [0, 2],
+      [8, 12], [2, 4], [1, 2], [1, 2], [1, 2],
+      [1, 100], [1, 100], [0, 3], [5, 7], [1, 100], [13, 17],
+    ]);
   });
 });
 

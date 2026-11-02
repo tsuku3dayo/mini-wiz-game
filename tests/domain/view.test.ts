@@ -51,7 +51,8 @@ describe('疑似3D の視界', () => {
         }
       }
     }
-  });
+    // 2 万通りを調べるので、ほかのテストと同時に動くと 5 秒の既定を超えることがある
+  }, 30_000);
 
   test('横が開いているときだけ leftFront・rightFront が付き、階段の種類が出る。ボスのマスは null', () => {
     const v = toFirstPersonView(openMap({ x: 0, y: 9, facing: 'N' }));

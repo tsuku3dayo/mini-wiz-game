@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.5
+version: 1.6
 updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -63,6 +63,8 @@ verified: null
 - `move`・`stairs` の引数が違うときの `details[0].message` は、v1.0 の DTO（class-validator の `IsIn`）の既定の文と同じにする：`action must be one of the following values: forward, backward, turnLeft, turnRight`、`direction must be one of the following values: down, up`（`api/validate.ts`）。
 - テスト用の道具 `tests/helpers/maps.ts`：`dungeonState(dungeon, overrides)`（DUNGEON の状態）、`constantRng(value)`（いつも同じ値。範囲の外なら端に寄せる。100 なら遭遇しない）、`noRng()`（引くと例外）、`addWall(d, floor, x, y, dir)`（両側から壁を足す）。
 - （v1.5。TASK-0010）`battleState(kind, enemyHp, overrides, isBoss)`（戦闘中の状態）、`tests/helpers/rng.ts` の `recordingRng(inner)`（引いた乱数の `int(a, b)` の引数と値を記録する）。
+- （v1.6。TASK-0014）`equip`・`discard` の `itemId`、`lootTake` の `discardId` が整数でないときは `{field} must be an integer number`、1 未満のときは `{field} must not be less than 1`（v1.0 の DTO の `IsInt`・`Min(1)` の既定の文）。`unequip` の `slot` は `IsIn` と同じ文。
+- （v1.6。TASK-0014）自動プレイヤー `tests/helpers/autoplayer.ts` の `play(api, name, { laps, resume })`：`resume` なら新しく始めず、今のプレイ中の状態から続ける（2 周目を確かめるため）。装備の強さは段階 → 補正値で比べる。上り階段ともう一方（下り階段。5F は上り階段の対角）の間を行き来して育つ。
 
 ## 2. 表示の計算（`src/logic/`）
 
