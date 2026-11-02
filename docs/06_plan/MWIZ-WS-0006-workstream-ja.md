@@ -3,8 +3,8 @@ id: MWIZ-WS-0006
 type: Workstream
 title: 装備を集めて強くする
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-EP-0006（v1.0）
   - MWIZ-US-0027（v1.0）
@@ -25,11 +25,11 @@ verified: null
 
 ドロップ・所持品・付け替え・捨てる・入れ替えと、そうび・もちもの・入れ替えの画面を作る。
 
-## TASK（この順に進める。確認 ID 59 個）
+## TASK（この順に進める。確認 ID 61 個。v1.1 で通しプレイの 2 個を TASK-0012 から移した）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
-| [TASK-0014](MWIZ-TASK-0014-implementation-task-ja.md) | 装備のルールとゲーム API | 34 | `feat/TASK-0014-items-rules` |
+| [TASK-0014](MWIZ-TASK-0014-implementation-task-ja.md) | 装備のルールとゲーム API | 36 | `feat/TASK-0014-items-rules` |
 | [TASK-0015](MWIZ-TASK-0015-implementation-task-ja.md) | そうび・もちもの・入れ替えの画面 | 25 | `feat/TASK-0015-items-screens` |
 
 ## WS の終わりの手動テスト
