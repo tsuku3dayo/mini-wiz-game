@@ -1,7 +1,7 @@
 // ゲーム API（仕様書 §21.5、§21.6、§22、TD-0002 §3）
 // 操作は作る TASK ごとに足す
 import { resolveTurn } from '../domain/battle';
-import { createCharacter, rest } from '../domain/character';
+import { continueToInn, createCharacter, rest } from '../domain/character';
 import { fieldHeal } from '../domain/heal';
 import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
@@ -112,6 +112,8 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     }),
 
     rest: () => run(rest),
+
+    continueGame: () => run(continueToInn),
 
     enterDungeon: () => run((state) => enterDungeon(state, deps.rng)),
 

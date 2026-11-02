@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ENCOUNTER_TABLE } from '../../src/domain/constants';
+import { ENCOUNTER_TABLE, ENEMIES } from '../../src/domain/constants';
 import { cellIndex } from '../../src/domain/dungeon';
 import { InvalidStateError } from '../../src/domain/errors';
 import { checkEncounter, enterDungeon, moveInDungeon, pickEnemy, returnToInn, useStairs, visitCurrent } from '../../src/domain/explore';
@@ -208,6 +208,55 @@ describe('敵に遭遇する', () => {
     expect([pick(3, 30), pick(3, 31), pick(3, 80), pick(3, 81)]).toEqual(['goblin', 'skeleton', 'skeleton', 'orc']);
     expect([pick(4, 30), pick(4, 31), pick(4, 80), pick(4, 81)]).toEqual(['skeleton', 'orc', 'orc', 'darkKnight']);
     expect([pick(5, 40), pick(5, 41)]).toEqual(['orc', 'darkKnight']);
+  });
+});
+
+describe('踏破記録とボス', () => {
+  test('TC-0015-01 出発直後は入口だけ。歩くと（遭遇しても）踏破済み、回転・壁では変わらない。ボスのマスは記録しない。階を移っても前の階の記録は残る', () => {
+    const entered = enterDungeon(deepFreeze(makeState('INN')), new SeededRng(9)).state;
+    const d0 = entered.dungeon!;
+    expect(d0.floors[0].visited.filter(Boolean)).toHaveLength(1);
+    expect(d0.floors[0].visited[cellIndex(d0.floors[0].up)]).toBe(true);
+
+    const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 })));
+    const walked = moveInDungeon(start, 'forward', new SequenceRng([21])).state;
+    expect(walked.dungeon!.floors[0].visited[cellIndex({ x: 4, y: 4 })]).toBe(true);
+    const back = moveInDungeon(start, 'backward', new SequenceRng([1, 1])).state; // 遭遇しても踏破済み
+    expect(back.location).toBe('BATTLE');
+    expect(back.dungeon!.floors[0].visited[cellIndex({ x: 4, y: 6 })]).toBe(true);
+    expect(moveInDungeon(start, 'turnLeft', noRng()).state.dungeon!.floors[0].visited).toEqual(start.dungeon!.floors[0].visited);
+    const edge = deepFreeze(dungeonState(openMap({ x: 4, y: 0 })));
+    expect(moveInDungeon(edge, 'forward', noRng()).state.dungeon!.floors[0].visited).toEqual(edge.dungeon!.floors[0].visited);
+
+    const boss = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5))), 'forward', noRng()).state;
+    expect(boss.location).toBe('BATTLE');
+    expect(boss.dungeon!.floors[4].visited[cellIndex({ x: 9, y: 0 })]).toBe(false);
+
+    // 1F で 3 マス記録 → 2F へ降りて戻る → 1F の記録はそのまま
+    let s = deepFreeze(dungeonState(openMap({ x: 9, y: 2 })));
+    s = moveInDungeon(s, 'forward', new SequenceRng([21])).state;
+    s = moveInDungeon(s, 'forward', noRng()).state; // 下り階段 (9,0)
+    const before = s.dungeon!.floors[0].visited;
+    const down = useStairs(s, 'down').state;
+    const up = useStairs(down, 'up').state;
+    expect(up.dungeon!.floors[0].visited).toEqual(before);
+    expect(up.dungeon!.floors[1].visited.filter(Boolean)).toHaveLength(1);
+  });
+
+  test('TC-0024-01 5F でボスのマスへ前進すると、乱数を引かずに暗黒のネクロマンサー戦（isBoss・bossAppear）', () => {
+    const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5))), 'forward', noRng());
+    expect(r.state.location).toBe('BATTLE');
+    expect(r.state.battle).toEqual({ enemy: { kind: 'necromancer', hp: 260 }, isBoss: true });
+    expect(r.messages).toEqual([{ text: '暗黒のネクロマンサーが あらわれた！', tone: 'normal', effect: 'bossAppear' }]);
+  });
+
+  test('TC-0025-04 周回数 9 でもボスの HP は 260。敵の能力値・経験値は周回数で変わらない', () => {
+    const before = JSON.stringify(ENEMIES);
+    const records = { battles: 50, kills: 40, deaths: 2, laps: 9, bossKills: 8 };
+    const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { records })), 'forward', noRng());
+    expect(r.state.battle!.enemy.hp).toBe(260);
+    expect(JSON.stringify(ENEMIES)).toBe(before);
+    expect(ENEMIES.necromancer).toMatchObject({ maxHp: 260, attack: 34, defense: 20, speed: 14, exp: 1000 });
   });
 });
 

@@ -299,6 +299,18 @@ body {
 .wiz-status [data-warning="true"] { color: var(--wiz-color-warning); }
 .wiz-status [data-testid="status-hp"].flash { animation: wiz-blink 200ms step-end 1; }
 
+/* ゲームクリア（仕様書 §11.5「ゲームクリア」、GUI-0005 §2）。外枠はタイトルと同じ（縦の中央） */
+.clear-main { gap: var(--wiz-gap); }
+.clear-heading { margin: 0 0 8px; text-align: center; line-break: strict; font-size: 36px; line-height: 1.3; font-weight: normal; color: var(--wiz-color-frame); }
+@media (min-width: 600px) { .clear-heading { font-size: 48px; } }
+.clear-heading.rising { animation: wiz-rise 1500ms ease-out 1; }
+@keyframes wiz-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.clear-line { margin: 0; }
+.clear-line + .clear-line { margin-top: 8px; }
+.clear-saved { color: var(--wiz-color-success); }
+.clear-laps { color: var(--wiz-color-arcane); }
+.clear-log-slot { display: grid; }
+
 /* 戦闘（仕様書 §11.5「戦闘」）。敵の絵は WS-0008 で足す */
 .battle-enemy { display: grid; justify-items: center; }
 .battle-enemy-name { margin: 0; font-size: 24px; line-height: 1.1; color: var(--wiz-color-primary); text-align: center; }
