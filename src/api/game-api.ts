@@ -1,13 +1,14 @@
 // ゲーム API（仕様書 §21.5、§21.6、§22、TD-0002 §3）
 // 操作は作る TASK ごとに足す
 import { createCharacter, rest } from '../domain/character';
-import { DomainError, GameNotFoundError, SaveNotFoundError, ValidationError } from '../domain/errors';
+import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
+import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
 import { assertLocation, fromSaveData, migrateSave, toSaveData, type GameStateData, type StepResult } from '../domain/game-state';
 import type { Rng } from '../domain/rng';
 import { toGameView } from './game-view';
 import { createRepository, StorageError, warnDropped, type KeyValueStore } from './repository';
 import { GameError, type CommandResult, type GameApi } from './types';
-import { validateStartGame } from './validate';
+import { validateMove, validateStairs, validateStartGame } from './validate';
 
 export interface GameApiDeps {
   store: KeyValueStore;
@@ -109,5 +110,29 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     }),
 
     rest: () => run(rest),
+
+    enterDungeon: () => run((state) => enterDungeon(state, deps.rng)),
+
+    move: (input) => run((state) => moveInDungeon(state, validateMove(input), deps.rng)),
+
+    stairs: (input) => run((state) => useStairs(state, validateStairs(input))),
+
+    returnToInn: () => run(returnToInn),
+
+    debugDungeon: () => respond(() => {
+      const { state } = requireGame();
+      const d = state.dungeon;
+      if (!d) throw new InvalidStateError('ダンジョンに いません');
+      const f = d.floors[d.floor - 1];
+      return {
+        floor: d.floor,
+        player: { ...d.player },
+        walls: [...f.walls],
+        up: { ...f.up },
+        down: f.down ? { ...f.down } : null,
+        boss: f.boss ? { ...f.boss } : null,
+        visited: [...f.visited],
+      };
+    }),
   };
 }

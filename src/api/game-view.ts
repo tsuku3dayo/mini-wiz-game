@@ -5,6 +5,7 @@ import { HEAL } from '../domain/constants';
 import { effectiveStats, equipmentBonus } from '../domain/equipment';
 import type { GameStateData, InventoryData, ItemInstance } from '../domain/game-state';
 import { INVENTORY_CAPACITY, ITEMS, SLOTS } from '../domain/items';
+import { toAutoMapView, toFirstPersonView } from '../domain/view';
 import type { GameView, InventoryView, ItemView } from './types';
 
 export function toItemView(i: ItemInstance): ItemView {
@@ -42,8 +43,8 @@ export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } =
     },
     inventory: toInventoryView(state.inventory),
     records: { ...state.records },
-    // 視界と地図（view.ts）は TASK-0008 で作る。それまではダンジョンがあっても null
-    dungeon: null,
+    // 視界と、今の階の地図だけ（未踏破のマスの壁・ほかの階・ボスの位置は入れない。§22.5）
+    dungeon: state.dungeon ? { ...toFirstPersonView(state.dungeon), map: toAutoMapView(state.dungeon) } : null,
     battle: toBattleView(state),
     clear: state.location === 'CLEARED' ? { autoSaved: opts.autoSaved ?? true } : null,
     pendingDrop: state.location === 'SWAP' && state.inventory.pending ? toItemView(state.inventory.pending.item) : null,
