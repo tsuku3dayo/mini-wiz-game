@@ -3,8 +3,8 @@ id: MWIZ-WS-0005
 type: Workstream
 title: ボスを倒し、周回して記録を残す
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-EP-0005（v1.0）
   - MWIZ-US-0024（v1.0）
@@ -24,11 +24,11 @@ verified: null
 
 ボス撃破・ゲームクリア・自動セーブ・周回・実績と、ステータス画面（広い画面では宿屋の実績）を作る。
 
-## TASK（この順に進める。確認 ID 16 個）
+## TASK（この順に進める。確認 ID 14 個。v1.1 で通しプレイの 2 個を TASK-0014 に移した）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
-| [TASK-0012](MWIZ-TASK-0012-implementation-task-ja.md) | ボス・ゲームクリア・周回 | 10 | `feat/TASK-0012-boss-clear` |
+| [TASK-0012](MWIZ-TASK-0012-implementation-task-ja.md) | ボス・ゲームクリア・周回 | 8 | `feat/TASK-0012-boss-clear` |
 | [TASK-0013](MWIZ-TASK-0013-implementation-task-ja.md) | 実績とステータス画面 | 6 | `feat/TASK-0013-records-status` |
 
 ## WS の終わりの手動テスト

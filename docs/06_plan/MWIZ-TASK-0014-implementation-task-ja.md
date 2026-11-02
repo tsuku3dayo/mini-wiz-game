@@ -3,16 +3,17 @@ id: MWIZ-TASK-0014
 type: Implementation Task
 title: 装備のルールとゲーム API
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
-  - MWIZ-WS-0006（v1.0）
+  - MWIZ-WS-0006（v1.1）
   - MWIZ-TC-0008（v1.0）
   - MWIZ-TC-0011（v1.1）
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0022（v1.0）
   - MWIZ-TC-0023（v1.0）
   - MWIZ-TC-0024（v1.0）
+  - MWIZ-TC-0025（v1.0）
   - MWIZ-TC-0026（v1.0）
   - MWIZ-TC-0027（v1.0）
   - MWIZ-TC-0028（v1.0）
@@ -33,8 +34,9 @@ verified: null
 
 - `domain/items.ts`・`loot.ts`・`equipment.ts`（ドロップ・所持品・付け替え・捨てる・入れ替え・実効値）
 - ゲーム API：equip・unequip・discard・lootTake・lootAbandon
+- `tests/helpers/autoplayer.ts` と通しプレイ（`playthrough.test.ts`）。v1.1 で TASK-0012 から移した（自動プレイヤーが付け替えと入れ替えを使うため。2026-11-02 オーナーの了承）
 
-## 対象の確認 ID（34 個：自動 34・手動 0）
+## 対象の確認 ID（36 個：自動 36・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
@@ -48,6 +50,7 @@ verified: null
 | `tests/domain/items.test.ts` | TC-0027-01、TC-0027-02、TC-0029-10 |
 | `tests/domain/loot.test.ts` | TC-0027-03、TC-0027-04、TC-0027-05、TC-0027-06、TC-0027-08、TC-0027-10、TC-0030-01、TC-0030-05 |
 | `tests/domain/equipment.test.ts` | TC-0028-03、TC-0028-05、TC-0028-07、TC-0028-12、TC-0029-07 |
+| `tests/api/playthrough.test.ts` | TC-0024-05、TC-0025-03 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。
 

@@ -320,6 +320,33 @@ describe('戦闘とヒール（ゲーム API）', () => {
   });
 });
 
+describe('周回する（ゲーム API）', () => {
+  test('TC-0008-05 1F の入口から戻っても、クリアから宿屋へ行っても、HP・MP は回復しない', async () => {
+    const back = setup({ game: storedGame(dungeonState(openMap({ x: 0, y: 9 }), { hp: 10, mp: 1 })) });
+    const r1 = await back.api.returnToInn();
+    expect(r1.state.character).toMatchObject({ hp: 10, mp: 1 });
+    const clear = setup({ game: storedGame(makeState('CLEARED', { hp: 10, mp: 1 })) });
+    const r2 = await clear.api.continueGame();
+    expect(r2.state.character).toMatchObject({ hp: 10, mp: 1 });
+  });
+
+  test('TC-0025-01 CLEARED で continueGame すると宿屋へ。ほかは変わらず「ゆうしゃは 宿屋に もどった」、乱数なし。2 回目は 409 で周回数は増えない', async () => {
+    const inventory = { ...INVENTORY, pending: null };
+    const records = { battles: 30, kills: 25, deaths: 1, laps: 2, bossKills: 1 };
+    const state = makeState('CLEARED', { level: 15, exp: 2584, hp: 40, maxHp: 120, mp: 5, maxMp: 40, inventory, records });
+    const { api, store, rng } = setupWith({ game: storedGame(state) }, new SeededRng(1));
+    const r = await api.continueGame();
+    expect(r.messages).toEqual([{ text: 'ゆうしゃは 宿屋に もどった', tone: 'normal' }]);
+    expect(r.state).toMatchObject({ location: 'INN', dungeon: null, records });
+    expect(r.state.character).toMatchObject({ level: 15, exp: 2584, hp: 40, mp: 5 });
+    expect(JSON.parse(store.raw('game')!).inventory).toEqual(inventory);
+    expect(rng.calls).toHaveLength(0);
+    const err = await caught(api.continueGame());
+    expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 409, error: 'invalid_state', message: 'その操作は いまは できない' });
+    expect(JSON.parse(store.raw('game')!).records.laps).toBe(2);
+  });
+});
+
 // 確認 ID のない、迷宮の操作の決まり（仕様書 §22.2）
 describe('迷宮の操作の引数と結果', () => {
   test('move・stairs の引数が違えば 400 validation_error（details つき）。結果の dungeon は視界と今の階の地図', async () => {

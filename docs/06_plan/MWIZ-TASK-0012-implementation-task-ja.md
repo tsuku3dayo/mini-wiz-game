@@ -3,10 +3,10 @@ id: MWIZ-TASK-0012
 type: Implementation Task
 title: ボス・ゲームクリア・周回
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
-  - MWIZ-WS-0005（v1.0）
+  - MWIZ-WS-0005（v1.1）
   - MWIZ-TC-0008（v1.0）
   - MWIZ-TC-0015（v1.0）
   - MWIZ-TC-0024（v1.0）
@@ -27,16 +27,15 @@ verified: null
 
 - ボスの配置・撃破・クリア時の自動セーブ（まとめて書く）・周回（`continueToInn`）
 - `screens/clear.ts`
-- `tests/helpers/autoplayer.ts` と通しプレイ（`playthrough.test.ts`）
+- 自動プレイヤーと通しプレイ（TC-0024-05・TC-0025-03）は、v1.1 で TASK-0014 に移した。自動プレイヤーは装備の付け替えと満杯のときの入れ替え（TASK-0014 で作る）を使うため（2026-11-02 オーナーの了承）
 
-## 対象の確認 ID（10 個：自動 10・手動 0）
+## 対象の確認 ID（8 個：自動 8・手動 0）
 
 | 置き場所 | 確認 ID |
 | --- | --- |
 | `tests/api/game-api.test.ts` | TC-0008-05、TC-0025-01 |
 | `tests/domain/explore.test.ts` | TC-0015-01、TC-0024-01、TC-0025-04 |
 | `tests/domain/battle.test.ts` | TC-0024-02 |
-| `tests/api/playthrough.test.ts` | TC-0024-05、TC-0025-03 |
 | `e2e/clear.spec.ts` | TC-0024-07、TC-0025-02 |
 
 - 自動の確認 ID は、この TASK の PR でテストを書いて通す（テストの名前の先頭に確認 ID）。手動の確認 ID は WS の終わりに実機で確かめ、AC に書く。

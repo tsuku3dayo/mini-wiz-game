@@ -89,11 +89,12 @@ export function battleOf(kind: string, hp: number, isBoss = kind === 'necromance
 }
 
 /** 場所ごとの画面の名前（body[data-screen]）。場所は使う TASK で足す */
-const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle' } as const;
+const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: 'clear' } as const;
 
 /**
  * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
  * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。BATTLE は 1F の (4,4) でゴブリン（HP 18）。
+ * CLEARED は 1 回ボスを倒したあと（laps 2・bossKills 1）。
  * 乱数は seed（既定は SEEDS.noEncounter。歩いても遭遇しない）
  */
 export async function startAt(
@@ -106,6 +107,7 @@ export async function startAt(
     INN: {},
     DUNGEON: { location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }) },
     BATTLE: { location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) },
+    CLEARED: { location: 'CLEARED', records: { battles: 30, kills: 25, deaths: 1, laps: 2, bossKills: 1 } },
   };
   await writeScene(page, { state: storedInn({ ...base[location], ...opts.state }), save: opts.save });
   await page.evaluate((seed) => window.__wiz!.useSeed(seed), opts.seed ?? SEEDS.noEncounter);

@@ -166,6 +166,8 @@ export interface GameApi {
   save(): Promise<CommandResult>;
   load(): Promise<CommandResult>;
   rest(): Promise<CommandResult>;
+  /** クリアの画面から宿屋へ（周回） */
+  continueGame(): Promise<CommandResult>;
   enterDungeon(): Promise<CommandResult>;
   move(input: { action: MoveAction }): Promise<CommandResult>;
   stairs(input: { direction: StairsDirection }): Promise<CommandResult>;

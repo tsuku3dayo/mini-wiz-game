@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { attack, damage, evadeChance, fleeChance, resolveTurn, toBattleView, turnOrder } from '../../src/domain/battle';
+import { ENEMIES } from '../../src/domain/constants';
 import { InvalidStateError } from '../../src/domain/errors';
 import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
@@ -112,6 +113,19 @@ describe('経験値を得て強くなる', () => {
     expect(r.state).toMatchObject({ location: 'DUNGEON', battle: null, exp: 7, hp: 20 });
     expect(r.state.dungeon!.player).toEqual(start.dungeon!.player);
     expect(r.state.records.kills).toBe(start.records.kills + 1);
+  });
+});
+
+describe('ボスを倒す', () => {
+  test('TC-0024-02 ボスの経験値は 1000。Lv12・累計 1584 で倒すと累計 2584・Lv15', () => {
+    expect(ENEMIES.necromancer.exp).toBe(1000);
+    // ボスの HP 1、プレイヤーが速い：回避 100（外れ）・ダメージ 0 → 撃破。成長 3 回分（15 個）→ ドロップ 5 個
+    const growth = Array.from({ length: 3 * 5 }, (_, i) => [8, 2, 1, 1, 1][i % 5]);
+    const rng = new SequenceRng([100, 0, ...growth, 1, 0, 8, 1, 20]);
+    const start = deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100 }));
+    const r = resolveTurn(start, 'attack', rng);
+    rng.assertExhausted();
+    expect(r.state).toMatchObject({ level: 15, exp: 2584 });
   });
 });
 
