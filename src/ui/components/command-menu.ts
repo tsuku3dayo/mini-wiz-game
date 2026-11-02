@@ -45,17 +45,16 @@ export function commandMenu(opts: CommandMenuOptions): CommandMenu {
     ul.classList.add('scroll');
   }
 
+  /** 項目の行を作り直す（項目が変わったときだけ） */
   function render() {
     if (disabled) ul.setAttribute('aria-disabled', 'true');
     else ul.removeAttribute('aria-disabled');
     const rows = items.map((item, i) => {
-      const active = i === cursor;
       const li = el('li', {
-        class: active ? 'wiz-menu-item active' : 'wiz-menu-item',
+        class: 'wiz-menu-item',
         role: 'menuitem',
-        tabindex: active ? 0 : -1,
         'aria-disabled': item.disabled ? 'true' : null,
-      }, el('span', { class: 'wiz-cursor', 'aria-hidden': 'true' }, active ? '▶' : '　'));
+      }, el('span', { class: 'wiz-cursor', 'aria-hidden': 'true' }));
       li.append(typeof item.label === 'string' ? document.createTextNode(item.label) : item.label);
       li.addEventListener('click', () => {
         setCursor(i, true);
@@ -67,6 +66,21 @@ export function commandMenu(opts: CommandMenuOptions): CommandMenu {
       return li;
     });
     ul.replaceChildren(...rows);
+    paint();
+  }
+
+  /**
+   * カーソルの印・色・tabindex だけを書き替える。行の要素は作り直さない
+   * （押し始めのフォーカスで作り直すと、押し終わりが別の要素になり、クリックが届かないため）
+   */
+  function paint() {
+    Array.from(ul.children).forEach((row, i) => {
+      const active = i === cursor;
+      row.classList.toggle('active', active);
+      row.setAttribute('tabindex', active ? '0' : '-1');
+      const mark = row.firstElementChild;
+      if (mark) mark.textContent = active ? '▶' : '　';
+    });
   }
 
   function rowAt(i: number): HTMLElement | undefined {
@@ -76,7 +90,7 @@ export function commandMenu(opts: CommandMenuOptions): CommandMenu {
   function setCursor(index: number, focus = true) {
     const hadFocus = ul.contains(document.activeElement);
     cursor = clampCursor(index, items.length);
-    render();
+    paint();
     const row = rowAt(cursor);
     if (row && (focus || hadFocus)) {
       row.focus({ preventScroll: true });
@@ -127,7 +141,13 @@ export function commandMenu(opts: CommandMenuOptions): CommandMenu {
       if (next.disabled !== undefined) disabled = next.disabled;
       const hadFocus = ul.contains(document.activeElement);
       cursor = clampCursor(cursor, items.length);
-      render();
+      if (next.items) {
+        render();
+      } else {
+        // 無効・有効だけが変わったときは、行を作り直さない
+        if (disabled) ul.setAttribute('aria-disabled', 'true');
+        else ul.removeAttribute('aria-disabled');
+      }
       if (hadFocus) rowAt(cursor)?.focus({ preventScroll: true });
     },
     setCursor,

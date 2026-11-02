@@ -40,6 +40,41 @@ export async function writeScene(page: Page, scene: { state?: Record<string, unk
   }, scene);
 }
 
+/** 場所ごとの画面の名前（body[data-screen]） */
+const SCREEN_OF = { INN: 'inn' } as const;
+
+/**
+ * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
+ * 場所は使う TASK で足す（今は INN だけ）
+ */
+export async function startAt(
+  page: Page,
+  location: keyof typeof SCREEN_OF,
+  opts: { state?: Record<string, unknown>; save?: Record<string, unknown> } = {},
+): Promise<void> {
+  await openDebug(page);
+  await writeScene(page, { state: storedInn(opts.state), save: opts.save });
+  await page.locator(`body[data-screen="${SCREEN_OF[location]}"]`).waitFor({ state: 'attached' });
+}
+
+/** メッセージ欄の行の文字（古い順） */
+export function logLines(page: Page): Promise<string[]> {
+  return page.locator('[role="log"] .wiz-line').allTextContents();
+}
+
+/** メニュー（aria-label）の項目の文字。先頭のカーソル（▶／全角スペース）を除く */
+export async function menuLabels(page: Page, label: string): Promise<string[]> {
+  const texts = await page.getByRole('menu', { name: label }).getByRole('menuitem').allTextContents();
+  // \s は全角スペース（カーソルのない行の印）も含む
+  return texts.map((t) => t.replace(/^[▶\s]/, ''));
+}
+
+/** メニューの ▶ のある行の文字 */
+export async function cursorLabel(page: Page, label: string): Promise<string> {
+  const text = await page.getByRole('menu', { name: label }).locator('.wiz-menu-item.active').textContent();
+  return (text ?? '').replace(/^[▶\s]/, '');
+}
+
 /** 保存の 3 つの値（プレイ中の状態・セーブ・音の設定）の文字列 */
 export function readStorage(page: Page): Promise<(string | null)[]> {
   return page.evaluate(() => ['mini-wiz-game-game', 'mini-wiz-game-save', 'mini-wiz-game-sound'].map((k) => localStorage.getItem(k)));

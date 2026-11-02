@@ -1,4 +1,47 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { readStorage, startAt, storedSave } from './helpers';
+
+test.describe('更新の帯', () => {
+  /** 帯が見えて、文と「更新」があり、上端（安全領域の内側）に固定されている */
+  async function expectBanner(page: Page) {
+    const banner = page.locator('#update-banner');
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText('新しい版があります');
+    await expect(page.locator('#update-button')).toHaveText('更新');
+    await expect(banner).toHaveCSS('position', 'fixed');
+    const top = await banner.evaluate((el) => el.getBoundingClientRect().top);
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(top).toBeLessThanOrEqual(1);
+  }
+
+  test('TC-0004-01 新しい版を受け取ると、タイトルと宿屋の画面の上端に「新しい版があります」と「更新」が出る', async ({ page }) => {
+    await page.goto('./?debug=1');
+    await page.waitForFunction(() => window.__wiz !== undefined);
+    await page.evaluate(() => window.__wiz!.showUpdateBanner());
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    await expectBanner(page);
+
+    await startAt(page, 'INN');
+    await page.evaluate(() => window.__wiz!.showUpdateBanner());
+    await expectBanner(page);
+  });
+
+  test('TC-0004-03 帯を出して 30 秒たっても読み込み直さず、プレイ中の状態とセーブがそのまま', async ({ page }) => {
+    await page.clock.install();
+    await startAt(page, 'INN', { save: storedSave() });
+    await page.evaluate(() => window.__wiz!.showUpdateBanner());
+    await expect(page.locator('#update-banner')).toBeVisible();
+    const before = await readStorage(page);
+    let navigations = 0;
+    page.on('framenavigated', (frame) => { if (frame === page.mainFrame()) navigations += 1; });
+    await page.clock.runFor(30_000);
+    expect(navigations).toBe(0);
+    expect(await readStorage(page)).toEqual(before);
+    expect(before[0]).not.toBeNull();
+    expect(before[1]).not.toBeNull();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+  });
+});
 
 // 開いている details の data-platform の一覧
 const openPlatforms = (page: Page) =>

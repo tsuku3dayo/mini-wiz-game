@@ -56,6 +56,18 @@ body {
 .title-menu { width: 100%; max-width: 360px; margin: 0 auto; display: grid; }
 .title-sub { display: flex; align-items: center; justify-content: space-between; gap: var(--wiz-gap); }
 .version { margin: 0 0 0 auto; text-align: right; color: var(--wiz-color-text-sub); }
+.title-save { margin-left: 16px; color: var(--wiz-color-text-sub); }
+.title-error:empty { display: none; }
+
+/* 名前入力（GUI-0002 §2） */
+.name-lead { margin: 0 0 16px; }
+.name-window .wiz-input { min-height: 48px; }
+
+/* 宿屋（GUI-0003 §1）。広い画面は段ごとに左右の高さをそろえる（見出しの上の余白があっても、残りの高さを分け合う） */
+.inn-log-slot, .inn-action { display: flex; flex-direction: column; }
+.inn-log-slot > .wiz-window, .inn-action > .wiz-window { flex: 1 1 auto; }
+.wiz-columns.stretch > .wiz-column { display: flex; flex-direction: column; }
+.wiz-columns.stretch > .wiz-column > * { flex: 1 1 auto; }
 
 /* 更新の帯（画面の上端に固定。安全領域の内側。GUI-0007 §2） */
 .update-banner {

@@ -1,5 +1,5 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// 音・BGM・体力わずかの枠・演出の層は、その TASK で足す。画面はタイトルだけ（名前入力・宿屋は TASK-0007）
+// 音・BGM・体力わずかの枠・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋（ほかは作る TASK で足す）
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
@@ -13,6 +13,8 @@ import { updateBanner } from './ui/components/update-banner';
 import { attachDebug } from './ui/debug';
 import { attachSkipKeys, createMessageQueue } from './ui/message-queue';
 import { createRouter } from './ui/router';
+import { mountInn } from './ui/screens/inn';
+import { mountNameEntry } from './ui/screens/name-entry';
 import { mountTitle } from './ui/screens/title';
 import { createStore } from './ui/store';
 import { prefersReducedMotion } from './ui/dom';
@@ -59,7 +61,7 @@ if (app) {
     api,
     command,
     queue,
-    screens: { title: mountTitle },
+    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn },
     onScreenChange: (name) => banner.setAllowed(name === 'title' || name === 'inn'),
   });
   router.start();

@@ -3,8 +3,8 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-TD-0003（v1.0）
   - MWIZ-GUI-0001（v1.1）
@@ -43,7 +43,8 @@ verified: null
 | 狭い画面 | `statusPanel(full, 見出し=名前)` → `messageLog(5)` → 操作の場所 |
 | 広い画面 | 2 段×2 カラム（各段で高さをそろえる）。上：`statusPanel(full, 見出し=ステータス＋なまえ行)`｜`recordsWindow`。下：`messageLog(5)`｜操作の場所 |
 
-- **操作の場所** は 1 つの入れ物で、中身を替える：宿屋の `commandMenu` ／ `gameMenu`（宿屋）／ `confirmMenu`（タイトルへ戻る）／ `errorPanel`。
+- **操作の場所** は 1 つの入れ物で、中身を替える：宿屋の `commandMenu` ／ `gameMenu`（宿屋）／ `confirmMenu`（タイトルへ戻る）。
+- エラー：続けられないエラーのときは、メッセージ欄の場所に `errorPanel`（仕様書 §11.5、TC-0012-06）。宿屋の `commandMenu` は無効にする。v1.0 では操作の場所に出すと書いていたが、仕様書に合わせて v1.1 で直した。
 - そうび・もちもの・ステータス（狭い画面だけ）は、画面全体の中身を差し替える（§7）。閉じたら作り直し、カーソルを「メニュー」に戻す。
 
 ## 4. ダンジョン（`ui/screens/dungeon.ts`、`#/dungeon`）

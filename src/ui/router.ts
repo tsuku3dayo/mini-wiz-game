@@ -97,6 +97,9 @@ export function createRouter(deps: RouterDeps): Router {
     if (name === null) {
       replaceHash('title');
       name = 'title';
+    } else if (location.hash !== hashOf(name)) {
+      // ハッシュなし・「#」だけのときも「#/」にそろえる（TC-0006-06）
+      replaceHash(name);
     }
     if (game.status === 'loading') {
       if (current !== null) mount(null);
