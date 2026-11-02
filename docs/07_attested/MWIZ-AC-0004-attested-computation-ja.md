@@ -2,7 +2,7 @@
 id: MWIZ-AC-0004
 type: Attested Computation
 title: ルールの基本（乱数・定数・状態・キャラクター） の実施記録
-status: draft
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0009（v1.0）
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TD-0002（v1.3）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
 # AC-0004 ルールの基本（乱数・定数・状態・キャラクター） の実施記録
@@ -58,6 +58,10 @@ verified: null
 - スクリーンショット：画面を変えていないので撮っていない
 
 CI の結果（PR #32、2026-11-02）：`check`（verify）OK 59 秒、`e2e` OK 1 分 27 秒。
+
+### WS-0002 の終わりの手動テスト（2026-11-02、オーナー）
+
+この TASK に手動の確認 ID はない。ここで作ったルール（名前の規則・キャラクターの作成・やすむ）は、TASK-0007 の画面から使われ、WS-0002 の手動テスト（TC-0007-11、iPhone 11 の Safari で名前を入れて宿屋に移る。AC-0007）で OK だった。
 
 ## 3. 確認できなかったこと
 

@@ -2,7 +2,7 @@
 id: MWIZ-AC-0005
 type: Attested Computation
 title: 保存とゲーム API の骨組み の実施記録
-status: draft
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -11,7 +11,7 @@ sources:
   - MWIZ-TC-0009（v1.0）
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TD-0002（v1.3）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
 # AC-0005 保存とゲーム API の骨組み の実施記録
@@ -55,10 +55,14 @@ verified: null
 
 CI の結果（PR #33、2026-11-02）：`check`（verify）OK 57 秒、`e2e` OK 1 分 23 秒。
 
+### WS-0002 の終わりの手動テスト（2026-11-02、オーナー）
+
+この TASK に手動の確認 ID はない。ここで作った保存とゲーム API（startGame）は、WS-0002 の手動テスト（TC-0007-11、iPhone 11 の Safari で名前を入れて宿屋に移る。AC-0007）で使われ、OK だった。本物の localStorage での読み書きは、TASK-0007 の E2E（セーブ・つづきから・タイトルへ戻る）で確かめた。
+
 ## 3. 確認できなかったこと
 
 - 手動の確認 ID はこの TASK にない。
-- 本物の localStorage での読み書きは、まだ画面につないでいないので確かめていない（メモリの Storage で確かめた）。TASK-0006・0007 の E2E で確かめる。
+- 本物の localStorage での読み書きは、この TASK では画面につないでいないので確かめていない（メモリの Storage で確かめた）。→ TASK-0007 の E2E で確かめた（上の手動テストの節）。
 
 ## 4. 後片付け
 
