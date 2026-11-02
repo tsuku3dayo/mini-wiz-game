@@ -3,8 +3,8 @@ id: MWIZ-WS-0002
 type: Workstream
 title: キャラクターを作り、宿屋を拠点に遊ぶ
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-02
 sources:
   - MWIZ-EP-0002（v1.0）
   - MWIZ-US-0006（v1.1）
@@ -30,13 +30,13 @@ verified: null
 
 ルールの基本・保存・ゲーム API・画面の共通の仕組みを作り、タイトル → 名前入力 → 宿屋（やすむ・セーブ・メニュー・タイトルへ戻る）まで遊べるようにする。E2E で場面を作るためのテスト用の入口（US-0038）もここで作り始める。
 
-## TASK（この順に進める。確認 ID 43 個）
+## TASK（この順に進める。確認 ID 44 個。v1.1 で TC-0005-06 を TASK-0006 に足した）
 
 | TASK | 内容 | 確認 ID の数 | ブランチ |
 | --- | --- | --- | --- |
 | [TASK-0004](MWIZ-TASK-0004-implementation-task-ja.md) | ルールの基本（乱数・定数・状態・キャラクター） | 6 | `feat/TASK-0004-domain-basics` |
 | [TASK-0005](MWIZ-TASK-0005-implementation-task-ja.md) | 保存とゲーム API の骨組み | 6 | `feat/TASK-0005-storage-api` |
-| [TASK-0006](MWIZ-TASK-0006-implementation-task-ja.md) | 画面の共通の仕組み | 5 | `feat/TASK-0006-ui-core` |
+| [TASK-0006](MWIZ-TASK-0006-implementation-task-ja.md) | 画面の共通の仕組み | 6 | `feat/TASK-0006-ui-core` |
 | [TASK-0007](MWIZ-TASK-0007-implementation-task-ja.md) | タイトル・名前入力・宿屋の画面 | 26 | `feat/TASK-0007-title-inn` |
 
 ## WS の終わりの手動テスト
