@@ -166,4 +166,21 @@ export interface GameApi {
   save(): Promise<CommandResult>;
   load(): Promise<CommandResult>;
   rest(): Promise<CommandResult>;
+  enterDungeon(): Promise<CommandResult>;
+  move(input: { action: MoveAction }): Promise<CommandResult>;
+  stairs(input: { direction: StairsDirection }): Promise<CommandResult>;
+  returnToInn(): Promise<CommandResult>;
+  /** テスト用の入口（?debug=1）からだけ呼ぶ。今の階の全情報（仕様書 §28） */
+  debugDungeon(): Promise<DebugDungeon>;
+}
+
+/** debugDungeon の結果（v1.0 の GET /api/debug/dungeon と同じ中身） */
+export interface DebugDungeon {
+  floor: number;
+  player: { x: number; y: number; facing: Facing };
+  walls: number[];
+  up: { x: number; y: number };
+  down: { x: number; y: number } | null;
+  boss: { x: number; y: number } | null;
+  visited: boolean[];
 }

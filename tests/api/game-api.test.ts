@@ -5,6 +5,7 @@ import type { GameStateData } from '../../src/domain/game-state';
 import { SwappableRng } from '../../src/domain/rng';
 import { createFakeStorage, type FakeStorage } from '../helpers/fake-storage';
 import { LOCATIONS, makeItem, makeState } from '../helpers/fixtures';
+import { dungeonState, openMap } from '../helpers/maps';
 
 const NOW = '2026-11-02T01:23:45.678Z';
 const CHARACTER = { name: 'アルド', level: 4, exp: 150, hp: 12, maxHp: 55, mp: 3, maxMp: 17, attack: 9, defense: 8, speed: 8 };
@@ -166,6 +167,93 @@ describe('保存の失敗が分かる', () => {
       store.setRaw('save', text);
       expect(await api.getSave()).toEqual({ exists: false, summary: null });
     }
+  });
+});
+
+describe('迷宮を探索する（ゲーム API）', () => {
+  test('TC-0013-03 出発 → 宿屋へ戻る → もう一度出発 すると、2 回目の迷宮は 1 回目と違う', async () => {
+    const { api } = setup({ game: storedGame(makeState('INN')) });
+    await api.enterDungeon();
+    const first = await api.debugDungeon();
+    expect(first.floor).toBe(1);
+    expect(first.player).toEqual({ ...first.up, facing: 'N' });
+    await api.returnToInn();
+    await api.enterDungeon();
+    const second = await api.debugDungeon();
+    expect({ walls: second.walls, up: second.up, down: second.down }).not.toEqual({ walls: first.walls, up: first.up, down: first.down });
+  });
+
+  test('TC-0038-03 debugDungeon は今の階の全マス（未踏破・ボスを含む）を返し、ふつうの結果にはそれらが入らない', async () => {
+    const d = openMap({ x: 9, y: 2, facing: 'N' }, {}, 5);
+    const { api } = setup({ game: storedGame(dungeonState(d)) });
+    const debug = await api.debugDungeon();
+    expect(debug).toEqual({
+      floor: 5,
+      player: { x: 9, y: 2, facing: 'N' },
+      walls: d.floors[4].walls,
+      up: { x: 0, y: 9 },
+      down: null,
+      boss: { x: 9, y: 0 },
+      visited: d.floors[4].visited,
+    });
+    const view = (await api.move({ action: 'turnLeft' })).state;
+    const text = JSON.stringify(view);
+    for (const key of ['"walls":[', '"boss":', '"up":', '"down":', '"visited":', '"floors":', '"revision":', '"schemaVersion":', '"updatedAt":']) {
+      expect(text).not.toContain(key);
+    }
+    expect(Object.keys(view.dungeon!).sort()).toEqual(['depths', 'facing', 'floor', 'map', 'underfoot']);
+    expect(view.dungeon!.map.cells.every((c) => c === null)).toBe(true);
+
+    // ゲームがなければ 404、ダンジョンがなければ 409「ダンジョンに いません」
+    expect((await caught(setup().api.debugDungeon())).status).toBe(404);
+    const inn = await caught(setup({ game: storedGame(makeState('INN')) }).api.debugDungeon());
+    expect({ status: inn.status, error: inn.error, message: inn.message }).toEqual({ status: 409, error: 'invalid_state', message: 'ダンジョンに いません' });
+  });
+});
+
+describe('保存の失敗と競合（迷宮の操作）', () => {
+  test('TC-0012-03 書く直前の読み直しで revision が進んでいたら、move は 409 conflict で、保存はほかのタブの値のまま', async () => {
+    const { api, store } = setup({ game: storedGame(dungeonState(openMap({ x: 4, y: 5 })), 3) });
+    const other = storedGame(dungeonState(openMap({ x: 2, y: 2 })), 4);
+    store.onRead = (name, n) => { if (name === 'game' && n === 2) store.put('game', other); };
+    const err = await caught(api.move({ action: 'forward' }));
+    expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 409, error: 'conflict', message: '他の操作と競合しました' });
+    expect(JSON.parse(store.raw('game')!)).toEqual(other);
+  });
+
+  test('TC-0012-05 書けなければ move は 500 storage_error で保存は変わらない。セーブが書けなければ前のセーブが残る', async () => {
+    const { api, store } = setup({ game: storedGame(dungeonState(openMap({ x: 4, y: 5 }))) });
+    store.failWrites.add('game');
+    const before = store.raw('game');
+    const err = await caught(api.move({ action: 'forward' }));
+    expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 500, error: 'storage_error', message: '保存できませんでした' });
+    expect(store.raw('game')).toBe(before);
+
+    const inn = setup({ game: storedGame(makeState('INN')), save: storedSave() });
+    inn.store.failWrites.add('save');
+    const saveBefore = inn.store.raw('save');
+    const e2 = await caught(inn.api.save());
+    expect({ status: e2.status, error: e2.error }).toEqual({ status: 500, error: 'storage_error' });
+    expect(inn.store.raw('save')).toBe(saveBefore);
+  });
+});
+
+// 確認 ID のない、迷宮の操作の決まり（仕様書 §22.2）
+describe('迷宮の操作の引数と結果', () => {
+  test('move・stairs の引数が違えば 400 validation_error（details つき）。結果の dungeon は視界と今の階の地図', async () => {
+    const { api } = setup({ game: storedGame(dungeonState(openMap({ x: 0, y: 9 }))) });
+    const bad = await caught(api.move({ action: 'jump' } as never));
+    expect({ status: bad.status, error: bad.error, message: bad.message }).toEqual({ status: 400, error: 'validation_error', message: '入力が正しくありません' });
+    expect(bad.details).toEqual([{ field: 'action', message: 'action must be one of the following values: forward, backward, turnLeft, turnRight' }]);
+    const badStairs = await caught(api.stairs({} as never));
+    expect(badStairs.details).toEqual([{ field: 'direction', message: 'direction must be one of the following values: down, up' }]);
+
+    const r = await api.move({ action: 'forward' });
+    expect(r.state.dungeon).toMatchObject({ floor: 1, facing: 'N', underfoot: null });
+    expect(r.state.dungeon!.map.player).toEqual({ x: 0, y: 8 });
+    expect(r.state.dungeon!.map.cells.filter((c) => c !== null)).toHaveLength(1);
+    const stairs = await caught(api.stairs({ direction: 'up' }));
+    expect({ status: stairs.status, message: stairs.message }).toEqual({ status: 409, message: 'ここには のぼり階段は ない' });
   });
 });
 

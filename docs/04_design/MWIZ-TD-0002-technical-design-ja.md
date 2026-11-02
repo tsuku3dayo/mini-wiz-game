@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.3
+version: 1.4
 updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -57,6 +57,11 @@ verified: null
 ### 1.4 仕様書で決まっていなかったこと（v1.1。TASK-0004 で決めた）
 
 - `normalizeInventory` で、装備中の枠に **部位の合わない個体**（例：よろいの枠に `weapon1`）があったら、形の違う値として黙って捨てる（その枠は空にする）。ID は `nextId` の計算に含める。
+
+### 1.5 仕様書で決まっていなかったこと（v1.4。TASK-0008 で決めた）
+
+- `move`・`stairs` の引数が違うときの `details[0].message` は、v1.0 の DTO（class-validator の `IsIn`）の既定の文と同じにする：`action must be one of the following values: forward, backward, turnLeft, turnRight`、`direction must be one of the following values: down, up`（`api/validate.ts`）。
+- テスト用の道具 `tests/helpers/maps.ts`：`dungeonState(dungeon, overrides)`（DUNGEON の状態）、`constantRng(value)`（いつも同じ値。範囲の外なら端に寄せる。100 なら遭遇しない）、`noRng()`（引くと例外）、`addWall(d, floor, x, y, dir)`（両側から壁を足す）。
 
 ## 2. 表示の計算（`src/logic/`）
 
@@ -129,7 +134,7 @@ run(step)
 
 1. `rng`・`constants`・`errors`・`game-state` の型
 2. `character`・`heal`・`records`（`rest` と `normalizeInventory` が使うので、`items` のマスタ・`conformItem`、`equipment` の `effectiveStats`、`loot` の `emptyInventory` もここで作る。v1.1）
-3. `dungeon`・`floors`・`explore`・`view`
+3. `dungeon`・`floors`・`explore`・`view`（移動で遭遇すると戦闘が始まるので、`battle` の `startBattle` もここで作る。v1.4）
 4. `battle`
 5. `items`・`loot`・`equipment`
 6. `storage`・`repository`・`game-view`・`validate`・`game-api`
