@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { dungeonMap, logLines, openDebug, startAt } from './helpers';
+import { battleOf, dungeonMap, logLines, openDebug, startAt, storedSave } from './helpers';
 
 /** debugDungeon を呼び、reject したら { status, message } を返す */
 const debugResult = (page: Page) => page.evaluate(async () => {
@@ -40,6 +40,20 @@ test.describe('テスト用の入口', () => {
 
     await startAt(page, 'INN');
     expect(await debugResult(page)).toEqual({ status: 409, message: 'ダンジョンに いません' });
+  });
+
+  test('TC-0038-05 writeState で戦闘の状態を書くと戦闘の画面と敵の名前。writeSave でセーブを書くと、タイトルの「つづきから」にカーソルと「名前 Lv」', async ({ page }) => {
+    await startAt(page, 'BATTLE', { state: { battle: battleOf('skeleton', 20) } });
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    await expect(page.locator('body')).toHaveAttribute('data-location', 'BATTLE');
+    await expect(page.getByTestId('enemy-window')).toHaveText('スケルトン');
+
+    await page.evaluate(() => localStorage.clear());
+    await openDebug(page);
+    await page.evaluate((save) => window.__wiz!.writeSave(save), storedSave({ name: 'アルド', level: 5 }));
+    const cont = page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'つづきから' });
+    await expect(cont).toContainText('アルド Lv5');
+    await expect(cont).toHaveClass(/active/);
   });
 
   test('TC-0038-04 useSeed で同じシードなら「ダンジョンへ」で同じ迷宮、違うシードなら違う迷宮', async ({ page }) => {

@@ -44,7 +44,16 @@ export async function writeScene(page: Page, scene: { state?: Record<string, unk
  * 歩いても遭遇しないシード：SeededRng(11350) は最初の 40 回の int(1,100) がすべて 21 以上
  * （遭遇は 20 以下。仕様書 §4.3）。決まった結果になるシードは、使う TASK で足していく
  */
-export const SEEDS = { noEncounter: 11350 } as const;
+export const SEEDS = {
+  noEncounter: 11350,
+  /** 1F で次の一歩でスライムに遭遇する（最初の int(1,100) が 20 以下、次が 70 以下） */
+  slimeNext: 7,
+  /**
+   * 最初の int(1,100) が 63（回避の判定が外れる・逃走 90% が成功する）、次の int(0,2) のあとの int(1,100) も外れる値。
+   * 敵が先なら敵の攻撃が当たり、プレイヤーが先ならプレイヤーの攻撃が当たる。倒してもドロップしない
+   */
+  hits: 1,
+} as const;
 
 type Facing = 'N' | 'E' | 'S' | 'W';
 
@@ -74,24 +83,32 @@ export function dungeonMap(opts: { x: number; y: number; facing?: Facing; floor?
   return { width: size, height: size, floors, floor, player: { x: opts.x, y: opts.y, facing: opts.facing ?? 'N' } };
 }
 
+/** 戦闘のデータ（敵の種類と残り HP） */
+export function battleOf(kind: string, hp: number, isBoss = kind === 'necromancer'): Record<string, unknown> {
+  return { enemy: { kind, hp }, isBoss };
+}
+
 /** 場所ごとの画面の名前（body[data-screen]）。場所は使う TASK で足す */
-const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon' } as const;
+const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle' } as const;
 
 /**
  * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
- * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。乱数は SEEDS.noEncounter（歩いても遭遇しない）
+ * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。BATTLE は 1F の (4,4) でゴブリン（HP 18）。
+ * 乱数は seed（既定は SEEDS.noEncounter。歩いても遭遇しない）
  */
 export async function startAt(
   page: Page,
   location: keyof typeof SCREEN_OF,
-  opts: { state?: Record<string, unknown>; save?: Record<string, unknown> } = {},
+  opts: { state?: Record<string, unknown>; save?: Record<string, unknown>; seed?: number } = {},
 ): Promise<void> {
   await openDebug(page);
-  const state = location === 'DUNGEON'
-    ? storedInn({ location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }), ...opts.state })
-    : storedInn(opts.state);
-  await writeScene(page, { state, save: opts.save });
-  if (location === 'DUNGEON') await page.evaluate((seed) => window.__wiz!.useSeed(seed), SEEDS.noEncounter);
+  const base: Record<string, Record<string, unknown>> = {
+    INN: {},
+    DUNGEON: { location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }) },
+    BATTLE: { location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) },
+  };
+  await writeScene(page, { state: storedInn({ ...base[location], ...opts.state }), save: opts.save });
+  await page.evaluate((seed) => window.__wiz!.useSeed(seed), opts.seed ?? SEEDS.noEncounter);
   await page.locator(`body[data-screen="${SCREEN_OF[location]}"]`).waitFor({ state: 'attached' });
 }
 

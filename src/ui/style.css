@@ -297,6 +297,17 @@ body {
 .wiz-status-compact { display: flex; flex-wrap: wrap; column-gap: 14px; margin: 0; }
 .wiz-status-name { color: var(--wiz-color-frame); }
 .wiz-status [data-warning="true"] { color: var(--wiz-color-warning); }
+.wiz-status [data-testid="status-hp"].flash { animation: wiz-blink 200ms step-end 1; }
+
+/* 戦闘（仕様書 §11.5「戦闘」）。敵の絵は WS-0008 で足す */
+.battle-enemy { display: grid; justify-items: center; }
+.battle-enemy-name { margin: 0; font-size: 24px; line-height: 1.1; color: var(--wiz-color-primary); text-align: center; }
+.battle-enemy[data-boss="true"] .battle-enemy-name { color: var(--wiz-color-error); }
+.battle-log-slot { display: flex; flex-direction: column; }
+.battle-log-slot > .wiz-window { flex: 1 1 auto; }
+@media (min-width: 600px) {
+  .wiz-columns.stretch > .wiz-column > .battle-command { flex: 1 1 auto; }
+}
 
 /* ErrorPanel（仕様書 §11.9） */
 .wiz-error-text { margin: 0 0 8px; }

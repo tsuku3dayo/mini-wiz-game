@@ -14,6 +14,8 @@ export interface StatusPanelOptions {
 export interface StatusPanel {
   el: HTMLElement;
   update(character: CharacterView): void;
+  /** HP の値を点滅させる（ダメージを うけたとき。200ms は呼ぶ側が決める） */
+  setFlash(on: boolean): void;
   destroy(): void;
 }
 
@@ -53,11 +55,21 @@ export function statusPanel(opts: StatusPanelOptions): StatusPanel {
   const wide = !!opts.wide;
   const title = opts.variant === 'compact' || wide ? 'ステータス' : opts.character.name;
   const win = gameWindow({ title, compact: opts.variant === 'compact', className: 'wiz-status', testId: 'status-panel' });
-  const draw = (c: CharacterView) => win.setChildren(opts.variant === 'full' ? fullBody(c, wide) : compactBody(c));
+  let flash = false;
+  const paintFlash = () => win.el.querySelector('[data-testid="status-hp"]')?.classList.toggle('flash', flash);
+  const draw = (c: CharacterView) => {
+    win.setChildren(opts.variant === 'full' ? fullBody(c, wide) : compactBody(c));
+    // 書き直しても、点滅の途中なら点滅を続ける
+    paintFlash();
+  };
   draw(opts.character);
   return {
     el: win.el,
     update: draw,
+    setFlash(on) {
+      flash = on;
+      paintFlash();
+    },
     destroy: () => win.destroy(),
   };
 }

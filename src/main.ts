@@ -1,5 +1,5 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// 音・BGM・体力わずかの枠・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン（ほかは作る TASK で足す）
+// 音・BGM・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘（ほかは作る TASK で足す）
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
@@ -14,6 +14,8 @@ import { attachDebug } from './ui/debug';
 import { attachSkipKeys, createMessageQueue } from './ui/message-queue';
 import { createRouter } from './ui/router';
 import { arrival } from './logic/arrival';
+import { lowHpFrame } from './ui/components/low-hp-frame';
+import { mountBattle } from './ui/screens/battle';
 import { mountDungeon } from './ui/screens/dungeon';
 import { mountInn } from './ui/screens/inn';
 import { mountNameEntry } from './ui/screens/name-entry';
@@ -64,10 +66,11 @@ if (app) {
     api,
     command,
     queue,
-    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon },
+    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle },
     onScreenChange: (name) => banner.setAllowed(name === 'title' || name === 'inn'),
   });
   router.start();
+  lowHpFrame(app, store);
   void Promise.all([store.refetchGame(), store.refetchSave()]);
 
   registerPwa();

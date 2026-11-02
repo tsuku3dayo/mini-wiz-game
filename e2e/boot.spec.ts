@@ -153,7 +153,7 @@ test.describe('起動に失敗しても直る', () => {
     expect(await readStorage(page)).toEqual(before);
   });
 
-  test('TC-0001-05復旧で消すのはこのアプリの範囲のキャッシュだけで、ほかのアプリのデータは残る', async ({ page }) => {
+  test('TC-0001-05 復旧で消すのはこのアプリの範囲のキャッシュだけで、ほかのアプリのデータは残る', async ({ page }) => {
     const nav = await prepare(page);
     await page.goto('./');
     const scope = await scopeOf(page);
