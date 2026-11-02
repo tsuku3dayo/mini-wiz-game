@@ -1,6 +1,8 @@
 // ゲーム API（仕様書 §21.5、§21.6、§22、TD-0002 §3）
 // 操作は作る TASK ごとに足す
+import { resolveTurn } from '../domain/battle';
 import { createCharacter, rest } from '../domain/character';
+import { fieldHeal } from '../domain/heal';
 import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
 import { assertLocation, fromSaveData, migrateSave, toSaveData, type GameStateData, type StepResult } from '../domain/game-state';
@@ -8,7 +10,7 @@ import type { Rng } from '../domain/rng';
 import { toGameView } from './game-view';
 import { createRepository, StorageError, warnDropped, type KeyValueStore } from './repository';
 import { GameError, type CommandResult, type GameApi } from './types';
-import { validateMove, validateStairs, validateStartGame } from './validate';
+import { validateBattle, validateMove, validateStairs, validateStartGame } from './validate';
 
 export interface GameApiDeps {
   store: KeyValueStore;
@@ -118,6 +120,10 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     stairs: (input) => run((state) => useStairs(state, validateStairs(input))),
 
     returnToInn: () => run(returnToInn),
+
+    heal: () => run(fieldHeal),
+
+    battle: (input) => run((state) => resolveTurn(state, validateBattle(input), deps.rng)),
 
     debugDungeon: () => respond(() => {
       const { state } = requireGame();

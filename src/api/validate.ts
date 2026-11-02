@@ -1,5 +1,6 @@
 // 操作の引数の検査（仕様書 §22.1、§22.2。v1.0 の DTO と同じ規則）。違反は ValidationError
-// 戦闘・装備の引数は、その操作を作る TASK で足す
+// 装備の引数は、その操作を作る TASK で足す
+import type { BattleCommand } from '../domain/battle';
 import { validateName } from '../domain/character';
 import type { MoveAction } from '../domain/dungeon';
 import { ValidationError } from '../domain/errors';
@@ -26,5 +27,8 @@ function oneOf<T extends string>(input: unknown, field: string, values: readonly
 export const MOVE_ACTIONS: readonly MoveAction[] = ['forward', 'backward', 'turnLeft', 'turnRight'];
 export const STAIRS_DIRECTIONS: readonly StairsDirection[] = ['down', 'up'];
 
-export const validateMove = (input: unknown): MoveAction => oneOf(input, 'action', MOVE_ACTIONS);
+export const BATTLE_COMMANDS: readonly BattleCommand[] = ['attack', 'heal', 'flee'];
+export const validateBattle = (input: unknown): BattleCommand => oneOf(input, 'command', BATTLE_COMMANDS);
+
+export const validateMove =(input: unknown): MoveAction => oneOf(input, 'action', MOVE_ACTIONS);
 export const validateStairs = (input: unknown): StairsDirection => oneOf(input, 'direction', STAIRS_DIRECTIONS);

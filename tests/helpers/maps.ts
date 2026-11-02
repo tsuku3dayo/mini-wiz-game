@@ -1,4 +1,5 @@
 // テスト用のマップ・ダンジョンの状態・決まった値の乱数
+import type { EnemyKind } from '../../src/domain/constants';
 import type { DungeonData, Facing, GameStateData } from '../../src/domain/game-state';
 import { BaseRng } from '../../src/domain/rng';
 import { makeState } from './fixtures';
@@ -31,6 +32,20 @@ export function openMap(
 /** ダンジョンにいる状態（名前「ゆうしゃ」・Lv1。fixtures の makeState と同じ初期値）。dungeon を差し替え、overrides で変える */
 export function dungeonState(dungeon: DungeonData = openMap(), overrides: Partial<GameStateData> = {}): GameStateData {
   return makeState('DUNGEON', { dungeon, ...overrides });
+}
+
+/** 戦闘中の状態（1F の (4,4) 北向き）。敵の種類と残り HP、ボス戦かを指定する */
+export function battleState(
+  kind: EnemyKind,
+  enemyHp: number,
+  overrides: Partial<GameStateData> = {},
+  isBoss = kind === 'necromancer',
+): GameStateData {
+  return makeState('BATTLE', {
+    dungeon: openMap({ x: 4, y: 4 }),
+    battle: { enemy: { kind, hp: enemyHp }, isBoss },
+    ...overrides,
+  });
 }
 
 /** いつも同じ値を返す乱数（範囲の外なら端に寄せる）。constantRng(100) は遭遇しない、constantRng(1) は必ず遭遇する */
