@@ -2,7 +2,7 @@
 id: MWIZ-AC-0007
 type: Attested Computation
 title: タイトル・名前入力・宿屋の画面 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -21,7 +21,7 @@ sources:
   - MWIZ-TD-0004（v1.1）
   - MWIZ-GUI-0002（v1.0）
   - MWIZ-GUI-0003（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
 # AC-0007 タイトル・名前入力・宿屋の画面 の実施記録

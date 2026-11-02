@@ -2,7 +2,7 @@
 id: MWIZ-AC-0006
 type: Attested Computation
 title: 画面の共通の仕組み の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
@@ -15,7 +15,7 @@ sources:
   - MWIZ-TD-0002（v1.3）
   - MWIZ-TD-0003（v1.0）
   - MWIZ-TD-0005（v1.3）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
 # AC-0006 画面の共通の仕組み の実施記録
