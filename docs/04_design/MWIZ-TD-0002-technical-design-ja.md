@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.1
+version: 1.2
 updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.0）
@@ -79,8 +79,11 @@ verified: null
 ### 3.1 作り
 
 ```ts
-export function createGameApi(deps: { storage: Storage; rng: Rng; now: () => string; delayMs?: () => number }): GameApi
+export function createGameApi(deps: { store: KeyValueStore; rng: Rng; now: () => string; delayMs?: () => number }): GameApi
 ```
+
+- `store` の名前と形は仕様書 §22.1・§21.7 のとおり（v1.2 で `storage: Storage` から直した）。型 `KeyValueStore` は `api/repository.ts` に置く。`platform/storage.ts` は同じ形のものを作り、`main.ts` が渡す（層の決まりで、api と platform は互いを import しないため）。
+- 操作は、それを使う TASK で足す（TASK-0005 は getGame・getSave・startGame・quitGame・rest・save・load）。`delayMs` は `__wiz.setDelay` と一緒に TASK-0006 で足す。GameView の `dungeon` は、視界と地図（`view.ts`）を作る TASK-0008 までは null。
 
 - 操作は仕様書 §22.2 の 20 個。どれも `run(step)` を呼ぶだけにする：
 
