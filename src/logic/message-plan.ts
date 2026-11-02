@@ -1,0 +1,49 @@
+// メッセージキューの決まり（仕様書 §11.8）：演出の長さ・遷移の保留の件数・持つ行の数
+import type { Message, MessageEffect, Rarity } from '../api/types';
+
+/** 持つ行の数。メッセージ欄は、このうち最新の 5／6／7 行を出す（TD-0003 §3） */
+export const MAX_LINES = 7;
+/** 演出のない行のあと、次の行を出すまでの待ち */
+export const LINE_INTERVAL_MS = 400;
+/** 応答待ちの ▼ を出すまでの時間 */
+export const WAITING_MARK_MS = 300;
+
+const EFFECT_MS: Readonly<Record<MessageEffect, number>> = {
+  levelUp: 1000,
+  rareDrop: 800,
+  bossAppear: 1200,
+  bossDefeat: 600,
+  clear: 1500,
+};
+
+/** 演出の長さ。rareDrop は LG だけ 1200ms */
+export function effectDuration(effect: MessageEffect, rarity?: Rarity): number {
+  if (effect === 'rareDrop' && rarity === 'LG') return 1200;
+  return EFFECT_MS[effect];
+}
+
+/** その行を出したあと、次の行（または演出の終わり）までの待ち */
+export function waitAfter(line: Pick<Message, 'effect' | 'rarity'>): number {
+  return line.effect ? effectDuration(line.effect, line.rarity) : LINE_INTERVAL_MS;
+}
+
+/** 行を足し、最新 MAX_LINES 行だけを残す（古い行から消える） */
+export function appendLines<T>(lines: readonly T[], added: readonly T[]): T[] {
+  return [...lines, ...added].slice(-MAX_LINES);
+}
+
+/**
+ * 遷移を保留する件数（1 件目をすぐ出す分を差し引く前）：
+ * danger の行があれば最後の danger の行まで。なければ、末尾に続く clear の行を除いた件数。
+ * 足元の案内（afterNavigation）は数えない（呼び出し側が渡さない）
+ */
+export function holdCount(messages: readonly Pick<Message, 'tone' | 'effect'>[]): number {
+  let lastDanger = -1;
+  messages.forEach((m, i) => {
+    if (m.tone === 'danger') lastDanger = i;
+  });
+  if (lastDanger >= 0) return lastDanger + 1;
+  let n = messages.length;
+  while (n > 0 && messages[n - 1].effect === 'clear') n -= 1;
+  return n;
+}

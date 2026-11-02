@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openDebug, readStorage, storedInn, storedSave, writeScene } from './helpers';
 
 // 起動の見張りと復旧（仕様書 §30.4、TC-0005・TC-0001-05）
 // Service Worker が配るファイルは page.route で止められないので、このファイルでは Service Worker を使わない
@@ -71,7 +72,59 @@ test.describe('起動に失敗しても直る', () => {
     expect(at).toBeGreaterThanOrEqual(before);
   });
 
-  test('TC-0001-05 復旧で消すのはこのアプリの範囲のキャッシュだけで、ほかのアプリのデータは残る', async ({ page }) => {
+  test('TC-0005-05 自動の復旧のあとも、「なおす」が出たあとも、保存の 3 つの値は失敗の前と同じ', async ({ page }) => {
+    const nav = await prepare(page);
+    await openDebug(page);
+    await writeScene(page, { state: storedInn(), save: storedSave() });
+    await page.evaluate(() => localStorage.setItem('mini-wiz-game-sound', 'on'));
+    const before = await readStorage(page);
+    expect(before.every((v) => v !== null)).toBe(true);
+
+    // TC-0005-02 の場面：1 回だけ失敗 → 自動で直して読み込み直す → 起動できる
+    await breakEntry(page, 1);
+    await page.reload();
+    await expect.poll(() => nav.count(), { timeout: 10_000 }).toBe(3);
+    await expect(page.locator('body')).toHaveAttribute('data-location', 'INN');
+    expect(await readStorage(page)).toEqual(before);
+
+    // TC-0005-03 の場面：失敗が続く → 自動で 1 回直す → 「なおす」
+    await page.unrouteAll();
+    await breakEntry(page);
+    await page.evaluate((key) => sessionStorage.removeItem(key), KEY);
+    await page.reload();
+    await expect(page.locator('#boot-error')).toBeVisible({ timeout: 10_000 });
+    expect(await readStorage(page)).toEqual(before);
+  });
+
+  test('TC-0005-06 「なおす」を押すと、すぐ時刻を書き、このアプリのキャッシュを消して読み込み直す。保存の値は変わらない', async ({ page }) => {
+    const nav = await prepare(page);
+    // 2 回失敗させる（1 回目は自動で直す、2 回目で「なおす」が出る）。3 回目は通す
+    await breakEntry(page, 2);
+    await page.goto('./');
+    await expect(page.locator('#boot-error')).toBeVisible({ timeout: 10_000 });
+    expect(nav.count()).toBe(2);
+
+    const scope = await scopeOf(page);
+    const repairedAt = Number(await page.evaluate((key) => sessionStorage.getItem(key), KEY));
+    await page.evaluate(async ({ s, save }) => {
+      localStorage.setItem('mini-wiz-game-save', JSON.stringify(save));
+      localStorage.setItem('mini-wiz-game-sound', 'on');
+      await (await caches.open(`workbox-precache-v2-${s}`)).put(s, new Response('x'));
+    }, { s: scope, save: storedSave() });
+    const before = await readStorage(page);
+
+    await page.locator('#boot-repair').click();
+    await expect.poll(() => nav.count(), { timeout: 10_000 }).toBe(3);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    await expect(page.locator('#boot-error')).toBeHidden();
+    const at = Number(await page.evaluate((key) => sessionStorage.getItem(key), KEY));
+    expect(at).toBeGreaterThan(repairedAt);
+    const names = await page.evaluate(() => caches.keys());
+    expect(names.filter((n) => n.includes(scope))).toEqual([]);
+    expect(await readStorage(page)).toEqual(before);
+  });
+
+  test('TC-0001-05復旧で消すのはこのアプリの範囲のキャッシュだけで、ほかのアプリのデータは残る', async ({ page }) => {
     const nav = await prepare(page);
     await page.goto('./');
     const scope = await scopeOf(page);
