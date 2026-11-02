@@ -6,7 +6,7 @@ status: draft
 version: 1.0
 updated: 2026-11-02
 sources:
-  - MWIZ-TASK-0005（v1.1）
+  - MWIZ-TASK-0005（v1.0）
   - MWIZ-TC-0007（v1.0）
   - MWIZ-TC-0009（v1.0）
   - MWIZ-TC-0012（v1.0）
