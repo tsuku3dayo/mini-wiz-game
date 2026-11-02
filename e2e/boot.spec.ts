@@ -12,7 +12,15 @@ const WAIT_MS = 500;
 async function prepare(page: Page): Promise<{ count: () => number }> {
   await page.addInitScript((ms) => { window.__bootWaitMs = ms; }, WAIT_MS);
   let n = 0;
-  page.on('framenavigated', (frame) => { if (frame === page.mainFrame()) n += 1; });
+  let last = '';
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame()) return;
+    // ハッシュだけが変わったもの（ルーターがハッシュを「#/」などに置き換えた）は、読み込みではないので数えない
+    const url = frame.url();
+    const hashOnly = last !== '' && url !== last && url.split('#')[0] === last.split('#')[0];
+    last = url;
+    if (!hashOnly) n += 1;
+  });
   return { count: () => n };
 }
 
@@ -35,6 +43,27 @@ test.describe('起動に失敗しても直る', () => {
     await page.waitForTimeout(WAIT_MS * 3);
     expect(nav.count()).toBe(1);
     await expect(page.locator('#boot-error')).toBeHidden();
+  });
+
+  test('TC-0005-02 起動に失敗すると 1 回だけ自動で読み込み直し、時刻を書いてこのアプリのキャッシュを消す。直ればタイトルが出る', async ({ page }) => {
+    const nav = await prepare(page);
+    await page.goto('./');
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    const scope = await scopeOf(page);
+    await page.evaluate(async (s) => {
+      await (await caches.open(`workbox-precache-v2-${s}`)).put(s, new Response('x'));
+    }, scope);
+    const before = Date.now();
+    // 1 回目（読み込み直し）だけ止め、自動の読み込み直しでは通す
+    await breakEntry(page, 1);
+    await page.reload();
+    await expect.poll(() => nav.count(), { timeout: 10_000 }).toBe(3);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    await expect(page.locator('#boot-error')).toBeHidden();
+    const at = Number(await page.evaluate((key) => sessionStorage.getItem(key), KEY));
+    expect(at).toBeGreaterThanOrEqual(before);
+    const names = await page.evaluate(() => caches.keys());
+    expect(names.filter((n) => n.includes(scope))).toEqual([]);
   });
 
   test('TC-0005-03 前の復旧から 2 分以内にまた失敗すると、読み込み直さずに「なおす」を出す', async ({ page }) => {
