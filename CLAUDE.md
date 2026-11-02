@@ -87,6 +87,7 @@ verified: null              # 承認されたら { by: "tsuku3dayo", at: "<日�
 
 - 承認を求めるときは `status: review` にする。オーナー（`tsuku3dayo`）がチャットで承認したら `status: stable` にし、`verified` に承認者 `tsuku3dayo` と承認日時を記入する。
 - 承認後に中身を変えるときは `version` を上げ、`status` を `review` に戻して再承認を受ける。
+- ただし、根拠にした成果物の版が上がって `sources` の版の表記だけを直すときは、承認済みのまま直してよい（`version`・`status`・`verified` は変えない。直したことを PR に書く。2026-11-02 オーナーの了承）。
 - 承認のない段階（04・05・06）の成果物は、書き終えたら `status: stable`・`verified: null` にし、段階ごとに PR を作ってマージする。
 
 ### attested-computation
