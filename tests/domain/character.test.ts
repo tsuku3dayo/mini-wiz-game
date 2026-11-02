@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { applyExp, continueToInn, createCharacter, expForLevel, isValidName, rest, validateName } from '../../src/domain/character';
 import { InvalidStateError, ValidationError } from '../../src/domain/errors';
-import { SequenceRng } from '../../src/domain/rng';
+import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
 import { makeItem, makeState } from '../helpers/fixtures';
+import { recordingRng } from '../helpers/rng';
 
 /** validateName が投げた ValidationError の文言を取り出す。通れば null */
 function nameError(raw: string): string | null {
@@ -153,5 +154,56 @@ describe('経験値とレベルアップ・周回', () => {
     expect(r.state).toEqual({ ...cleared, location: 'INN' });
     expect(r.messages).toEqual([{ text: 'ゆうしゃは 宿屋に もどった', tone: 'normal' }]);
     expect(() => continueToInn(r.state)).toThrow(InvalidStateError);
+  });
+});
+
+describe('経験値を得て強くなる', () => {
+  const growthLine = (a: number, b: number, c: number, d: number, e: number) => `HP +${a} MP +${b} こうげき +${c} ぼうぎょ +${d} すばやさ +${e}`;
+
+  test('TC-0022-02 expForLevel：Lv2 24、Lv3 72、Lv4 144、Lv5 240、Lv10 1080、Lv100 118800', () => {
+    expect([2, 3, 4, 5, 10, 100].map(expForLevel)).toEqual([24, 72, 144, 240, 1080, 118800]);
+  });
+
+  test('TC-0022-03 23 を加えても Lv1 のまま（乱数 0 個・0 行）。24 で Lv2 になり、乱数をちょうど 5 個引く', () => {
+    const none = recordingRng();
+    const r1 = applyExp(deepFreeze(makeState('DUNGEON')), 23, none);
+    expect(r1.state.level).toBe(1);
+    expect(none.calls).toHaveLength(0);
+    expect(r1.messages).toEqual([]);
+    const five = recordingRng();
+    expect(applyExp(deepFreeze(makeState('DUNGEON')), 24, five).state.level).toBe(2);
+    expect(five.calls.map(({ min, max }) => [min, max])).toEqual([[8, 12], [2, 4], [1, 2], [1, 2], [1, 2]]);
+  });
+
+  test('TC-0022-04 72 を加えると Lv3・4 行。成長が最小（8,2,1,1,1 × 2）なら最大 HP 46', () => {
+    const r = applyExp(deepFreeze(makeState('DUNGEON')), 72, new SequenceRng([8, 2, 1, 1, 1, 8, 2, 1, 1, 1]));
+    expect(r.state).toMatchObject({ level: 3, maxHp: 46 });
+    expect(r.messages.map((m) => m.text)).toEqual(['レベルが あがった！ Lv2', growthLine(8, 2, 1, 1, 1), 'レベルが あがった！ Lv3', growthLine(8, 2, 1, 1, 1)]);
+  });
+
+  test('TC-0022-05 成長は 最大HP → 最大MP → こうげき → ぼうぎょ → すばやさ の順に引く', () => {
+    const r = applyExp(deepFreeze(makeState('DUNGEON')), 24, new SequenceRng([12, 4, 2, 1, 2]));
+    expect(r.state).toMatchObject({ maxHp: 42, maxMp: 14, attack: 7, defense: 6, speed: 7 });
+    expect(r.messages[1].text).toBe(growthLine(12, 4, 2, 1, 2));
+  });
+
+  test('TC-0022-06 HP 20/30・MP 5/10 で Lv2（成長 8,2,1,1,1）なら HP 28/38・MP 7/12（全回復しない）', () => {
+    const r = applyExp(deepFreeze(makeState('DUNGEON', { hp: 20, mp: 5 })), 24, new SequenceRng([8, 2, 1, 1, 1]));
+    expect(r.state).toMatchObject({ hp: 28, maxHp: 38, mp: 7, maxMp: 12 });
+  });
+
+  test('TC-0022-07 10,000 回レベルアップすると、成長値はすべて範囲内で、両端が 1 回以上出る', () => {
+    const rng = new SeededRng(2026);
+    type Grown = 'maxHp' | 'maxMp' | 'attack' | 'defense' | 'speed';
+    const seen: Record<Grown, Set<number>> = { maxHp: new Set(), maxMp: new Set(), attack: new Set(), defense: new Set(), speed: new Set() };
+    let state = makeState('DUNGEON');
+    for (let i = 0; i < 10_000; i += 1) {
+      const before = state;
+      state = applyExp(before, expForLevel(before.level + 1) - before.exp, rng).state;
+      for (const k of Object.keys(seen) as Grown[]) seen[k].add(state[k] - before[k]);
+    }
+    expect([...seen.maxHp].sort((a, b) => a - b)).toEqual([8, 9, 10, 11, 12]);
+    expect([...seen.maxMp].sort((a, b) => a - b)).toEqual([2, 3, 4]);
+    for (const k of ['attack', 'defense', 'speed'] as const) expect([...seen[k]].sort((a, b) => a - b)).toEqual([1, 2]);
   });
 });

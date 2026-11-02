@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createGameApi } from '../../src/api/game-api';
-import { GameError } from '../../src/api/types';
+import { GameError, type GameApi } from '../../src/api/types';
 import type { GameStateData } from '../../src/domain/game-state';
-import { SwappableRng } from '../../src/domain/rng';
+import { SeededRng, SequenceRng, SwappableRng, type Rng } from '../../src/domain/rng';
 import { createFakeStorage, type FakeStorage } from '../helpers/fake-storage';
 import { LOCATIONS, makeItem, makeState } from '../helpers/fixtures';
-import { dungeonState, openMap } from '../helpers/maps';
+import { battleState, dungeonState, openMap } from '../helpers/maps';
+import { recordingRng } from '../helpers/rng';
 
 const NOW = '2026-11-02T01:23:45.678Z';
 const CHARACTER = { name: 'アルド', level: 4, exp: 150, hp: 12, maxHp: 55, mp: 3, maxMp: 17, attack: 9, defense: 8, speed: 8 };
@@ -235,6 +236,87 @@ describe('保存の失敗と競合（迷宮の操作）', () => {
     const e2 = await caught(inn.api.save());
     expect({ status: e2.status, error: e2.error }).toEqual({ status: 500, error: 'storage_error' });
     expect(inn.store.raw('save')).toBe(saveBefore);
+  });
+});
+
+/** 乱数を差し替えた API（引いた乱数を記録する） */
+function setupWith(initial: Record<string, unknown>, inner: Rng) {
+  const store = createFakeStorage(initial);
+  const rng = recordingRng(inner);
+  return { api: createGameApi({ store, rng: new SwappableRng(rng), now: () => NOW }), store, rng };
+}
+
+describe('戦闘とヒール（ゲーム API）', () => {
+  test('TC-0015-05 結果に見せない情報がない。dungeon は 5 つのキーと今の階の 100 マス、battle は 5 つのキー。5F のボスは視界の stairs でも null', async () => {
+    const d = openMap({ x: 9, y: 3, facing: 'N' }, {}, 5);
+    const { api } = setupWith({ game: storedGame(dungeonState(d)) }, new SequenceRng([100, 20, 50]));
+    // 敵の HP（ダークナイト 70・ゴブリン 18 から減った 14）が出ないことも見る
+    const hidden = ['"revision":', '"schemaVersion":', '"updatedAt":', '"floors":', '"walls":[', '"visited":', '"boss":', '"hp":70', '"hp":14'];
+    const check = (view: unknown) => {
+      const text = JSON.stringify(view);
+      for (const key of hidden) expect(text, key).not.toContain(key);
+    };
+    const game = (await api.getGame()).state!;
+    check(game);
+    expect(Object.keys(game.dungeon!).sort()).toEqual(['depths', 'facing', 'floor', 'map', 'underfoot']);
+    expect(game.dungeon!.map.cells).toHaveLength(100);
+    expect(game.dungeon!.map.cells.every((c) => c === null)).toBe(true);
+    // ボスのマス (9,0) が視界の奥にあっても stairs は null
+    expect(game.dungeon!.depths.map((x) => x.stairs)).toEqual([null, null, null, null]);
+
+    // 前進（100：遭遇なし）→ 後退で 20 → 遭遇（50：5F ではダークナイト）→ 戦闘の結果
+    expect(JSON.stringify(game)).not.toContain('"hp":70');
+    check((await api.move({ action: 'forward' })).state);
+    const met = await api.move({ action: 'backward' });
+    expect(met.state.location).toBe('BATTLE');
+    expect(met.state.battle!.enemyKind).toBe('darkKnight');
+    check(met.state);
+    expect(Object.keys(met.state.battle!).sort()).toEqual(['canFlee', 'canHeal', 'enemyKind', 'enemyName', 'isBoss']);
+    const stairsApi = setup({ game: storedGame(dungeonState(openMap({ x: 9, y: 0 }))) }).api;
+    check((await stairsApi.stairs({ direction: 'down' })).state);
+    const fight = setupWith({ game: storedGame(battleState('goblin', 18)) }, new SequenceRng([100, 0, 100, 0]));
+    const turn = await fight.api.battle({ command: 'attack' });
+    check(turn.state);
+    expect(Object.keys(turn.state.battle!).sort()).toEqual(['canFlee', 'canHeal', 'enemyKind', 'enemyName', 'isBoss']);
+  });
+
+  test('TC-0020-06 ボス戦で flee は 409「にげられない！」。保存（revision を含む）は同じで、乱数は進まない', async () => {
+    const { api, store, rng } = setupWith({ game: storedGame(battleState('necromancer', 200), 6) }, new SeededRng(1));
+    const before = store.raw('game');
+    const err = await caught(api.battle({ command: 'flee' }));
+    expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 409, error: 'invalid_state', message: 'にげられない！' });
+    expect(store.raw('game')).toBe(before);
+    expect(rng.calls).toHaveLength(0);
+  });
+
+  test('TC-0021-02 MP 2 で戦闘のヒール・ダンジョンのヒールは 409「MP が たりない」。保存は同じで、乱数を引かない', async () => {
+    const cases = [
+      { state: battleState('slime', 12, { mp: 2 }), call: (api: GameApi) => api.battle({ command: 'heal' }) },
+      { state: dungeonState(openMap(), { mp: 2, hp: 10 }), call: (api: GameApi) => api.heal() },
+    ];
+    for (const c of cases) {
+      const { api, store, rng } = setupWith({ game: storedGame(c.state) }, new SeededRng(1));
+      const before = store.raw('game');
+      const err = await caught(c.call(api));
+      expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 409, error: 'invalid_state', message: 'MP が たりない' });
+      expect(store.raw('game')).toBe(before);
+      expect(rng.calls).toHaveLength(0);
+    }
+  });
+
+  test('TC-0023-02 倒れる操作では経験値が増えず、所持品と nextId は同じ（ドロップなし）。セーブも同じ', async () => {
+    const inventory = { ...INVENTORY, pending: null };
+    const state = battleState('goblin', 18, { hp: 1, exp: 9, inventory });
+    // ゴブリン（速さ 6）が先：回避の 100（外れ）・ダメージ 0 → 4 ダメージで倒れる
+    const { api, store } = setupWith({ game: storedGame(state), save: storedSave() }, new SequenceRng([100, 0]));
+    const save = store.raw('save');
+    const r = await api.battle({ command: 'attack' });
+    expect(r.state.location).toBe('INN');
+    expect(r.state.character.exp).toBe(9);
+    const game = JSON.parse(store.raw('game')!);
+    expect(game.inventory).toEqual(inventory);
+    expect(game.inventory.nextId).toBe(5);
+    expect(store.raw('save')).toBe(save);
   });
 });
 

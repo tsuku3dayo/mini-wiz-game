@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { ENCOUNTER_TABLE } from '../../src/domain/constants';
 import { cellIndex } from '../../src/domain/dungeon';
 import { InvalidStateError } from '../../src/domain/errors';
 import { checkEncounter, enterDungeon, moveInDungeon, pickEnemy, returnToInn, useStairs, visitCurrent } from '../../src/domain/explore';
@@ -150,7 +151,67 @@ describe('入口から宿屋へ戻る', () => {
   });
 });
 
-// 確認 ID のない、遭遇と踏破記録の決まり（仕様書 §4.3、§4.6。統計は TC-0018 で確かめる）
+describe('敵に遭遇する', () => {
+  test('TC-0018-01 何もないマスへ前進・後退すると、[20, n] で遭遇（BATTLE・battles +1・「…が あらわれた！」）、[21] では遭遇せず乱数 1 個', () => {
+    for (const action of ['forward', 'backward'] as const) {
+      const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 }, {}, 3)));
+      const hit = moveInDungeon(start, action, new SequenceRng([20, 31]));
+      expect(hit.state.location).toBe('BATTLE');
+      expect(hit.state.records.battles).toBe(start.records.battles + 1);
+      expect(hit.messages).toEqual([{ text: 'スケルトンが あらわれた！', tone: 'normal' }]);
+      const rng = new SequenceRng([21]);
+      const miss = moveInDungeon(start, action, rng);
+      rng.assertExhausted();
+      expect(miss.state.location).toBe('DUNGEON');
+      expect(miss.messages).toEqual([]);
+    }
+  });
+
+  test('TC-0018-02 回転・壁・階段で着く・宿屋へ戻る・階段や入口のマスへ歩いて入る、では乱数を引かず遭遇しない', () => {
+    const at = (x: number, y: number, facing: 'N' | 'E' | 'S' | 'W' = 'N', floor = 1) => deepFreeze(dungeonState(openMap({ x, y, facing }, {}, floor)));
+    expect(moveInDungeon(at(4, 4), 'turnLeft', noRng()).state.location).toBe('DUNGEON');
+    expect(moveInDungeon(at(4, 0), 'forward', noRng()).messages).toEqual([{ text: 'かべだ', tone: 'normal' }]);
+    expect(useStairs(at(9, 0), 'down').state.location).toBe('DUNGEON');
+    expect(returnToInn(at(0, 9)).state.location).toBe('INN');
+    // 入口 (0,9)・下り階段 (9,0)・2F の上り階段 (0,9) へ歩いて入る
+    expect(moveInDungeon(at(0, 8), 'backward', noRng()).state.location).toBe('DUNGEON');
+    expect(moveInDungeon(at(9, 1), 'forward', noRng()).state.location).toBe('DUNGEON');
+    expect(moveInDungeon(at(1, 9, 'W', 2), 'forward', noRng()).state.location).toBe('DUNGEON');
+  });
+
+  test('TC-0018-03 10,000 回の遭遇判定で遭遇は 18%〜22%、各階の敵の割合は出現表 ±2.5 ポイント', () => {
+    const rng = new SeededRng(2026);
+    for (let floor = 1; floor <= 5; floor += 1) {
+      const state = deepFreeze(dungeonState(openMap({ x: 4, y: 4 }, {}, floor)));
+      const counts: Record<string, number> = {};
+      let hits = 0;
+      for (let i = 0; i < 10_000; i += 1) {
+        const r = checkEncounter(state, rng);
+        if (r.state.battle) {
+          hits += 1;
+          counts[r.state.battle.enemy.kind] = (counts[r.state.battle.enemy.kind] ?? 0) + 1;
+        }
+      }
+      expect(hits / 10_000, `${floor}F の遭遇率`).toBeGreaterThanOrEqual(0.18);
+      expect(hits / 10_000, `${floor}F の遭遇率`).toBeLessThanOrEqual(0.22);
+      for (const [kind, rate] of ENCOUNTER_TABLE[floor]) {
+        const share = ((counts[kind] ?? 0) / hits) * 100;
+        expect(Math.abs(share - rate), `${floor}F の ${kind}`).toBeLessThanOrEqual(2.5);
+      }
+    }
+  });
+
+  test('TC-0018-04 pickEnemy の境目：1F 70/71、2F〜4F 30/31・80/81、5F 40/41', () => {
+    const pick = (floor: number, r: number) => pickEnemy(floor, new SequenceRng([r]));
+    expect([pick(1, 70), pick(1, 71)]).toEqual(['slime', 'goblin']);
+    expect([pick(2, 30), pick(2, 31), pick(2, 80), pick(2, 81)]).toEqual(['slime', 'goblin', 'goblin', 'skeleton']);
+    expect([pick(3, 30), pick(3, 31), pick(3, 80), pick(3, 81)]).toEqual(['goblin', 'skeleton', 'skeleton', 'orc']);
+    expect([pick(4, 30), pick(4, 31), pick(4, 80), pick(4, 81)]).toEqual(['skeleton', 'orc', 'orc', 'darkKnight']);
+    expect([pick(5, 40), pick(5, 41)]).toEqual(['orc', 'darkKnight']);
+  });
+});
+
+// 確認 ID のない、遭遇と踏破記録の決まり（仕様書 §4.3、§4.6）
 describe('遭遇と踏破記録', () => {
   test('pickEnemy は表の順に累積して選ぶ（境界の値）', () => {
     expect(pickEnemy(1, new SequenceRng([70]))).toBe('slime');

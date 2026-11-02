@@ -170,6 +170,9 @@ export interface GameApi {
   move(input: { action: MoveAction }): Promise<CommandResult>;
   stairs(input: { direction: StairsDirection }): Promise<CommandResult>;
   returnToInn(): Promise<CommandResult>;
+  /** ダンジョンのヒール */
+  heal(): Promise<CommandResult>;
+  battle(input: { command: BattleCommand }): Promise<CommandResult>;
   /** テスト用の入口（?debug=1）からだけ呼ぶ。今の階の全情報（仕様書 §28） */
   debugDungeon(): Promise<DebugDungeon>;
 }

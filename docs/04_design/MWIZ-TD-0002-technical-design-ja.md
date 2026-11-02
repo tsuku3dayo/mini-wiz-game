@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.4
+version: 1.5
 updated: 2026-11-02
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -62,6 +62,7 @@ verified: null
 
 - `move`・`stairs` の引数が違うときの `details[0].message` は、v1.0 の DTO（class-validator の `IsIn`）の既定の文と同じにする：`action must be one of the following values: forward, backward, turnLeft, turnRight`、`direction must be one of the following values: down, up`（`api/validate.ts`）。
 - テスト用の道具 `tests/helpers/maps.ts`：`dungeonState(dungeon, overrides)`（DUNGEON の状態）、`constantRng(value)`（いつも同じ値。範囲の外なら端に寄せる。100 なら遭遇しない）、`noRng()`（引くと例外）、`addWall(d, floor, x, y, dir)`（両側から壁を足す）。
+- （v1.5。TASK-0010）`battleState(kind, enemyHp, overrides, isBoss)`（戦闘中の状態）、`tests/helpers/rng.ts` の `recordingRng(inner)`（引いた乱数の `int(a, b)` の引数と値を記録する）。
 
 ## 2. 表示の計算（`src/logic/`）
 
@@ -135,7 +136,7 @@ run(step)
 1. `rng`・`constants`・`errors`・`game-state` の型
 2. `character`・`heal`・`records`（`rest` と `normalizeInventory` が使うので、`items` のマスタ・`conformItem`、`equipment` の `effectiveStats`、`loot` の `emptyInventory` もここで作る。v1.1）
 3. `dungeon`・`floors`・`explore`・`view`（移動で遭遇すると戦闘が始まるので、`battle` の `startBattle` もここで作る。v1.4）
-4. `battle`
+4. `battle`・`heal`。勝利の処理は「成長 → ドロップ」の順に乱数を引くので、`loot` の `DROPS`・`rollDrop`・`addItem`・`dropMessage`・`applyDrop` と、ボスに勝ったときの処理（§9.1。CLEARED・実績・クリアの行）もここで作る（v1.5。TASK-0010。確かめは予定どおり TASK-0012・0014）
 5. `items`・`loot`・`equipment`
 6. `storage`・`repository`・`game-view`・`validate`・`game-api`
 7. `logic/`（画面を作る WS の直前に、使うものから）
