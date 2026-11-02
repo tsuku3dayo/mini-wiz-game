@@ -1,8 +1,9 @@
 // 宿屋（#/inn。仕様書 §11.5、GUI-0003 §1、TD-0004 §3）
 // 操作の場所は 1 つの入れ物で、中身を替える：宿屋のメニュー／GameMenu／タイトルへ戻るの確認
-// まだ作っていないもの：そうび・もちもの（TASK-0010 以降）、
-// ステータス画面と広い画面の実績（TASK-0013）、「おと」（TASK-0017）。項目は出すが、選んでも何もしない
+// 狭い画面のメニューの「ステータス」は、画面全体をステータス画面に差し替える（仕様書 §11.7）。広い画面は上の右に実績
+// まだ作っていないもの：そうび・もちもの（TASK-0015）、「おと」（TASK-0017）。項目は出すが、選んでも何もしない
 import { commandMenu, type CommandMenu } from '../components/command-menu';
+import { recordsWindow, statusScreen } from '../components/status-screen';
 import { confirmMenu } from '../components/confirm-menu';
 import { errorPanel } from '../components/error-panel';
 import { columns, gameFrame } from '../components/game-frame';
@@ -13,7 +14,7 @@ import { statusPanel, type StatusPanel } from '../components/status-panel';
 import { isWide, onWideChange } from '../dom';
 import type { ScreenContext } from '../router';
 
-type Mode = 'menu' | 'gameMenu' | 'confirm';
+type Mode = 'menu' | 'gameMenu' | 'confirm' | 'status';
 
 const INDEX_MENU = 2;
 const INDEX_QUIT = 4;
@@ -29,6 +30,7 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
 
   let parts: { destroy(): void }[] = [];
   let status: StatusPanel | null = null;
+  let records: ReturnType<typeof recordsWindow> | null = null;
   let innMenu: CommandMenu | null = null;
   let confirm: ReturnType<typeof confirmMenu> | null = null;
   let menuWindow: { update(next: { disabled?: boolean }): void } | null = null;
@@ -96,7 +98,11 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
         onClose: () => setMode('menu', INDEX_MENU),
         onEquip: () => undefined,
         onItems: () => undefined,
-        onStatus: () => undefined,
+        // 狭い画面だけの項目。画面全体をステータス画面に差し替える
+        onStatus: () => {
+          mode = 'status';
+          build();
+        },
         onToggleSound: () => undefined,
         onDisabledSelect: showReason,
       });
@@ -119,9 +125,38 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
     parts.forEach((p) => p.destroy());
     parts = [];
     panel = null;
+    records = null;
     const state = store.game.state;
     if (!state) return;
     const wide = isWide();
+
+    // 広い画面へ切り替わったときにステータス画面を出していたら、宿屋に戻す（TD-0004 §7）
+    if (mode === 'status' && wide) {
+      mode = 'menu';
+      cursor = INDEX_MENU;
+    }
+    if (mode === 'status') {
+      status = null;
+      actionSlot = null;
+      logSlot = null;
+      logPart = null;
+      innMenu = null;
+      confirm = null;
+      menuWindow = null;
+      const screen = statusScreen({
+        character: state.character,
+        records: state.records,
+        // 閉じると宿屋（メニューは閉じた状態）に戻り、フォーカスは「メニュー」
+        onBack: () => {
+          mode = 'menu';
+          cursor = INDEX_MENU;
+          build();
+        },
+      });
+      root.replaceChildren(screen.el);
+      parts.push(screen);
+      return;
+    }
 
     status = statusPanel({ variant: 'full', character: state.character, wide });
     const log = messageLog({ queue, command, rows: 5 });
@@ -132,9 +167,10 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
     actionSlot = document.createElement('div');
     actionSlot.className = 'inn-action';
 
-    // 広い画面：上 ステータス｜じっせき（実績は TASK-0013 で足す）、下 メッセージ欄｜操作の場所
-    const frame = wide
-      ? gameFrame({ name: '宿屋' }, columns([status.el], [], true), columns([logSlot], [actionSlot], true))
+    // 広い画面：上 ステータス｜じっせき、下 メッセージ欄｜操作の場所
+    if (wide) records = recordsWindow(state.records);
+    const frame = wide && records
+      ? gameFrame({ name: '宿屋' }, columns([status.el], [records.el], true), columns([logSlot], [actionSlot], true))
       : gameFrame({ name: '宿屋' }, status.el, logSlot, actionSlot);
     root.replaceChildren(frame.el);
     parts.push(status, log, frame);
@@ -157,7 +193,10 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
 
   function onChange() {
     const state = store.game.state;
-    if (state) status?.update(state.character);
+    if (state) {
+      status?.update(state.character);
+      records?.update(state.records);
+    }
     const locked = innLocked();
     innMenu?.update({ disabled: locked });
     menuWindow?.update({ disabled: command.fatal !== null });

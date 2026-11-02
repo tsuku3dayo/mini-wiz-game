@@ -53,7 +53,32 @@ test.describe('メニューとコマンド', () => {
     await expectAt('戦闘', 'にげる');
   });
 
-  test('TC-0010-04 ダンジョンで MP 2 のとき「ヒール」は無効。選ぶと「MP が たりない」が通常の色で出て、ゲーム API を呼ばない', async ({ page }, info) => {
+  test('TC-0010-08 広い画面のメニューには「ステータス」がなく、宿屋にステータス（1 行目「なまえ ゆうしゃ」）と「じっせき」が出る', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', '広い画面のテストは desktop だけ');
+    const records = { battles: 128, kills: 120, deaths: 3, laps: 2, bossKills: 1 };
+    await startAt(page, 'INN', { state: { records } });
+    const status = page.getByTestId('status-panel');
+    await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
+    await expect(status.locator('dt').first()).toHaveText('なまえ');
+    await expect(status.locator('dd').first()).toHaveText('ゆうしゃ');
+    const rec = page.getByTestId('records-window');
+    await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
+    await expect(rec).toContainText('このキャラクターの きろく');
+    expect(await rec.locator('dt').allTextContents()).toEqual(['そうせんとう', 'とうばつ', 'しぼう', 'しゅうかい', 'ボスとうばつ']);
+    expect(await rec.locator('dd').allTextContents()).toEqual(['128 回', '120 体', '3 回', '2 周目', '1 回']);
+    // 2 つのウィンドウは横に並ぶ
+    const tops = await Promise.all([status, rec].map((l) => l.evaluate((e) => Math.round(e.getBoundingClientRect().top))));
+    expect(tops[0]).toBe(tops[1]);
+
+    const labels = async () => (await page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''));
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' }).click();
+    expect(await labels()).toEqual(['もどる', 'そうび', 'もちもの', 'おと：オフ']);
+    await startAt(page, 'DUNGEON');
+    await page.getByRole('button', { name: '≡ メニュー' }).click();
+    expect(await labels()).toEqual(['もどる', 'ヒール', 'そうび', 'もちもの', 'おと：オフ']);
+  });
+
+  test('TC-0010-04ダンジョンで MP 2 のとき「ヒール」は無効。選ぶと「MP が たりない」が通常の色で出て、ゲーム API を呼ばない', async ({ page }, info) => {
     await startAt(page, 'DUNGEON', { state: { mp: 2 } });
     const menu = await openDungeonMenu(page, info);
     const heal = menu.getByRole('menuitem').filter({ hasText: 'ヒール' });

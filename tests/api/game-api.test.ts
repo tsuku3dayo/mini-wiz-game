@@ -320,6 +320,21 @@ describe('戦闘とヒール（ゲーム API）', () => {
   });
 });
 
+describe('実績（ゲーム API）', () => {
+  test('TC-0026-01 初期の実績で 5F のボスのマスに入り、1 戦目で倒すと { battles 1, kills 1, deaths 0, laps 2, bossKills 1 }', async () => {
+    // こうげき 300・速さ 30 のキャラクター：先攻・回避 100（外れ）・ダメージ 0 → 290 ダメージで撃破。
+    // Lv1 → Lv9 の成長 8 回（40 個）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値の元 20）
+    const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 300, speed: 30 });
+    const growth = Array.from({ length: 8 * 5 }, (_, i) => [8, 2, 1, 1, 1][i % 5]);
+    const { api } = setupWith({ game: storedGame(state) }, new SequenceRng([100, 0, ...growth, 1, 0, 8, 1, 20]));
+    const met = await api.move({ action: 'forward' });
+    expect(met.state.battle).toMatchObject({ isBoss: true });
+    const r = await api.battle({ command: 'attack' });
+    expect(r.state.location).toBe('CLEARED');
+    expect(r.state.records).toEqual({ battles: 1, kills: 1, deaths: 0, laps: 2, bossKills: 1 });
+  });
+});
+
 describe('周回する（ゲーム API）', () => {
   test('TC-0008-05 1F の入口から戻っても、クリアから宿屋へ行っても、HP・MP は回復しない', async () => {
     const back = setup({ game: storedGame(dungeonState(openMap({ x: 0, y: 9 }), { hp: 10, mp: 1 })) });

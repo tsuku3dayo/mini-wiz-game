@@ -14,6 +14,7 @@ import { messageLog } from '../components/message-log';
 import { movePad } from '../components/move-pad';
 import { stairsButton } from '../components/stairs-button';
 import { statusPanel, type StatusPanel } from '../components/status-panel';
+import { statusScreen } from '../components/status-screen';
 import { el, isTypingKey, isWide, onWideChange } from '../dom';
 import { flashOnMessage } from '../effects';
 import type { ScreenContext } from '../router';
@@ -34,6 +35,8 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
 
   // 画面に固有の状態（作り直しても残す）
   let menuOpen = false;
+  /** ステータス画面を出しているか（狭い画面だけ） */
+  let statusOpen = false;
 
   let parts: { destroy(): void }[] = [];
   let label: ReturnType<typeof locationLabel> | null = null;
@@ -91,7 +94,10 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
         onHeal: () => void command.run(() => api.heal()),
         onEquip: () => undefined,
         onItems: () => undefined,
-        onStatus: () => undefined,
+        onStatus: () => {
+          statusOpen = true;
+          build();
+        },
         onToggleSound: () => undefined,
         onDisabledSelect: showReason,
       });
@@ -109,6 +115,39 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
     const state = store.game.state;
     if (!state || !state.dungeon) return;
     const wide = isWide();
+
+    // ステータス画面（狭い画面だけ）：画面全体を差し替える。広い画面へ切り替わったらダンジョンに戻す（TD-0004 §7）
+    if (statusOpen && wide) statusOpen = false;
+    if (statusOpen) {
+      label = null;
+      fpv = null;
+      map = null;
+      status = null;
+      pad = null;
+      stairs = null;
+      menuButton = null;
+      menu = null;
+      actionSlot = null;
+      controls = null;
+      logSlot = null;
+      logEl = null;
+      top = null;
+      viewCol = null;
+      const screen = statusScreen({
+        character: state.character,
+        records: state.records,
+        // 閉じるとダンジョン（メニューは閉じた状態）に戻り、フォーカスは「≡ メニュー」
+        onBack: () => {
+          statusOpen = false;
+          menuOpen = false;
+          build();
+          menuButton?.focus();
+        },
+      });
+      root.replaceChildren(screen.el);
+      parts.push(screen);
+      return;
+    }
 
     label = locationLabel();
     fpv = firstPersonView();
