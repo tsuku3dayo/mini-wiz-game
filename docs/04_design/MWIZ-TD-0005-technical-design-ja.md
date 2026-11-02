@@ -3,10 +3,10 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.2
-updated: 2026-10-30
+version: 1.3
+updated: 2026-11-02
 sources:
-  - MWIZ-TD-0001（v1.0）
+  - MWIZ-TD-0001（v1.1）
   - MWIZ-TS-0001（v1.1）
   - MWIZ-ADR-0008（v1.0）
   - MWIZ-ADR-0009（v1.1）
@@ -67,9 +67,9 @@ verified: null
 | `body[data-screen]`・`[data-location]`・`[data-busy]` | ルーターと `ui/command.ts` が書く（常に） |
 | `app:sound`・`app:bgm` イベント | `audio/sound.ts`・`audio/bgm-director.ts` が `window.dispatchEvent`（常に） |
 | `window.__wiz.debugDungeon()` | `api.debugDungeon()`（ゲーム API の中で、保存の状態から今の階の全マスを返す） |
-| `window.__wiz.useSeed(seed)` | `SwappableRng` の中身を `SeededRng(seed)` に替える |
+| `window.__wiz.useSeed(seed)` | `SwappableRng` の中身を `SeededRng(seed)` に替える（組み立ては `platform/math-rng.ts` の `createDebugRng()`。v1.3） |
 | `window.__wiz.writeState(stored)`・`writeSave(stored)` | `storage.write` で直接書き、`store.refresh()` |
-| `window.__wiz.setDelay(ms)` | ゲーム API の `delayMs` を替える（TD-0002 §3.1） |
+| `window.__wiz.setDelay(ms)` | ゲーム API に渡す待つ関数 `delay` の待ち時間を替える（TD-0002 §3.1。v1.3） |
 | `window.__wiz.showUpdateBanner()` | `update-banner` を出す |
 
 - 画面の大きさの確かめには入口を足さない（E2E で `setViewportSize` と DOM の大きさを測る。TD-0003 §9）。
