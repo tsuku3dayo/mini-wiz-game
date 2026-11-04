@@ -2,7 +2,8 @@
 // currentTime はテストが進める。resume は vi.fn()
 import { vi } from 'vitest';
 
-export type ParamEvent = ['set' | 'linear' | 'exp' | 'target' | 'cancel', number, number];
+/** [種類, 値, 時刻, 時定数（target のときだけ）] */
+export type ParamEvent = ['set' | 'linear' | 'exp' | 'target' | 'cancel', number, number, number?];
 
 export class FakeParam {
   value = 0;
@@ -10,7 +11,7 @@ export class FakeParam {
   setValueAtTime(v: number, t: number) { this.events.push(['set', v, t]); return this; }
   linearRampToValueAtTime(v: number, t: number) { this.events.push(['linear', v, t]); return this; }
   exponentialRampToValueAtTime(v: number, t: number) { this.events.push(['exp', v, t]); return this; }
-  setTargetAtTime(v: number, t: number) { this.events.push(['target', v, t]); return this; }
+  setTargetAtTime(v: number, t: number, tc: number) { this.events.push(['target', v, t, tc]); return this; }
   cancelScheduledValues(t: number) { this.events.push(['cancel', 0, t]); return this; }
 }
 
@@ -36,6 +37,20 @@ export class FakeGain extends FakeNode {
   gain = new FakeParam();
 }
 
+/** ノイズを鳴らす音源（打楽器） */
+export class FakeBufferSource extends FakeNode {
+  buffer: unknown = null;
+  startAt: number | null = null;
+  stops: (number | null)[] = [];
+  start(t = 0) { this.startAt = t; }
+  stop(t?: number) { this.stops.push(t ?? null); }
+}
+
+export class FakeFilter extends FakeNode {
+  type = 'lowpass';
+  frequency = new FakeParam();
+}
+
 export interface FakeAudioState {
   /** 作るときの state（既定は running） */
   initialState?: AudioContextState;
@@ -46,12 +61,23 @@ export class FakeAudioContext {
   currentTime = 0;
   state: AudioContextState;
   destination = { name: 'destination' };
+  sampleRate = 48000;
   oscillators: FakeOscillator[] = [];
   gains: FakeGain[] = [];
+  sources: FakeBufferSource[] = [];
+  filters: FakeFilter[] = [];
+  buffers = 0;
   resume = vi.fn(async () => undefined);
   constructor(state: AudioContextState) { this.state = state; }
   createOscillator() { const o = new FakeOscillator(); this.oscillators.push(o); return o; }
   createGain() { const g = new FakeGain(); this.gains.push(g); return g; }
+  createBufferSource() { const s = new FakeBufferSource(); this.sources.push(s); return s; }
+  createBiquadFilter() { const f = new FakeFilter(); this.filters.push(f); return f; }
+  createBuffer(_channels: number, length: number) {
+    this.buffers += 1;
+    const data = new Float32Array(length);
+    return { getChannelData: () => data };
+  }
 }
 
 /** globalThis.AudioContext を偽物にする。戻り値で元に戻す */
