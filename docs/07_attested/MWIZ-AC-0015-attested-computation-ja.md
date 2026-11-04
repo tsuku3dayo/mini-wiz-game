@@ -2,7 +2,7 @@
 id: MWIZ-AC-0015
 type: Attested Computation
 title: そうび・もちもの・入れ替えの画面の実施記録
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-04
 sources:
@@ -17,7 +17,7 @@ sources:
   - MWIZ-TC-0038（v1.0）
   - MWIZ-TD-0003（v1.2）
   - MWIZ-TD-0004（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-04T14:09:26+09:00" }
 ---
 
 # AC-0015 そうび・もちもの・入れ替えの画面の実施記録
