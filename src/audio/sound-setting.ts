@@ -40,8 +40,9 @@ export function createSoundSetting(opts: { storage: SoundStorage | null; onTurnO
       } catch {
         // 保存できなくても、その場では切り替える
       }
-      listeners.forEach((l) => l());
+      // 確認音を先に鳴らす（BGM の監督が、その残りのあとで曲を始められるように）
       if (on) opts.onTurnOn?.();
+      listeners.forEach((l) => l());
       return on;
     },
     subscribe(listener) {

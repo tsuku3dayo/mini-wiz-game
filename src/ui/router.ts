@@ -49,6 +49,11 @@ export interface RouterDeps {
   onScreenChange?: (name: ScreenName | null) => void;
 }
 
+/** 画面のパス（'/inn' など。BGM の監督が使う） */
+export function pathOf(name: ScreenName | null): string | null {
+  return name ? PATHS[name] : null;
+}
+
 function nameOfHash(hash: string): ScreenName | null {
   const path = hash.replace(/^#/, '') || '/';
   const found = (Object.keys(PATHS) as ScreenName[]).find((n) => PATHS[n] === path);

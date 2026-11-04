@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { battleOf, bossBattle, dungeonMap, logLines, SEEDS, startAt } from './helpers';
+import { audioEvents, battleOf, bgmNames, bossBattle, clearAudio, dungeonMap, logLines, recordAudio, SEEDS, shortSwords, startAt, storedInventory } from './helpers';
 
 // 効果音（仕様書 §12.1、§28、TC-0032）。鳴らす判断は window の app:sound（detail: { name, muted }）で見る
 
@@ -248,5 +248,207 @@ test.describe('効果音と音の設定', () => {
     expect(await page.evaluate(() => typeof (window as unknown as Record<string, unknown>).AudioContext)).toBe('undefined');
     await expect(page.getByTestId('error-panel')).toHaveCount(0);
     expect(errors).toEqual([]);
+  });
+});
+
+// BGM（仕様書 §12.2、§26.7、TC-0034）。曲を替えた・止めたことは window の app:bgm（detail: { name }）で見る
+test.describe('場面ごとの BGM', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  const bossFrontState = { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) };
+  /** 場面を作ったあと、その場面の曲になるまで待って、記録を空にする（startAt はタイトルを開いてから場面を書くため） */
+  async function settle(page: Page, name: string | null) {
+    await expect.poll(async () => (await bgmNames(page)).at(-1)).toBe(name);
+    await clearAudio(page);
+  }
+
+  test('TC-0034-03 音がオンのとき、画面に入るたびに曲が替わる：タイトル → （名前入力はそのまま）→ 宿屋 → ダンジョン → 戦闘、ボスの出現のあとはボスの曲', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await page.goto('./?debug=1');
+    await page.waitForFunction(() => window.__wiz !== undefined);
+    await expect.poll(() => bgmNames(page)).toEqual(['title']);
+    await press(info, titleItem(page, 'はじめから'));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'new');
+    await page.getByRole('textbox', { name: 'なまえ' }).fill('ゆうしゃ');
+    expect(await bgmNames(page)).toEqual(['title']);
+    await press(info, page.getByRole('menu', { name: 'なまえ入力' }).getByRole('menuitem').filter({ hasText: '決定' }));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+    await press(info, page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    // 次の一歩で遭遇する場面に書き替える（読み込み直さないので記録は続く）
+    await page.evaluate(async (dungeon) => {
+      const raw = JSON.parse(localStorage.getItem('mini-wiz-game-game')!);
+      await window.__wiz!.writeState({ ...raw, dungeon, hp: 999, maxHp: 999 });
+    }, dungeonMap({ x: 4, y: 4 }));
+    await page.evaluate((seed) => window.__wiz!.useSeed(seed), SEEDS.slimeNext);
+    await press(info, forward(page));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    await expect.poll(() => bgmNames(page)).toEqual(['title', 'inn', 'dungeon', 'battle']);
+    // ボスの手前へ（戦闘をやめてダンジョンに戻す）→ 前進
+    await page.evaluate(async (dungeon) => {
+      const raw = JSON.parse(localStorage.getItem('mini-wiz-game-game')!);
+      await window.__wiz!.writeState({ ...raw, location: 'DUNGEON', battle: null, dungeon });
+    }, bossFrontState.dungeon);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    await forward(page).click();
+    await expect.poll(() => bgmNames(page), { timeout: 5000 }).toEqual(['title', 'inn', 'dungeon', 'battle', 'dungeon', null, 'boss']);
+  });
+
+  test('TC-0034-06 クリア画面に入っているあいだ、最後の app:bgm は null のまま', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await page.clock.install();
+    await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
+    await settle(page, 'boss');
+    await attackPaused(page, info);
+    await page.clock.runFor(9000);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
+    const before = await bgmNames(page);
+    expect(before).toEqual([null]);
+    await page.clock.runFor(5000);
+    expect(await bgmNames(page)).toEqual(before);
+  });
+
+  test('TC-0034-08 宿屋でメニュー・ステータス（広い画面はそうび）を開いて閉じても、通常の入れ替えからダンジョンへ戻っても、曲は替わらない', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await startAt(page, 'INN');
+    await settle(page, 'inn');
+    const menu = page.getByRole('menu', { name: 'メニュー' });
+    await press(info, page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' }));
+    const sub = info.project.name === 'desktop' ? ['そうび', 'そうび'] : ['ステータス', 'ステータス'];
+    await press(info, menu.getByRole('menuitem').filter({ hasText: sub[0] }));
+    await expect(page.locator('h1')).toHaveText(sub[1]);
+    await press(info, page.getByRole('menu', { name: sub[1], exact: true }).getByRole('menuitem').filter({ hasText: 'もどる' }));
+    await press(info, page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' }));
+    await press(info, page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').filter({ hasText: 'もどる' }));
+    await expect(page.getByRole('menu', { name: '宿屋' })).toBeVisible();
+    expect(await audioEvents(page)).toEqual([]);
+
+    // 通常の敵のあとの入れ替え → あきらめる → ダンジョン
+    await startAt(page, 'SWAP');
+    await settle(page, 'dungeon');
+    await press(info, page.getByRole('menu', { name: 'いれかえ' }).getByRole('menuitem').filter({ hasText: 'あきらめる' }));
+    await press(info, page.getByRole('menu', { name: 'かくにん' }).getByRole('menuitem').filter({ hasText: 'はい' }));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    expect(await audioEvents(page)).toEqual([]);
+  });
+
+  test('TC-0034-11 遭遇では encounter の音のあとに戦闘の曲。タイトルで音をオンにすると toggle の音のあとにタイトルの曲', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await startAt(page, 'DUNGEON', { state: { hp: 999, maxHp: 999, dungeon: dungeonMap({ x: 4, y: 4 }) }, seed: SEEDS.slimeNext });
+    await settle(page, 'dungeon');
+    await press(info, forward(page));
+    await expect.poll(async () => (await audioEvents(page)).map((e) => `${e.type}:${e.name}`)).toEqual(['sound:encounter', 'bgm:battle']);
+
+    // 音がオフのタイトルで「おと：オフ」を選ぶ（開き直すので、記録とオンの設定を新しくする）
+    const fresh = await page.context().newPage();
+    await recordAudio(fresh);
+    await fresh.goto('./');
+    await fresh.evaluate(() => localStorage.clear());
+    await fresh.goto('about:blank');
+    await fresh.goto('./');
+    await expect(titleItem(fresh, 'おと：')).toHaveText(/おと：オフ$/);
+    await press(info, titleItem(fresh, 'おと：'));
+    await expect.poll(async () => (await audioEvents(fresh)).map((e) => `${e.type}:${e.name}`)).toEqual(['sound:toggle', 'bgm:title']);
+  });
+
+  test('TC-0034-13 ボスのマスに入ると、bossAppear の演出のあいだ曲を止め（null）、1200ms でボスの曲。演出を飛ばせばすぐボスの曲', async ({ page }) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await page.clock.install();
+    for (const skip of [false, true]) {
+      await startAt(page, 'DUNGEON', { state: bossFrontState });
+      await settle(page, 'dungeon');
+      await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+      await forward(page).click();
+      await expect(page.locator('#effect-layer')).toHaveAttribute('data-effect', 'bossAppear');
+      expect(await bgmNames(page)).toEqual([null]);
+      if (skip) {
+        await page.getByTestId('message-window').click();
+      } else {
+        await page.clock.runFor(1199);
+        expect(await bgmNames(page)).toEqual([null]);
+        await page.clock.runFor(1);
+      }
+      await expect.poll(() => bgmNames(page)).toEqual([null, 'boss']);
+    }
+  });
+
+  test('TC-0034-15 ボスを倒すと宿屋に戻るまで無音（撃破のメッセージ・クリア画面・満杯の入れ替え・入れ替えの再読み込み）。「宿屋へ」で宿屋の曲', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await page.clock.install();
+    await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
+    await settle(page, 'boss');
+    await attackPaused(page, info);
+    await page.clock.runFor(9000);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
+    expect(await bgmNames(page)).toEqual([null]);
+    await page.clock.resume();
+    await press(info, page.getByRole('menu', { name: 'ゲームクリア' }).getByRole('menuitem').filter({ hasText: '宿屋へ' }));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+    await expect.poll(() => bgmNames(page)).toEqual([null, 'inn']);
+
+    // 所持品 50 個でボスを倒す → 入れ替え（ダンジョンなし）でも無音、読み込み直しても無音
+    const full = { ...bossBattle(), inventory: storedInventory({ items: shortSwords(50, 1) }) };
+    await startAt(page, 'BATTLE', { state: full, seed: SEEDS.bossWin });
+    await settle(page, 'boss');
+    await attackPaused(page, info);
+    await page.clock.runFor(9000);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'swap');
+    expect(await bgmNames(page)).toEqual([null]);
+    await page.clock.resume();
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'swap');
+    await page.waitForTimeout(500);
+    expect(await bgmNames(page)).toEqual([]);
+  });
+
+  test('TC-0034-16 通常の敵に勝つと、勝利のメッセージのあいだ（戦闘の画面）は曲が替わらず、ダンジョンに移ったときにダンジョンの曲。倒れたら宿屋の曲', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await page.clock.install();
+    await startAt(page, 'BATTLE', { state: { battle: battleOf('slime', 1) }, seed: SEEDS.hits });
+    await settle(page, 'battle');
+    await attackPaused(page, info);
+    for (let i = 0; i < 40 && (await page.locator('body').getAttribute('data-screen')) === 'battle'; i += 1) {
+      expect(await bgmNames(page)).toEqual([]);
+      await page.clock.runFor(100);
+    }
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    const events = (await audioEvents(page)).filter((e) => e.type === 'bgm');
+    expect(events.map((e) => [e.name, e.screen])).toEqual([['dungeon', 'dungeon']]);
+
+    // 倒れたとき（HP 1、ゴブリンが先に攻撃）
+    await startAt(page, 'BATTLE', { state: { hp: 1 }, seed: SEEDS.hits });
+    await settle(page, 'battle');
+    await attackPaused(page, info);
+    for (let i = 0; i < 40 && (await page.locator('body').getAttribute('data-screen')) !== 'inn'; i += 1) await page.clock.runFor(100);
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+    expect(await bgmNames(page)).toEqual(['inn']);
+  });
+
+  test('TC-0034-20 ダンジョンの「メニュー → おと」でオフにすると、曲を止める（null）', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await startAt(page, 'DUNGEON');
+    await settle(page, 'dungeon');
+    const menu = await openDungeonMenu(page, info);
+    await press(info, menu.getByRole('menuitem').filter({ hasText: 'おと：オン' }));
+    await expect.poll(() => bgmNames(page)).toEqual([null]);
+  });
+
+  test('TC-0034-21 書き込みに失敗して ErrorPanel が出ても、曲は替わらない', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordAudio(page);
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 5, y: 5 }) } });
+    await settle(page, 'dungeon');
+    await page.evaluate(() => { Storage.prototype.setItem = () => { throw new Error('QuotaExceededError'); }; });
+    await press(info, forward(page));
+    await expect(page.getByTestId('error-panel').getByRole('alert')).toHaveText('きろくを よみかき できません');
+    await page.waitForTimeout(300);
+    expect(await audioEvents(page)).toEqual([]);
   });
 });

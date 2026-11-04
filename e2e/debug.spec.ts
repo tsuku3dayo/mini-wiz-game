@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { battleOf, dungeonMap, logLines, openDebug, SEEDS, startAt, storedInn, storedSave, swapInventory, writeScene } from './helpers';
+import { audioEvents, battleOf, bgmNames, clearAudio, dungeonMap, logLines, openDebug, recordAudio, SEEDS, soundOnAtStart, startAt, storedInn, storedSave, swapInventory, writeScene } from './helpers';
 
 /** debugDungeon を呼び、reject したら { status, message } を返す */
 const debugResult = (page: Page) => page.evaluate(async () => {
@@ -105,6 +105,35 @@ test.describe('テスト用の入口', () => {
     await expectBody('swap', 'SWAP');
     await writeScene(page, { state: storedInn({ location: 'CLEARED' }) });
     await expectBody('clear', 'CLEARED');
+  });
+
+  test('TC-0038-08 効果音の判断のたびに app:sound（{ name, muted }。オフでも muted: true）、曲を替えた・止めたときに app:bgm（{ name }。止めたら null）', async ({ page }) => {
+    // 音がオフで遭遇
+    await recordAudio(page);
+    await startAt(page, 'DUNGEON', { state: { hp: 999, maxHp: 999, dungeon: dungeonMap({ x: 4, y: 4 }) }, seed: SEEDS.slimeNext });
+    await clearAudio(page);
+    await page.getByRole('button', { name: '前進', exact: true }).click();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    const sounds = (await audioEvents(page)).filter((e) => e.type === 'sound');
+    expect(sounds.map(({ name, muted }) => ({ name, muted }))).toEqual([{ name: 'encounter', muted: true }]);
+    expect(await bgmNames(page)).toEqual([]);
+
+    // 音をオンにして宿屋 → ダンジョン
+    await soundOnAtStart(page);
+    await startAt(page, 'INN');
+    await expect.poll(async () => (await bgmNames(page)).at(-1)).toBe('inn');
+    await clearAudio(page);
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
+    await expect.poll(() => bgmNames(page)).toEqual(['dungeon']);
+    // 「メニュー → おと」でオフ → null
+    await page.getByRole('button', { name: '≡ メニュー' }).click();
+    await page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').filter({ hasText: 'おと：オン' }).click();
+    await expect.poll(() => bgmNames(page)).toEqual(['dungeon', null]);
+    const detail = await page.evaluate(() => new Promise<unknown>((resolve) => {
+      window.addEventListener('app:bgm', (e) => resolve((e as CustomEvent).detail), { once: true });
+      (document.querySelector('[role="menu"][aria-label="メニュー"] [role="menuitem"]:last-child') as HTMLElement).click();
+    }));
+    expect(detail).toEqual({ name: 'dungeon' });
   });
 
   test('TC-0038-06 setDelay(1000) のあいだ data-busy が true で、300ms を過ぎると ▼ が出る。応答のあとで消える', async ({ page }) => {
