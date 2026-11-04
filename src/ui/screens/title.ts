@@ -1,5 +1,6 @@
 // タイトル（#/。仕様書 §11.5、GUI-0002 §1、TD-0004 §1）。メッセージ欄は作らない
-// 「おと」の切り替えは TASK-0017 でつなぐ（今は項目を出すだけ）
+// 「おと」は、その場で項目の文字だけを変える（メッセージは出さない。オンにした瞬間に確認音）
+import { soundLabel } from '../../audio/sound-setting';
 import { versionLabel } from '../../logic/version';
 import { isInstalled } from '../../platform/install';
 import { commandMenu, type CommandMenu, type MenuItem } from '../components/command-menu';
@@ -9,7 +10,7 @@ import { el } from '../dom';
 import type { ScreenContext } from '../router';
 
 export function mountTitle(root: HTMLElement, ctx: ScreenContext): { destroy(): void } {
-  const { store, api, command, router } = ctx;
+  const { store, api, command, router, sound } = ctx;
   const deco = () => el('div', { class: 'deco', 'aria-hidden': 'true' }, '✦');
 
   // インストールのボタンは、インストール済みなら出さない（版の表記は右に残る。GUI-0002 §1）
@@ -52,7 +53,7 @@ export function mountTitle(root: HTMLElement, ctx: ScreenContext): { destroy(): 
       { label: 'はじめから', onSelect: () => router.navigate('new') },
       // セーブがないときは無効。理由を渡さないので、選んでも何も出さない（メッセージ欄がない。仕様書 §11.5）
       { label: continueLabel(), disabled: !s, onSelect: () => void command.run(() => api.load(), { refetchSave: true }) },
-      { label: 'おと：オフ' },
+      { label: soundLabel(sound.on), onSelect: () => { sound.toggle(); menu?.update({ items: items() }); } },
     ];
   }
 

@@ -1,5 +1,6 @@
 // 画面切替え（仕様書 §11.2「LocationGuard」、§27.4）。ハッシュとゲームの状態の場所で、出す画面を決める
 import type { GameApi, Location } from '../api/types';
+import type { SoundSetting } from '../audio/sound-setting';
 import type { Command } from './command';
 import { errorPanel } from './components/error-panel';
 import { gameFrame } from './components/game-frame';
@@ -28,6 +29,8 @@ export interface ScreenContext {
   api: GameApi;
   command: Command;
   queue: MessageQueue;
+  /** 音のオン／オフ（タイトル・GameMenu の「おと」） */
+  sound: SoundSetting;
   router: Router;
 }
 
@@ -39,6 +42,7 @@ export interface RouterDeps {
   api: GameApi;
   command: Command;
   queue: MessageQueue;
+  sound: SoundSetting;
   /** 画面ごとの作り方。まだない画面は、空の画面を出す（作る TASK で足す） */
   screens: Partial<Record<ScreenName, MountScreen>>;
   /** 画面が替わったとき（更新の帯の出し入れなど） */
@@ -128,6 +132,7 @@ export function createRouter(deps: RouterDeps): Router {
     api: deps.api,
     command,
     queue,
+    sound: deps.sound,
     get router() { return router; },
   };
 

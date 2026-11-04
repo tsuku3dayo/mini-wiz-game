@@ -78,6 +78,44 @@ test.describe('メニューとコマンド', () => {
     expect(await labels()).toEqual(['もどる', 'ヒール', 'そうび', 'もちもの', 'おと：オフ']);
   });
 
+  test('TC-0010-06 狭い画面のメニュー：宿屋は もどる・そうび・もちもの・ステータス・おと：オフ（カーソルは そうび）、ダンジョンは ヒール を足し、カーソルは ヒール（無効でも）。もどるで閉じる', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop', '狭い画面だけの並び');
+    const labels = async () => (await page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''));
+    await startAt(page, 'INN');
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' }).tap();
+    expect(await labels()).toEqual(['もどる', 'そうび', 'もちもの', 'ステータス', 'おと：オフ']);
+    expect(await cursorLabel(page, 'メニュー')).toBe('そうび');
+    await page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').filter({ hasText: 'もどる' }).tap();
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toHaveCount(0);
+
+    await startAt(page, 'DUNGEON', { state: { mp: 2 } });
+    const menu = await openDungeonMenu(page, info);
+    expect(await labels()).toEqual(['もどる', 'ヒール', 'そうび', 'もちもの', 'ステータス', 'おと：オフ']);
+    expect(await cursorLabel(page, 'メニュー')).toBe('ヒール');
+    await expect(menu.getByRole('menuitem').filter({ hasText: 'ヒール' })).toHaveAttribute('aria-disabled', 'true');
+    await menu.getByRole('menuitem').filter({ hasText: 'もどる' }).tap();
+    await expect(page.getByRole('menu', { name: 'メニュー' })).toHaveCount(0);
+  });
+
+  test('TC-0010-11 宿屋のメニューの「おと：オフ」で「おと：オン」になり、メニューは開いたまま（カーソルも同じ）、「おとを オンにした」と保存が on。もう一度で元に戻る', async ({ page }, info) => {
+    const sound = () => page.evaluate(() => localStorage.getItem('mini-wiz-game-sound'));
+    await startAt(page, 'INN');
+    const menuItem = page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' });
+    if (info.project.name === 'desktop') await menuItem.click();
+    else await menuItem.tap();
+    const menu = page.getByRole('menu', { name: 'メニュー' });
+    const toggle = () => menu.getByRole('menuitem').filter({ hasText: 'おと：' });
+    for (const [label, line, saved] of [['おと：オン', 'おとを オンにした', 'on'], ['おと：オフ', 'おとを オフにした', 'off']]) {
+      if (info.project.name === 'desktop') await toggle().click();
+      else await toggle().tap();
+      await expect(toggle()).toHaveText(new RegExp(`${label}$`));
+      await expect(menu).toBeVisible();
+      expect(await cursorLabel(page, 'メニュー')).toBe(label);
+      await expect.poll(async () => (await logLines(page)).at(-1)).toBe(line);
+      expect(await sound()).toBe(saved);
+    }
+  });
+
   test('TC-0010-04 ダンジョンで MP 2 のとき「ヒール」は無効。選ぶと「MP が たりない」が通常の色で出て、ゲーム API を呼ばない', async ({ page }, info) => {
     await startAt(page, 'DUNGEON', { state: { mp: 2 } });
     const menu = await openDungeonMenu(page, info);

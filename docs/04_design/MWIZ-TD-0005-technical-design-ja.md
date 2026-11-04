@@ -3,8 +3,8 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.3
-updated: 2026-11-02
+version: 1.4
+updated: 2026-11-04
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TS-0001（v1.1）
@@ -23,8 +23,8 @@ verified: null
 
 | モジュール | 受け持ち | つなぎ方 |
 | --- | --- | --- |
-| `sound-setting.ts` | オン／オフ（`mini-wiz-game-sound`、初期オフ）、`toggle()`、`subscribe` | タイトルのメニュー・GameMenu の「おと」が呼ぶ。オンにした瞬間に `toggle` の音 |
-| `sound.ts` | 効果音 8 種の合成（仕様書 §25）、`play(name)`・`stop()`、自動再生の制限への対処（最初の入力で `resume`） | `ui/command.ts`（遭遇）と `ui/message-queue.ts`（演出の開始・終了）が呼ぶ。鳴らす判断のたびに `app:sound` イベント |
+| `sound-setting.ts` | オン／オフ（`mini-wiz-game-sound`、初期オフ）、`toggle()`、`subscribe`、`soundLabel`。保存には文字列 `'on'`／`'off'` をそのまま書く（Web Storage の `getItem`・`setItem` を受け取る。ゲームの保存の `KeyValueStore` は JSON にするので使わない。v1.4） | タイトルのメニュー・GameMenu の「おと」が呼ぶ（画面には `ScreenContext.sound` で渡す）。オンにした瞬間に `toggle` の音（`main.ts` が `onTurnOn` でつなぐ） |
+| `sound.ts` | 効果音 8 種の合成（仕様書 §25）、`playSfx(name)`・`stopSfx()`・`sfxRemainingSec()`・`onSfx`（仕様書 §25.3 の名前。v1.3 は `play`・`stop` と書いていた）、自動再生の制限への対処（入力のたびに `resume`）。`sfx(name, { muted })` が `app:sound` イベントを出し、muted でなければ `playSfx` を呼ぶ（v1.4） | `main.ts` が、`ui/command.ts` の `onEncounter`（遭遇）と `ui/message-queue.ts` の `onEffectStart`・`onEffectEnd`（演出の開始・終了）に `sfx`・`stopSfx` をつなぐ |
 | `bgm.ts` | FM 合成の再生エンジン（仕様書 §26.2〜§26.6）、ダッキング・フェード | `bgm-director.ts` だけが呼ぶ |
 | `bgm-director.ts` | 場面（パス・状態・演出）から曲を決め、変わったときだけ替える（仕様書 §26.7）。替えたら `app:bgm` イベント | ストア・ルーター・キュー・音の設定を購読する。LocationGuard の外に置き、エラーの画面でも止めない |
 
