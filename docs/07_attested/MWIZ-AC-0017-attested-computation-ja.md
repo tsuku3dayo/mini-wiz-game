@@ -2,7 +2,7 @@
 id: MWIZ-AC-0017
 type: Attested Computation
 title: 効果音と音の設定の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-04
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0026（v1.0）
   - MWIZ-TC-0032（v1.0）
   - MWIZ-TD-0005（v1.4）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-04T15:56:00+09:00" }
 ---
 
 # AC-0017 効果音と音の設定の実施記録
