@@ -2,7 +2,7 @@
 id: MWIZ-AC-0020
 type: Attested Computation
 title: BGM の監督（場面と曲）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-04
 sources:
@@ -11,7 +11,7 @@ sources:
   - MWIZ-TC-0034（v1.0）
   - MWIZ-TC-0038（v1.0）
   - MWIZ-TD-0005（v1.4）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-04T18:03:59+09:00" }
 ---
 
 # AC-0020 BGM の監督（場面と曲）の実施記録
