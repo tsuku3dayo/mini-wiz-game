@@ -92,13 +92,42 @@ export function battleOf(kind: string, hp: number, isBoss = kind === 'necromance
   return { enemy: { kind, hp }, isBoss };
 }
 
+/**
+ * 保存の形の装備の個体。レアリティは段階で出るもの（仕様書 §8.3）にし、value は範囲の中にする。
+ * そうでないと読み込みの conformItem で直され、画面の文字が変わる
+ */
+export function storedItem(id: number, itemId: string, rarity: string, value: number): Record<string, unknown> {
+  return { id, itemId, rarity, value };
+}
+
+/** 所持品の形（装備なし・入れ替え待ちなしが既定） */
+export function storedInventory(opts: { items?: Record<string, unknown>[]; equipped?: Record<string, unknown>; pending?: Record<string, unknown> | null } = {}): Record<string, unknown> {
+  const items = opts.items ?? [];
+  const ids = [...items, ...Object.values(opts.equipped ?? {}), (opts.pending as { item?: unknown } | null | undefined)?.item]
+    .map((i) => (i as { id?: number } | null | undefined)?.id ?? 0);
+  return {
+    equipped: { weapon: null, armor: null, shield: null, accessory: null, ...opts.equipped },
+    items,
+    nextId: Math.max(0, ...ids) + 1,
+    pending: opts.pending ?? null,
+  };
+}
+
+/** n 個の ショートソード［N］（id は from から。所持品を満杯にするとき） */
+export function shortSwords(n: number, from: number): Record<string, unknown>[] {
+  return Array.from({ length: n }, (_, i) => storedItem(from + i, 'weapon1', 'N', 1));
+}
+
 /** 場所ごとの画面の名前（body[data-screen]）。場所は使う TASK で足す */
-const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: 'clear' } as const;
+const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: 'clear', SWAP: 'swap' } as const;
 
 /**
  * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
  * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。BATTLE は 1F の (4,4) でゴブリン（HP 18）。
  * CLEARED は 1 回ボスを倒したあと（laps 2・bossKills 1）。
+ * SWAP は 1F の (4,4) で、所持品 50 個（ショートソード［N］、id 1〜50）、
+ * 落ちている個体 ミスリルソード［UR］（こうげき +28、id 51）、thenClear: false。
+ * state.inventory を渡せば差し替えられる。
  * 乱数は seed（既定は SEEDS.noEncounter。歩いても遭遇しない）
  */
 export async function startAt(
@@ -112,10 +141,19 @@ export async function startAt(
     DUNGEON: { location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }) },
     BATTLE: { location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) },
     CLEARED: { location: 'CLEARED', records: { battles: 30, kills: 25, deaths: 1, laps: 2, bossKills: 1 } },
+    SWAP: { location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() },
   };
   await writeScene(page, { state: storedInn({ ...base[location], ...opts.state }), save: opts.save });
   await page.evaluate((seed) => window.__wiz!.useSeed(seed), opts.seed ?? SEEDS.noEncounter);
   await page.locator(`body[data-screen="${SCREEN_OF[location]}"]`).waitFor({ state: 'attached' });
+}
+
+/** 入れ替え待ちの所持品（startAt の SWAP の既定） */
+export function swapInventory(thenClear = false): Record<string, unknown> {
+  return storedInventory({
+    items: shortSwords(50, 1),
+    pending: { item: storedItem(51, 'weapon6', 'UR', 28), thenClear },
+  });
 }
 
 /** メッセージ欄の行の文字（古い順） */
@@ -128,6 +166,24 @@ export async function menuLabels(page: Page, label: string): Promise<string[]> {
   const texts = await page.getByRole('menu', { name: label }).getByRole('menuitem').allTextContents();
   // \s は全角スペース（カーソルのない行の印）も含む
   return texts.map((t) => t.replace(/^[▶\s]/, ''));
+}
+
+/**
+ * メニューの項目の、見えている文字（読み上げ用の隠し文とカーソルを除き、要素ごとに半角スペースで区切る）。
+ * 例：「ぶき ロングソード［SR］ こうげき +10」
+ */
+export function shownLabels(page: Page, label: string): Promise<string[]> {
+  return page.getByRole('menu', { name: label, exact: true }).getByRole('menuitem').evaluateAll((rows) => rows.map((row) => {
+    const copy = row.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll('.visually-hidden, .wiz-cursor').forEach((n) => n.remove());
+    const texts: string[] = [];
+    const walker = document.createTreeWalker(copy, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = (n.textContent ?? '').trim();
+      if (t) texts.push(t);
+    }
+    return texts.join(' ');
+  }));
 }
 
 /** メニューの ▶ のある行の文字 */

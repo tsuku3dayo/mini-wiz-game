@@ -173,7 +173,8 @@ body {
 
 /* CommandMenu（仕様書 §11.4） */
 .wiz-menu { list-style: none; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-.wiz-menu.scroll { overflow-y: auto; }
+/* position: relative：中の読み上げ用の隠し文（position: absolute）も、スクロールの枠で切る（でないとページが縦に伸びる） */
+.wiz-menu.scroll { overflow-y: auto; position: relative; }
 .wiz-menu-item {
   display: flex;
   align-items: center;
@@ -326,6 +327,41 @@ body {
 @media (min-width: 600px) {
   .wiz-columns.stretch > .wiz-column > .battle-command { flex: 1 1 auto; }
 }
+
+/* ItemLabel（仕様書 §8.7、§11.7）：折り返し可。1 つの補正の途中では折り返さない */
+.wiz-item-label { flex: 1 1 auto; min-width: 0; white-space: normal; }
+.wiz-item-shown { display: inline-flex; flex-wrap: wrap; column-gap: 8px; }
+.wiz-item-bonus { white-space: nowrap; color: var(--wiz-color-primary); }
+.wiz-item-slot, .wiz-item-none, .wiz-item-empty, .wiz-order-label { color: var(--wiz-color-text-sub); }
+.wiz-item-name { overflow-wrap: anywhere; }
+.wiz-item-name.rarity-n { color: var(--wiz-color-rarity-n); }
+.wiz-item-name.rarity-r { color: var(--wiz-color-rarity-r); }
+.wiz-item-name.rarity-sr { color: var(--wiz-color-rarity-sr); }
+.wiz-item-name.rarity-ur { color: var(--wiz-color-rarity-ur); }
+.wiz-item-name.rarity-lg { color: var(--wiz-color-rarity-lg); }
+.wiz-item-empty, .wiz-order-label { margin: 0; }
+
+/* 装備画面（GUI-0006 §1）：各行は 部位名（3.5em）＋ ItemLabel */
+.wiz-slot-row { display: flex; flex: 1 1 auto; min-width: 0; align-items: baseline; }
+.wiz-slot-name { flex: 0 0 3.5em; }
+.equip-left .wiz-order-label { margin-bottom: 4px; }
+.wiz-ability { display: flex; }
+.wiz-ability-name { flex: 0 0 6em; }
+.wiz-ability-value { white-space: pre; }
+.wiz-ability[data-change="up"] { color: var(--wiz-color-success); }
+.wiz-ability[data-change="down"] { color: var(--wiz-color-warning); }
+
+/* もちもの画面・一覧（GUI-0006 §2） */
+.wiz-item-count { margin: 0 0 4px; }
+.wiz-item-count[data-full="true"] { color: var(--wiz-color-warning); }
+.wiz-item-filter { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.wiz-filter-button { min-width: 44px; min-height: 44px; width: 44px; height: 44px; padding: 0; }
+.wiz-filter-name { min-width: 3.5em; text-align: center; }
+.wiz-item-filter .wiz-order-label { margin-left: 8px; }
+
+/* 入れ替え（GUI-0006 §3） */
+.swap-drop { margin: 0 0 8px; display: flex; flex-wrap: wrap; column-gap: 8px; }
+.swap-log-slot { display: grid; }
 
 /* ErrorPanel（仕様書 §11.9） */
 .wiz-error-text { margin: 0 0 8px; }

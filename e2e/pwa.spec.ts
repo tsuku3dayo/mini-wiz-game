@@ -1,5 +1,5 @@
 import { devices, expect, test, type Page } from '@playwright/test';
-import { readStorage, startAt, storedSave } from './helpers';
+import { battleOf, dungeonMap, readStorage, startAt, storedInn, storedSave, swapInventory, writeScene } from './helpers';
 
 test.describe('更新の帯', () => {
   /** 帯が見えて、文と「更新」があり、上端（安全領域の内側）に固定されている */
@@ -24,6 +24,46 @@ test.describe('更新の帯', () => {
     await startAt(page, 'INN');
     await page.evaluate(() => window.__wiz!.showUpdateBanner());
     await expectBanner(page);
+  });
+
+  test('TC-0004-02 帯を出していても、ダンジョン・戦闘・入れ替え・クリア・名前入力では見えない。1F の入口から宿屋へ戻るとまた出る', async ({ page }) => {
+    const banner = page.locator('#update-banner');
+    const screen = (name: string) => expect(page.locator('body')).toHaveAttribute('data-screen', name);
+    await startAt(page, 'INN');
+    await page.evaluate(() => window.__wiz!.showUpdateBanner());
+    await expect(banner).toBeVisible();
+
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
+    await screen('dungeon');
+    await expect(banner).toBeHidden();
+
+    // 戦闘・入れ替え・クリア（読み込み直さずに状態だけ書き替える）
+    const scenes: [Record<string, unknown>, string][] = [
+      [{ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) }, 'battle'],
+      [{ location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() }, 'swap'],
+      [{ location: 'CLEARED' }, 'clear'],
+    ];
+    for (const [state, name] of scenes) {
+      await writeScene(page, { state: storedInn(state) });
+      await screen(name);
+      await expect(banner, name).toBeHidden();
+    }
+
+    // 1F の入口から「宿屋へ戻る」
+    await writeScene(page, { state: storedInn({ location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }) }) });
+    await screen('dungeon');
+    await page.getByRole('button', { name: '宿屋へ戻る' }).click();
+    await screen('inn');
+    await expect(banner).toBeVisible();
+
+    // 名前入力（タイトルへ戻ってから「はじめから」）
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'タイトルへ戻る' }).click();
+    await page.getByRole('menu', { name: 'かくにん' }).getByRole('menuitem').filter({ hasText: 'はい' }).click();
+    await screen('title');
+    await expect(banner).toBeVisible();
+    await page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'はじめから' }).click();
+    await screen('new');
+    await expect(banner).toBeHidden();
   });
 
   test('TC-0004-03 帯を出して 30 秒たっても読み込み直さず、プレイ中の状態とセーブがそのまま', async ({ page }) => {

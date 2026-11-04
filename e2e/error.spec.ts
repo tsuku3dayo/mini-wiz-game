@@ -63,6 +63,55 @@ test.describe('エラーの出し方', () => {
     }
   });
 
+  test('TC-0012-08 装備画面・もちもの画面で書き込みに失敗すると、ErrorPanel がその画面の一番下に出る', async ({ page }, info) => {
+    const press = (target: ReturnType<Page['locator']>) => (info.project.name === 'desktop' ? target.click() : target.tap());
+    const item = (menu: string, text: string) => page.getByRole('menu', { name: menu, exact: true }).getByRole('menuitem').filter({ hasText: text });
+    const state = {
+      inventory: {
+        equipped: { weapon: null, armor: null, shield: null, accessory: null },
+        items: [{ id: 1, itemId: 'weapon1', rarity: 'R', value: 2 }],
+        nextId: 2,
+        pending: null,
+      },
+    };
+    const scenes: { name: string; act: () => Promise<void> }[] = [
+      {
+        name: 'そうび',
+        act: async () => {
+          await press(item('そうび', 'ぶき'));
+          await press(item('ぶき', 'ショートソード［R］'));
+        },
+      },
+      {
+        name: 'もちもの',
+        act: async () => {
+          await press(item('もちもの', 'ショートソード［R］'));
+          await press(item('かくにん', 'はい'));
+        },
+      },
+    ];
+    for (const s of scenes) {
+      await startAt(page, 'INN', { state });
+      await press(item('宿屋', 'メニュー'));
+      await press(item('メニュー', s.name));
+      await expect(page.locator('h1')).toHaveText(s.name);
+      await failWrites(page);
+      await s.act();
+      const panel = page.getByTestId('error-panel');
+      await expect(panel, s.name).toBeVisible();
+      await expect(panel.getByRole('alert')).toHaveText('きろくを よみかき できません');
+      await expect(panel.getByRole('menuitem').filter({ hasText: '再試行' })).toBeFocused();
+      // 画面の中で、ErrorPanel より下に部品がない（ほかのウィンドウ・メニューの下の端が、ErrorPanel の上の端より上）
+      const panelTop = await panel.evaluate((e) => e.getBoundingClientRect().top);
+      const others = await page.locator('main .wiz-window, main [role="menu"]').evaluateAll((list, p) => list
+        .filter((e) => !p!.contains(e) && !e.contains(p))
+        .map((e) => e.getBoundingClientRect().bottom), await panel.elementHandle());
+      expect(others.length, s.name).toBeGreaterThan(0);
+      expect(Math.max(...others), s.name).toBeLessThanOrEqual(panelTop);
+      await expect(page.getByTestId('message-window')).toHaveCount(0);
+    }
+  });
+
   test('TC-0012-07 タイトルで書き込みに失敗すると、ErrorPanel がメニューの下に出る', async ({ page }, info) => {
     await openDebug(page);
     await writeScene(page, { save: storedSave() });

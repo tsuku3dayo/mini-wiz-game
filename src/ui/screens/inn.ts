@@ -1,8 +1,11 @@
 // 宿屋（#/inn。仕様書 §11.5、GUI-0003 §1、TD-0004 §3）
 // 操作の場所は 1 つの入れ物で、中身を替える：宿屋のメニュー／GameMenu／タイトルへ戻るの確認
 // 狭い画面のメニューの「ステータス」は、画面全体をステータス画面に差し替える（仕様書 §11.7）。広い画面は上の右に実績
-// まだ作っていないもの：そうび・もちもの（TASK-0015）、「おと」（TASK-0017）。項目は出すが、選んでも何もしない
+// そうび・もちものも、画面全体を差し替える（メッセージ欄なし）。閉じたら宿屋を作り直し、カーソルを「メニュー」に戻す
+// まだ作っていないもの：「おと」（TASK-0017）。項目は出すが、選んでも何もしない
 import { commandMenu, type CommandMenu } from '../components/command-menu';
+import { equipmentPanel } from '../components/equipment-panel';
+import { inventoryPanel } from '../components/inventory-panel';
 import { recordsWindow, statusScreen } from '../components/status-screen';
 import { confirmMenu } from '../components/confirm-menu';
 import { errorPanel } from '../components/error-panel';
@@ -14,7 +17,7 @@ import { statusPanel, type StatusPanel } from '../components/status-panel';
 import { isWide, onWideChange } from '../dom';
 import type { ScreenContext } from '../router';
 
-type Mode = 'menu' | 'gameMenu' | 'confirm' | 'status';
+type Mode = 'menu' | 'gameMenu' | 'confirm' | 'status' | 'equip' | 'items';
 
 const INDEX_MENU = 2;
 const INDEX_QUIT = 4;
@@ -96,8 +99,14 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
         wide: isWide(),
         soundOn: false,
         onClose: () => setMode('menu', INDEX_MENU),
-        onEquip: () => undefined,
-        onItems: () => undefined,
+        onEquip: () => {
+          mode = 'equip';
+          build();
+        },
+        onItems: () => {
+          mode = 'items';
+          build();
+        },
         // 狭い画面だけの項目。画面全体をステータス画面に差し替える
         onStatus: () => {
           mode = 'status';
@@ -135,7 +144,7 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
       mode = 'menu';
       cursor = INDEX_MENU;
     }
-    if (mode === 'status') {
+    if (mode === 'status' || mode === 'equip' || mode === 'items') {
       status = null;
       actionSlot = null;
       logSlot = null;
@@ -143,16 +152,15 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
       innMenu = null;
       confirm = null;
       menuWindow = null;
-      const screen = statusScreen({
-        character: state.character,
-        records: state.records,
-        // 閉じると宿屋（メニューは閉じた状態）に戻り、フォーカスは「メニュー」
-        onBack: () => {
-          mode = 'menu';
-          cursor = INDEX_MENU;
-          build();
-        },
-      });
+      // 閉じると宿屋（メニューは閉じた状態）に戻り、フォーカスは「メニュー」
+      const onClose = () => {
+        mode = 'menu';
+        cursor = INDEX_MENU;
+        build();
+      };
+      const screen = mode === 'status'
+        ? statusScreen({ character: state.character, records: state.records, onBack: onClose })
+        : (mode === 'equip' ? equipmentPanel : inventoryPanel)({ store, api, command, onClose });
       root.replaceChildren(screen.el);
       parts.push(screen);
       return;
@@ -206,7 +214,8 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
 
   const offStore = store.subscribe(onChange);
   const offCommand = command.subscribe(onChange);
-  const offWide = onWideChange(build);
+  // そうび・もちものは CSS だけで並びが替わるので、作り直さない（カーソルなどを残す）
+  const offWide = onWideChange(() => { if (mode !== 'equip' && mode !== 'items') build(); });
   build();
 
   return {

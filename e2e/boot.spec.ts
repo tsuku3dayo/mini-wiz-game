@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openDebug, readStorage, storedInn, storedSave, writeScene } from './helpers';
+import { battleOf, openDebug, readStorage, startAt, storedInn, storedSave, writeScene } from './helpers';
 
 // 起動の見張りと復旧（仕様書 §30.4、TC-0005・TC-0001-05）
 // Service Worker が配るファイルは page.route で止められないので、このファイルでは Service Worker を使わない
@@ -32,6 +32,19 @@ async function breakEntry(page: Page, times = Infinity): Promise<void> {
     return route.continue();
   });
 }
+
+/** 再開の場面（TC-0009-07・08）：敵の残り HP を減らした戦闘中・入れ替え待ち・宿屋 */
+const resumeScenes = [
+  { location: 'BATTLE', screen: 'battle', state: { battle: battleOf('goblin', 7) } },
+  { location: 'SWAP', screen: 'swap', state: {} },
+  { location: 'INN', screen: 'inn', state: { hp: 12 } },
+] as const;
+
+/** 入れ替えの画面の「おちている」の個体の名前（ほかの画面では null） */
+const dropName = async (page: Page) => {
+  const drop = page.getByTestId('swap-drop').locator('.wiz-item-name');
+  return (await drop.count()) > 0 ? drop.textContent() : null;
+};
 
 const scopeOf = (page: Page) => page.evaluate(() => new URL('./', location.href).href);
 
@@ -151,6 +164,33 @@ test.describe('起動に失敗しても直る', () => {
     const names = await page.evaluate(() => caches.keys());
     expect(names.filter((n) => n.includes(scope))).toEqual([]);
     expect(await readStorage(page)).toEqual(before);
+  });
+
+  test('TC-0009-07 戦闘中・入れ替え待ち・宿屋のそれぞれで、読み込み直しても同じ画面になり、保存の値が変わらない', async ({ page }) => {
+    for (const s of resumeScenes) {
+      await startAt(page, s.location, { state: s.state, save: storedSave() });
+      const before = (await readStorage(page)).slice(0, 2);
+      const drop = await dropName(page);
+      await page.reload();
+      await expect(page.locator('body'), s.location).toHaveAttribute('data-screen', s.screen);
+      expect((await readStorage(page)).slice(0, 2), s.location).toEqual(before);
+      expect(await dropName(page)).toBe(drop);
+    }
+  });
+
+  test('TC-0009-08 ページを閉じて同じコンテキストで開き直しても、同じ画面になり、保存の値が変わらない', async ({ page, context }) => {
+    let current = page;
+    for (const s of resumeScenes) {
+      await startAt(current, s.location, { state: s.state, save: storedSave() });
+      const before = (await readStorage(current)).slice(0, 2);
+      const drop = await dropName(current);
+      await current.close();
+      current = await context.newPage();
+      await current.goto('./?debug=1');
+      await expect(current.locator('body'), s.location).toHaveAttribute('data-screen', s.screen);
+      expect((await readStorage(current)).slice(0, 2), s.location).toEqual(before);
+      expect(await dropName(current)).toBe(drop);
+    }
   });
 
   test('TC-0001-05 復旧で消すのはこのアプリの範囲のキャッシュだけで、ほかのアプリのデータは残る', async ({ page }) => {
