@@ -100,7 +100,66 @@ test.describe('戦闘の画面', () => {
     expect((await page.evaluate(() => window.__wiz!.debugDungeon())).player).toEqual(before);
   });
 
-  test.describe('メッセージを 1 行ずつ出す場面', () => {
+  test.describe('敵の絵', () => {
+  const KINDS = [['slime', 'スライム'], ['goblin', 'ゴブリン'], ['skeleton', 'スケルトン'], ['orc', 'オーク'], ['darkKnight', 'ダークナイト'], ['necromancer', '暗黒のネクロマンサー']] as const;
+  const frame = (page: Page) => page.getByTestId('enemy-window').getByTestId('enemy-image-frame');
+  const img = (page: Page) => frame(page).locator('img');
+  /** 絵が読めるまで待つ */
+  const loaded = (page: Page) => expect.poll(() => img(page).evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth)).toBe(256);
+
+  test('TC-0033-01 6 体それぞれの戦闘で、名前の上に enemies/<種類>.png の絵（256px）が読み込まれ、絵の下端と名前の上端の間は 0', async ({ page }) => {
+    for (const [kind] of KINDS) {
+      await startAt(page, 'BATTLE', { state: { battle: battleOf(kind, 5) } });
+      await expect(img(page), kind).toHaveAttribute('src', `enemies/${kind}.png`);
+      await loaded(page);
+      const box = await frame(page).evaluate((e) => e.getBoundingClientRect().bottom);
+      const name = await page.locator('.battle-enemy-name').evaluate((e) => e.getBoundingClientRect().top);
+      expect(Math.abs(box - name), kind).toBeLessThanOrEqual(0.5);
+    }
+  });
+
+  test('TC-0033-02 どの画面の大きさでも、枠と絵は 256×256 で、image-rendering は pixelated', async ({ page }) => {
+    await startAt(page, 'BATTLE');
+    await loaded(page);
+    const size = async () => Promise.all([frame(page), img(page)].map((l) => l.evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      return [Math.round(r.width * 100) / 100, Math.round(r.height * 100) / 100];
+    })));
+    for (const viewport of [null, { width: 414, height: 715 }, { width: 1366, height: 657 }]) {
+      if (viewport) await page.setViewportSize(viewport);
+      // 600px の境目をまたぐと画面を作り直すので、落ち着くまで待って測る
+      await expect.poll(size, JSON.stringify(viewport)).toEqual([[256, 256], [256, 256]]);
+    }
+    await expect(img(page)).toHaveCSS('image-rendering', 'pixelated');
+  });
+
+  test('TC-0033-03 絵の alt は敵の名前と同じ', async ({ page }) => {
+    for (const [kind, name] of KINDS) {
+      await startAt(page, 'BATTLE', { state: { battle: battleOf(kind, 5) } });
+      await expect(img(page), kind).toHaveAttribute('alt', name);
+    }
+  });
+
+  test.describe('絵が読めないとき', () => {
+    // Service Worker が持っている絵を出すと、止めたつもりの読み込みが止まらないので、Service Worker を使わない
+    test.use({ serviceWorkers: 'block' });
+
+  test('TC-0033-04 絵が読めないと枠がなくなり名前だけになる。例外も ErrorPanel も出ず、「たたかう」で戦闘が続く', async ({ page, context }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await context.route('**/enemies/*.png', (r) => r.abort());
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999, battle: battleOf('slime', 12) }, seed: SEEDS.hits });
+    await expect(page.locator('.battle-enemy-name')).toHaveText('スライム');
+    await expect(frame(page)).toHaveCount(0);
+    await choose(page, info, commandItem(page, 'たたかう'));
+    await expect.poll(() => logLines(page)).not.toEqual([]);
+    await expect(page.getByTestId('error-panel')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+  });
+});
+
+test.describe('メッセージを 1 行ずつ出す場面', () => {
     test.use({ reducedMotion: 'no-preference' });
 
     test('TC-0019-09 「ダメージを うけた」の行が出ると HP の値が 200ms・1 回・step-end で点滅する。プレイヤーの攻撃の行だけでは点滅しない', async ({ page }, info) => {

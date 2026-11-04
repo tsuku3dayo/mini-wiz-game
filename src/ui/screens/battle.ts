@@ -1,8 +1,9 @@
 // 戦闘（#/battle。仕様書 §11.5「戦闘」、GUI-0005 §1、TD-0004 §5）
 // 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）
-// 敵の絵は WS-0008 で足す（今は名前だけ）
+// 敵の絵（256×256）は名前の上。敵の種類が変わったら作り直す（仕様書 §13.2）
 import type { BattleView } from '../../api/types';
 import { commandMenu, type CommandMenu, type MenuItem } from '../components/command-menu';
+import { enemyImage } from '../components/enemy-image';
 import { errorPanel } from '../components/error-panel';
 import { columns, gameFrame } from '../components/game-frame';
 import { gameWindow } from '../components/game-window';
@@ -20,6 +21,9 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
   let menu: CommandMenu | null = null;
   let enemyBox: HTMLElement | null = null;
   let enemyName: HTMLElement | null = null;
+  let image: { el: HTMLElement; destroy(): void } | null = null;
+  /** 絵を作ったときの敵の種類（変わったら作り直す） */
+  let imageKind: string | null = null;
   let logSlot: HTMLElement | null = null;
   let logEl: HTMLElement | null = null;
   let panel: { el: HTMLElement; destroy(): void } | null = null;
@@ -53,6 +57,8 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
 
     enemyName = el('p', { class: 'battle-enemy-name' });
     enemyBox = el('div', { class: 'battle-enemy' }, enemyName);
+    image = null;
+    imageKind = null;
     const enemyWin = gameWindow({ testId: 'enemy-window', className: 'battle-enemy-window' }, enemyBox);
     status = statusPanel({ variant: 'compact', character: state.character });
     menu = commandMenu({ label: '戦闘', items: items(shown), autoFocus: !locked(), disabled: locked(), onDisabledSelect: showReason });
@@ -78,6 +84,12 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
     if (shown && enemyBox && enemyName) {
       enemyBox.dataset.boss = String(shown.isBoss);
       enemyName.textContent = shown.enemyName;
+      if (imageKind !== shown.enemyKind) {
+        image?.destroy();
+        image = enemyImage({ kind: shown.enemyKind, name: shown.enemyName });
+        imageKind = shown.enemyKind;
+        enemyBox.prepend(image.el);
+      }
       enemyBox.closest('[data-testid="enemy-window"]')?.setAttribute('data-boss', String(shown.isBoss));
     }
     if (state) status?.update(state.character);
