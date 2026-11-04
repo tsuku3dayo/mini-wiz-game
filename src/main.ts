@@ -1,8 +1,10 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// 音・BGM・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
+// BGM は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
+import { sfx, stopSfx } from './audio/sound';
+import { browserStorage, createSoundSetting } from './audio/sound-setting';
 import { nowIso } from './platform/clock';
 import { prepareInstall } from './platform/install';
 import { createDebugRng, MathRandomRng } from './platform/math-rng';
@@ -46,9 +48,21 @@ if (app) {
 
   // ストア・メッセージキュー・操作の流れ
   const store = createStore(api);
-  const queue = createMessageQueue({ reducedMotion: prefersReducedMotion });
+  // 音：設定（オンにした瞬間に確認音）・演出の効果音（始まりで鳴らし、終わり・スキップで止める）・遭遇の音
+  const sound = createSoundSetting({ storage: browserStorage(), onTurnOn: () => sfx('toggle', { muted: false }) });
+  const queue = createMessageQueue({
+    reducedMotion: prefersReducedMotion,
+    onEffectStart: (e) => sfx(e.effect === 'rareDrop' && e.rarity === 'LG' ? 'rareDropLG' : e.effect, { muted: !sound.on }),
+    onEffectEnd: () => stopSfx(),
+  });
   attachSkipKeys(queue);
-  const command = createCommand({ store, queue, arrival });
+  const command = createCommand({
+    store,
+    queue,
+    arrival,
+    // ボスの遭遇では鳴らさない（bossAppear の演出で鳴る）
+    onEncounter: (next) => { if (!next.battle?.isBoss) sfx('encounter', { muted: !sound.on }); },
+  });
 
   if (debug && debugRng) {
     attachDebug({
@@ -69,6 +83,7 @@ if (app) {
     api,
     command,
     queue,
+    sound,
     screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear, swap: mountSwap },
     onScreenChange: (name) => banner.setAllowed(name === 'title' || name === 'inn'),
   });

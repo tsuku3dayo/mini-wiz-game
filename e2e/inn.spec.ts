@@ -103,6 +103,29 @@ test.describe('宿屋', () => {
     expect((await values()).HP).toBe(' 25/ 61 (+15)');
   });
 
+  test('TC-0026-06 広い画面の宿屋に「ステータス」（なまえ・補正つき）と「じっせき」が横に並び、メニューは もどる・そうび・もちもの・おと：オフ（ステータスなし）', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', '広い画面のテストは desktop だけ');
+    const inventory = {
+      equipped: { weapon: { id: 1, itemId: 'weapon4', rarity: 'R', value: 10 }, armor: null, shield: null, accessory: { id: 2, itemId: 'accessory4', rarity: 'R', value: 15 } },
+      items: [],
+      nextId: 3,
+      pending: null,
+    };
+    const records = { battles: 128, kills: 120, deaths: 3, laps: 2, bossKills: 1 };
+    await startAt(page, 'INN', { state: { level: 3, exp: 80, hp: 25, maxHp: 46, mp: 10, maxMp: 16, attack: 7, defense: 7, speed: 7, records, inventory } });
+    const status = page.getByTestId('status-panel');
+    await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
+    expect(await status.locator('dt').allTextContents()).toEqual(['なまえ', 'Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ']);
+    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7']);
+    const rec = page.getByTestId('records-window');
+    await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
+    expect(await rec.locator('dd').allTextContents()).toEqual(['128 回', '120 体', '3 回', '2 周目', '1 回']);
+    const tops = await Promise.all([status, rec].map((l) => l.evaluate((e) => Math.round(e.getBoundingClientRect().top))));
+    expect(tops[0]).toBe(tops[1]);
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'メニュー' }).click();
+    expect(await menuLabels(page, 'メニュー')).toEqual(['もどる', 'そうび', 'もちもの', 'おと：オフ']);
+  });
+
   test('TC-0009-06 確認で Esc を押すと宿屋のメニューに戻り、カーソルとフォーカスが「タイトルへ戻る」にある', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
     await startAt(page, 'INN');

@@ -2,7 +2,7 @@
 // 狭い画面：階と向き → 疑似3D → メッセージ欄 → ステータス → ［地図｜移動ボタン］→ 操作の行［階段｜≡ メニュー］
 // 広い画面：上 ［階と向き・疑似3D］｜地図、下 メッセージ欄（6 行）｜［ステータス・［移動ボタン｜階段／メニュー］］
 // メニューを開くと、操作の場所（狭い画面は地図と移動ボタン・操作の行、広い画面は右下のボタン）を GameMenu に替える
-// そうび・もちもの・ステータス画面（狭い画面だけ）は、画面全体を差し替える。「おと」は TASK-0017 でつなぐ
+// そうび・もちもの・ステータス画面（狭い画面だけ）は、画面全体を差し替える。「おと」はその場で切り替える
 import type { MoveAction, StairsView } from '../../api/types';
 import { autoMap, type AutoMap } from '../components/auto-map';
 import { equipmentPanel } from '../components/equipment-panel';
@@ -33,7 +33,7 @@ const MIN_VIEW_H = 130;
 const MIN_MAP = 176;
 
 export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy(): void } {
-  const { store, api, command, queue } = ctx;
+  const { store, api, command, queue, sound } = ctx;
 
   // 画面に固有の状態（作り直しても残す）
   let menuOpen = false;
@@ -89,7 +89,7 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
         place: 'dungeon',
         wide: isWide(),
         canHeal: !!state?.canHeal,
-        soundOn: false,
+        soundOn: sound.on,
         disabled: command.locked,
         onClose: () => setMenu(false),
         // 使ってもメニューは開いたまま、カーソルもそのまま（仕様書 §11.4）
@@ -106,7 +106,12 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
           sub = 'status';
           build();
         },
-        onToggleSound: () => undefined,
+        // その場で切り替える（メニューは閉じない）。メッセージ欄に 1 行
+        onToggleSound: () => {
+          const on = sound.toggle();
+          menu?.update({ soundOn: on });
+          queue.enqueue([{ text: on ? 'おとを オンにした' : 'おとを オフにした', tone: 'normal' }]);
+        },
         onDisabledSelect: showReason,
       });
       actionSlot.replaceChildren(menu.el);

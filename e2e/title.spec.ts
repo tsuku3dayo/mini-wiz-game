@@ -5,6 +5,20 @@ const title = (page: Page) => page.getByRole('menu', { name: 'タイトル' });
 const item = (page: Page, text: string) => title(page).getByRole('menuitem').filter({ hasText: text });
 
 test.describe('タイトル', () => {
+  test('TC-0006-01 飾り線 2 本（aria-hidden）・「WIZ」・副題・メニュー（はじめから・つづきから・おと：オフ）・インストール・版。メッセージ欄はない', async ({ page }) => {
+    await page.goto('./');
+    const deco = page.locator('.deco');
+    await expect(deco).toHaveCount(2);
+    for (const d of await deco.all()) await expect(d).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('WIZ');
+    await expect(page.getByText('～ 死霊術師の迷宮 ～')).toBeVisible();
+    await expect(title(page)).toHaveAttribute('role', 'menu');
+    expect((await title(page).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''))).toEqual(['はじめから', 'つづきから', 'おと：オフ']);
+    await expect(page.getByRole('button', { name: 'インストール', exact: true })).toBeVisible();
+    await expect(page.getByText('v1.0')).toBeVisible();
+    await expect(page.getByRole('log')).toHaveCount(0);
+  });
+
   test('TC-0001-02 ページの題名は「WIZ ～死霊術師の迷宮～」で、html の lang は ja', async ({ page }) => {
     await page.goto('./');
     await expect(page).toHaveTitle('WIZ ～死霊術師の迷宮～');

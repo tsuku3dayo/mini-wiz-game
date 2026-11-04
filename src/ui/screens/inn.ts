@@ -2,7 +2,6 @@
 // 操作の場所は 1 つの入れ物で、中身を替える：宿屋のメニュー／GameMenu／タイトルへ戻るの確認
 // 狭い画面のメニューの「ステータス」は、画面全体をステータス画面に差し替える（仕様書 §11.7）。広い画面は上の右に実績
 // そうび・もちものも、画面全体を差し替える（メッセージ欄なし）。閉じたら宿屋を作り直し、カーソルを「メニュー」に戻す
-// まだ作っていないもの：「おと」（TASK-0017）。項目は出すが、選んでも何もしない
 import { commandMenu, type CommandMenu } from '../components/command-menu';
 import { equipmentPanel } from '../components/equipment-panel';
 import { inventoryPanel } from '../components/inventory-panel';
@@ -23,7 +22,7 @@ const INDEX_MENU = 2;
 const INDEX_QUIT = 4;
 
 export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): void } {
-  const { store, api, command, queue } = ctx;
+  const { store, api, command, queue, sound } = ctx;
 
   // 画面に固有の状態（作り直しても残す。TD-0003 §2）
   let mode: Mode = 'menu';
@@ -97,7 +96,7 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
       const gm = gameMenu({
         place: 'inn',
         wide: isWide(),
-        soundOn: false,
+        soundOn: sound.on,
         onClose: () => setMode('menu', INDEX_MENU),
         onEquip: () => {
           mode = 'equip';
@@ -112,7 +111,12 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
           mode = 'status';
           build();
         },
-        onToggleSound: () => undefined,
+        // その場で切り替える（メニューは閉じない）。メッセージ欄に 1 行
+        onToggleSound: () => {
+          const on = sound.toggle();
+          gm.update({ soundOn: on });
+          queue.enqueue([{ text: on ? 'おとを オンにした' : 'おとを オフにした', tone: 'normal' }]);
+        },
         onDisabledSelect: showReason,
       });
       menuWindow = gm;

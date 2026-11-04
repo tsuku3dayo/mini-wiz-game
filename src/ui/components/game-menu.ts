@@ -1,4 +1,5 @@
 // GameMenu：宿屋・ダンジョンのメニュー（仕様書 §11.4）。操作の場所に替えて出す
+import { soundLabel } from '../../audio/sound-setting';
 import { commandMenu, type CommandMenu, type MenuItem } from './command-menu';
 import { gameWindow } from './game-window';
 
@@ -36,7 +37,7 @@ export function gameMenu(opts: GameMenuOptions): GameMenu {
     { label: 'そうび', onSelect: opts.onEquip },
     { label: 'もちもの', onSelect: opts.onItems },
     ...(opts.wide ? [] : [{ label: 'ステータス', onSelect: opts.onStatus }]),
-    { label: state.soundOn ? 'おと：オン' : 'おと：オフ', onSelect: opts.onToggleSound },
+    { label: soundLabel(state.soundOn), onSelect: opts.onToggleSound },
   ];
 
   const menu = commandMenu({
