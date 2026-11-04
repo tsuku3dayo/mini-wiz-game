@@ -1,6 +1,6 @@
 // メッセージキュー（仕様書 §11.8）。アプリに 1 つ置き、画面をまたいで行を持つ
 import type { Message, MessageEffect, Rarity } from '../api/types';
-import { appendLines, holdCount, waitAfter } from '../logic/message-plan';
+import { appendLines, holdCount, planReduced, waitAfter } from '../logic/message-plan';
 
 export interface QueueLine extends Message {
   /** 通し番号（新しく出た行を見分けるため） */
@@ -100,13 +100,14 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
         // 一度に全部出し、最後の演出だけを立てる（色の強調用）。保留はしない
         stopTimer();
         endEffect();
-        lines = appendLines(lines, [...pending, ...all]);
+        const plan = planReduced(all);
+        lines = appendLines(lines, [...pending, ...plan.show]);
         pending = [];
-        hold = 0;
-        const last = [...all].reverse().find((l) => l.effect);
+        hold = plan.hold;
+        const last = plan.effectLine;
         if (last) {
           startEffect(last);
-          timer = setTimeout(() => { timer = null; endEffect(); notify(); }, waitAfter(last));
+          timer = setTimeout(() => { timer = null; endEffect(); notify(); }, plan.wait);
         }
         notify();
         return;

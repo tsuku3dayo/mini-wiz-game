@@ -57,7 +57,26 @@ export const SEEDS = {
   slimeDropR: 131,
   /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、特例で段階 8・［LG］を落とす（同上） */
   darkKnightDropLG: 66,
+  /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、レベルアップして［UR］を落とす（7 行。5 行目が levelUp、7 行目が rareDrop） */
+  darkKnightDropUR: 2,
+  /** 同じ形で［SR］を落とす（演出なし） */
+  darkKnightDropSR: 5,
+  /** HP 1 のゴブリンを倒し（プレイヤーは HP 999）、［N］を落とす（5 行目がドロップ） */
+  goblinDropN: 5,
+  /**
+   * HP 1 のボスを先攻で倒す（Lv12・EXP 1584・すばやさ 30。bossBattle）。
+   * 11 行：攻撃 → bossDefeat → 経験値 → （levelUp → 成長）× 3 → rareDrop（LG）→ clear
+   */
+  bossWin: 1,
 } as const;
+
+/** HP 1 のボスとの戦闘（5F のボスのマス）。SEEDS.bossWin で倒す */
+export function bossBattle(): Record<string, unknown> {
+  return {
+    location: 'BATTLE', level: 12, exp: 1584, speed: 30, hp: 100, maxHp: 120,
+    dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }), battle: battleOf('necromancer', 1),
+  };
+}
 
 type Facing = 'N' | 'E' | 'S' | 'W';
 

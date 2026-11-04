@@ -108,6 +108,20 @@ describe('E2E のシード', () => {
     expect(dk.outcome).toBe('victory');
     expect(dk.messages.at(-1)).toMatchObject({ rarity: 'LG', effect: 'rareDrop' });
   });
+
+  test('darkKnightDropUR（2）はレベルアップして UR を、darkKnightDropSR（5）は SR を、goblinDropN（5）は N を、bossWin（1）は Lv12 のプレイヤーが先攻でボスを倒し 3 回レベルアップして LG を落とす', () => {
+    const dk = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(2));
+    expect(dk.messages.map((m) => m.effect ?? null)).toEqual([null, null, null, null, 'levelUp', null, 'rareDrop']);
+    expect(dk.messages.at(-1)).toMatchObject({ rarity: 'UR' });
+    const sr = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
+    expect(sr.messages.at(-1)).toMatchObject({ rarity: 'SR' });
+    expect(sr.messages.at(-1)?.effect).toBeUndefined();
+    const n = resolveTurn(deepFreeze(battleState('goblin', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
+    expect(n.messages.at(-1)).toMatchObject({ rarity: 'N' });
+    const boss = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, dungeon: openMap({ x: 9, y: 0 }, {}, 5) })), 'attack', new SeededRng(1));
+    expect(boss.messages.map((m) => m.effect ?? null)).toEqual([null, 'bossDefeat', null, 'levelUp', null, 'levelUp', null, 'levelUp', null, 'rareDrop', 'clear']);
+    expect(boss.messages.at(-2)).toMatchObject({ rarity: 'LG' });
+  });
 });
 
 describe('満杯のときの入れ替え', () => {

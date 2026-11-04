@@ -363,5 +363,50 @@ body {
 .swap-drop { margin: 0 0 8px; display: flex; flex-wrap: wrap; column-gap: 8px; }
 .swap-log-slot { display: grid; }
 
+/* 演出（仕様書 §11.8「演出」、GUI-0007 §1）。明滅は 1 秒に 3 回以下 */
+.effect-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--wiz-gutter-r) 0 var(--wiz-gutter-l);
+}
+.effect-layer:not([data-effect]) { display: none; }
+.effect-layer.rarity-n { color: var(--wiz-color-rarity-n); }
+.effect-layer.rarity-r { color: var(--wiz-color-rarity-r); }
+.effect-layer.rarity-sr { color: var(--wiz-color-rarity-sr); }
+.effect-layer.rarity-ur { color: var(--wiz-color-rarity-ur); }
+.effect-layer.rarity-lg { color: var(--wiz-color-rarity-lg); }
+.effect-name { margin: 0; font-size: 24px; line-height: 1.3; text-align: center; overflow-wrap: anywhere; color: var(--wiz-color-error); }
+.effect-name:empty { display: none; }
+.effect-layer[data-effect="rareDrop"][data-motion="full"] { animation: wiz-rare-glow 400ms ease-in-out 2; }
+.effect-layer[data-effect="rareDrop"][data-motion="full"][data-rarity="LG"] { animation-iteration-count: 3; }
+.effect-layer[data-effect="bossAppear"][data-motion="full"] { animation: wiz-boss-appear 1200ms linear 1; }
+.effect-layer[data-effect="bossDefeat"][data-motion="full"] { animation: wiz-boss-defeat 600ms linear 1; }
+/* 動きを減らす設定：色の強調だけ（動かさない） */
+.effect-layer[data-effect="rareDrop"][data-motion="reduced"] { box-shadow: inset 0 0 24px 6px currentColor; }
+.effect-layer[data-effect="bossAppear"][data-motion="reduced"] { background: rgba(0, 0, 0, 0.85); }
+@keyframes wiz-rare-glow { 50% { box-shadow: inset 0 0 24px 6px currentColor; } }
+@keyframes wiz-boss-appear {
+  0% { background-color: transparent; }
+  25% { background-color: rgba(0, 0, 0, 0.85); }
+  37% { background-color: rgba(179, 18, 46, 0.55); }
+  50% { background-color: rgba(0, 0, 0, 0.85); }
+  62% { background-color: rgba(179, 18, 46, 0.55); }
+  75%, 100% { background-color: transparent; }
+}
+@keyframes wiz-boss-defeat {
+  0%, 66%, 100% { background-color: rgba(232, 220, 192, 0); }
+  16%, 83% { background-color: rgba(232, 220, 192, 0.55); }
+}
+/* levelUp：StatusPanel の外側が 2 回光る（secondary） */
+.wiz-status.level-up { animation: wiz-level-glow 1000ms linear 1; }
+@keyframes wiz-level-glow {
+  0%, 50%, 100% { box-shadow: none; }
+  25%, 75% { box-shadow: 0 0 12px 3px var(--wiz-color-secondary); }
+}
+
 /* ErrorPanel（仕様書 §11.9） */
 .wiz-error-text { margin: 0 0 8px; }
