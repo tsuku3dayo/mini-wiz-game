@@ -1,8 +1,9 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// BGM は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
+// 音：効果音・BGM（監督）。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
+import { createBgmDirector } from './audio/bgm-director';
 import { sfx, stopSfx } from './audio/sound';
 import { browserStorage, createSoundSetting } from './audio/sound-setting';
 import { nowIso } from './platform/clock';
@@ -14,7 +15,7 @@ import { createCommand } from './ui/command';
 import { updateBanner } from './ui/components/update-banner';
 import { attachDebug } from './ui/debug';
 import { attachSkipKeys, createMessageQueue } from './ui/message-queue';
-import { createRouter } from './ui/router';
+import { createRouter, pathOf } from './ui/router';
 import { arrival } from './logic/arrival';
 import { effectLayer } from './ui/components/effect-layer';
 import { lowHpFrame } from './ui/components/low-hp-frame';
@@ -74,9 +75,10 @@ if (app) {
     });
   }
 
-  // 画面：更新の帯はタイトル・宿屋の画面のときだけ
+  // 画面：更新の帯はタイトル・宿屋の画面のときだけ。画面が替わったら BGM の曲も決め直す
   prepareInstall();
   const banner = updateBanner();
+  let bgm: { update(): void } | null = null;
   const router = createRouter({
     root: app,
     store,
@@ -85,9 +87,14 @@ if (app) {
     queue,
     sound,
     screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear, swap: mountSwap },
-    onScreenChange: (name) => banner.setAllowed(name === 'title' || name === 'inn'),
+    onScreenChange: (name) => {
+      banner.setAllowed(name === 'title' || name === 'inn');
+      bgm?.update();
+    },
   });
   router.start();
+  // BGM の監督はルーターの外（エラーの画面でも止めない）。ルーターより後に購読するので、画面が替わってから曲を決める
+  bgm = createBgmDirector({ store, queue, sound, path: () => pathOf(router.current) });
   lowHpFrame(app, store);
   effectLayer({ queue, reducedMotion: prefersReducedMotion, app });
   void Promise.all([store.refetchGame(), store.refetchSave()]);

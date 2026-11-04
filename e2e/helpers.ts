@@ -175,6 +175,45 @@ export function swapInventory(thenClear = false): Record<string, unknown> {
   });
 }
 
+/** 音のイベントの記録（app:sound と app:bgm を出た順に） */
+export type AudioEvent = { type: 'sound' | 'bgm'; name: string | null; muted?: boolean; t: number; screen: string };
+
+/**
+ * app:sound・app:bgm を、時刻とそのときの画面（body[data-screen]）つきで記録する。
+ * 記録は開き直すたびに空になる（SDD-PROCESS §8 07）。場面ごとに見る
+ */
+export async function recordAudio(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const w = window as Window & { __audio?: unknown[] };
+    w.__audio = [];
+    const push = (type: string) => (e: Event) => {
+      const d = (e as CustomEvent<{ name: string | null; muted?: boolean }>).detail;
+      w.__audio!.push({ type, ...d, t: Date.now(), screen: document.body.dataset.screen ?? '' });
+    };
+    window.addEventListener('app:sound', push('sound'));
+    window.addEventListener('app:bgm', push('bgm'));
+  });
+}
+
+export function audioEvents(page: Page): Promise<AudioEvent[]> {
+  return page.evaluate(() => ((window as Window & { __audio?: unknown[] }).__audio ?? []) as AudioEvent[]);
+}
+
+/** 記録を空にする（そこから先だけを見るとき） */
+export function clearAudio(page: Page): Promise<void> {
+  return page.evaluate(() => { (window as Window & { __audio?: unknown[] }).__audio = []; });
+}
+
+/** BGM の曲の名前の並び */
+export async function bgmNames(page: Page): Promise<(string | null)[]> {
+  return (await audioEvents(page)).filter((e) => e.type === 'bgm').map((e) => e.name);
+}
+
+/** 開くたびに音をオンにしておく */
+export function soundOnAtStart(page: Page): Promise<void> {
+  return page.addInitScript(() => localStorage.setItem('mini-wiz-game-sound', 'on'));
+}
+
 /** メッセージ欄の行の文字（古い順） */
 export function logLines(page: Page): Promise<string[]> {
   return page.locator('[role="log"] .wiz-line').allTextContents();
