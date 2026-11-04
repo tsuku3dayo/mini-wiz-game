@@ -8,23 +8,41 @@ export const LINE_INTERVAL_MS = 400;
 /** 応答待ちの ▼ を出すまでの時間 */
 export const WAITING_MARK_MS = 300;
 
-const EFFECT_MS: Readonly<Record<MessageEffect, number>> = {
+/** 演出の長さ（仕様書 §11.8）。rareDrop の LG だけは RARE_DROP_LG_MS */
+export const EFFECT_MS: Readonly<Record<MessageEffect, number>> = {
   levelUp: 1000,
   rareDrop: 800,
   bossAppear: 1200,
   bossDefeat: 600,
   clear: 1500,
 };
+export const RARE_DROP_LG_MS = 1200;
 
 /** 演出の長さ。rareDrop は LG だけ 1200ms */
 export function effectDuration(effect: MessageEffect, rarity?: Rarity): number {
-  if (effect === 'rareDrop' && rarity === 'LG') return 1200;
+  if (effect === 'rareDrop' && rarity === 'LG') return RARE_DROP_LG_MS;
   return EFFECT_MS[effect];
 }
 
 /** その行を出したあと、次の行（または演出の終わり）までの待ち */
 export function waitAfter(line: Pick<Message, 'effect' | 'rarity'>): number {
   return line.effect ? effectDuration(line.effect, line.rarity) : LINE_INTERVAL_MS;
+}
+
+type PlanLine = Pick<Message, 'effect' | 'rarity'>;
+
+/** ふつうの計画：行を 1 つずつ出し、出したあとの待ち（演出のない行は 400ms、演出のある行はその長さ） */
+export function planSteps<T extends PlanLine>(lines: readonly T[]): { line: T; wait: number }[] {
+  return lines.map((line) => ({ line, wait: waitAfter(line) }));
+}
+
+/**
+ * 動きを減らす設定の計画：行をすべて一度に出し、立てる演出は最後の 1 つだけ（色の強調用）。
+ * 待ちはその演出の長さ（演出がなければ 0）。遷移の保留はしない
+ */
+export function planReduced<T extends PlanLine>(lines: readonly T[]): { show: T[]; effectLine: T | null; wait: number; hold: 0 } {
+  const effectLine = [...lines].reverse().find((l) => l.effect) ?? null;
+  return { show: [...lines], effectLine, wait: effectLine ? waitAfter(effectLine) : 0, hold: 0 };
 }
 
 /** 行を足し、最新 MAX_LINES 行だけを残す（古い行から消える） */

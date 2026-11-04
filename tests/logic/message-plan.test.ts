@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { appendLines, effectDuration, holdCount, LINE_INTERVAL_MS, MAX_LINES, waitAfter } from '../../src/logic/message-plan';
+import { appendLines, EFFECT_MS, effectDuration, holdCount, LINE_INTERVAL_MS, MAX_LINES, planReduced, planSteps, RARE_DROP_LG_MS, waitAfter } from '../../src/logic/message-plan';
 
 describe('メッセージの進め方', () => {
   test('TC-0011-01 演出のない行は 400ms、演出のある行は演出の長さ。持つ行は 7 行で、8 行目でいちばん古い行が消える', () => {
@@ -16,6 +16,41 @@ describe('メッセージの進め方', () => {
     const seven = appendLines([], [1, 2, 3, 4, 5, 6, 7]);
     expect(seven).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(appendLines(seven, [8])).toEqual([2, 3, 4, 5, 6, 7, 8]);
+  });
+});
+
+describe('演出の長さと計画', () => {
+  test('TC-0031-06 EFFECT_MS は levelUp 1000・rareDrop 800（LG 1200）・bossAppear 1200・bossDefeat 600・clear 1500。演出のない行のあとは 400ms、演出のある行のあとはその長さ待つ計画', () => {
+    expect(EFFECT_MS).toEqual({ levelUp: 1000, rareDrop: 800, bossAppear: 1200, bossDefeat: 600, clear: 1500 });
+    expect(RARE_DROP_LG_MS).toBe(1200);
+    const lines = [
+      { text: 'a' },
+      { text: 'b', effect: 'bossDefeat' as const },
+      { text: 'c', effect: 'levelUp' as const },
+      { text: 'd' },
+      { text: 'e', effect: 'rareDrop' as const, rarity: 'UR' as const },
+      { text: 'f', effect: 'rareDrop' as const, rarity: 'LG' as const },
+      { text: 'g', effect: 'bossAppear' as const },
+      { text: 'h', effect: 'clear' as const },
+    ];
+    expect(planSteps(lines).map((s) => [s.line.text, s.wait])).toEqual([
+      ['a', 400], ['b', 600], ['c', 1000], ['d', 400], ['e', 800], ['f', 1200], ['g', 1200], ['h', 1500],
+    ]);
+  });
+
+  test('TC-0031-10 動きを減らす設定の計画は、行をすべて一度に出し、演出は最後の 1 つだけ（待ちはその長さ）。遷移の保留はしない', () => {
+    const lines = [
+      { text: 'a', effect: 'bossDefeat' as const },
+      { text: 'b', effect: 'levelUp' as const },
+      { text: 'c', effect: 'rareDrop' as const, rarity: 'LG' as const },
+      { text: 'd' },
+    ];
+    const plan = planReduced(lines);
+    expect(plan.show.map((l) => l.text)).toEqual(['a', 'b', 'c', 'd']);
+    expect(plan.effectLine?.text).toBe('c');
+    expect(plan.wait).toBe(1200);
+    expect(plan.hold).toBe(0);
+    expect(planReduced([{ text: 'x', tone: 'normal' as const, effect: undefined }])).toMatchObject({ effectLine: null, wait: 0, hold: 0 });
   });
 });
 

@@ -191,6 +191,59 @@ test.describe('メッセージ欄', () => {
     await expect.poll(() => lineColor(/たおれた…/)).toBe('rgb(255, 90, 78)');
   });
 
+  test('TC-0027-09 ドロップの行はレアリティの色。UR は 400ms の点滅 2 回で次の行は 800ms 後、LG は 3 回で 1200ms 後。N・R・SR と動きを減らす設定では点滅しない', async ({ page }, info) => {
+    const dropLine = () => page.locator('[role="log"] .wiz-line').filter({ hasText: /おとした！/ }).last();
+    const blink = () => dropLine().evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { duration: s.animationDuration, timing: s.animationTimingFunction, count: s.animationIterationCount, running: e.getAnimations().length };
+    });
+    // 下り階段のマスでの戦闘：勝つと足元の案内が、ドロップの行の次の行として出る
+    const atStairs = (kind: string) => ({ hp: 999, maxHp: 999, dungeon: dungeonMap({ x: 9, y: 0 }), battle: battleOf(kind, 1) });
+    const arrival = '足元に くだり階段がある';
+
+    await page.clock.install();
+    for (const s of [
+      { seed: SEEDS.darkKnightDropUR, color: 'rgb(255, 140, 26)', count: '2', next: 800 },
+      { seed: SEEDS.darkKnightDropLG, color: 'rgb(255, 77, 109)', count: '3', next: 1200 },
+    ]) {
+      await startAt(page, 'BATTLE', { state: atStairs('darkKnight'), seed: s.seed });
+      await pauseClock(page);
+      await choose(page, info, attackItem(page));
+      await expect.poll(() => logLines(page)).toHaveLength(1);
+      // 7 行目がドロップ（400 × 4 ＋ レベルアップ 1000 ＋ 400）
+      await page.clock.runFor(3000);
+      await expect(dropLine()).toBeVisible();
+      await expect(dropLine()).toHaveCSS('color', s.color);
+      expect(await blink()).toEqual({ duration: '0.4s', timing: 'steps(1)', count: s.count, running: 1 });
+      await page.clock.runFor(s.next - 1);
+      expect(await logLines(page)).not.toContain(arrival);
+      await page.clock.runFor(1);
+      await expect.poll(async () => (await logLines(page)).at(-1)).toBe(arrival);
+    }
+    await page.clock.resume();
+
+    // N・R・SR は点滅しない（行の色はレアリティの色）
+    for (const s of [
+      { kind: 'goblin', seed: SEEDS.goblinDropN, color: 'rgb(255, 255, 255)' },
+      { kind: 'slime', seed: SEEDS.slimeDropR, color: 'rgb(91, 140, 255)' },
+      { kind: 'darkKnight', seed: SEEDS.darkKnightDropSR, color: 'rgb(199, 146, 234)' },
+    ]) {
+      await startAt(page, 'BATTLE', { state: atStairs(s.kind), seed: s.seed });
+      await choose(page, info, attackItem(page));
+      await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+      await expect(dropLine()).toHaveCSS('color', s.color);
+      expect((await blink()).running, s.kind).toBe(0);
+    }
+
+    // 動きを減らす設定では、UR でも点滅しない
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await startAt(page, 'BATTLE', { state: atStairs('darkKnight'), seed: SEEDS.darkKnightDropUR });
+    await choose(page, info, attackItem(page));
+    await expect.poll(async () => (await logLines(page)).at(-1)).toBe(arrival);
+    await expect(dropLine()).toHaveCSS('color', 'rgb(255, 140, 26)');
+    expect((await blink()).running).toBe(0);
+  });
+
   test('TC-0011-10 表示中の行に danger があると欄が danger（外側の線が赤、内側はそのまま）。消えると default', async ({ page }, info) => {
     await startAt(page, 'BATTLE', { state: { hp: 1 }, seed: SEEDS.hits });
     await choose(page, info, attackItem(page));

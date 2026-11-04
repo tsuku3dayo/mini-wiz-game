@@ -14,6 +14,7 @@ import { attachDebug } from './ui/debug';
 import { attachSkipKeys, createMessageQueue } from './ui/message-queue';
 import { createRouter } from './ui/router';
 import { arrival } from './logic/arrival';
+import { effectLayer } from './ui/components/effect-layer';
 import { lowHpFrame } from './ui/components/low-hp-frame';
 import { mountBattle } from './ui/screens/battle';
 import { mountClear } from './ui/screens/clear';
@@ -73,6 +74,7 @@ if (app) {
   });
   router.start();
   lowHpFrame(app, store);
+  effectLayer({ queue, reducedMotion: prefersReducedMotion, app });
   void Promise.all([store.refetchGame(), store.refetchSave()]);
 
   registerPwa();
