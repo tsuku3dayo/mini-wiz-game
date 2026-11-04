@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { battleOf, dungeonMap, logLines, openDebug, startAt, storedSave } from './helpers';
+import { battleOf, dungeonMap, logLines, openDebug, SEEDS, startAt, storedInn, storedSave, swapInventory, writeScene } from './helpers';
 
 /** debugDungeon を呼び、reject したら { status, message } を返す */
 const debugResult = (page: Page) => page.evaluate(async () => {
@@ -70,6 +70,41 @@ test.describe('テスト用の入口', () => {
     expect(second).toEqual(first);
     const other = await enterWith(8);
     expect(other.walls).not.toEqual(first.walls);
+  });
+
+  test('TC-0038-07 body の data-screen・data-location・data-busy が、画面・ゲームの場所・受付を止めている間を表す', async ({ page }) => {
+    const body = page.locator('body');
+    const expectBody = async (screen: string, location: string) => {
+      await expect(body, screen).toHaveAttribute('data-screen', screen);
+      await expect(body, screen).toHaveAttribute('data-location', location);
+      await expect(body, screen).toHaveAttribute('data-busy', 'false');
+    };
+    // タイトル（ゲームなし）→ 名前入力 → 宿屋
+    await openDebug(page);
+    await expectBody('title', 'none');
+    await page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'はじめから' }).click();
+    await expectBody('new', 'none');
+    await page.getByRole('textbox', { name: 'なまえ' }).fill('ゆうしゃ');
+    await page.getByRole('menu', { name: 'なまえ入力' }).getByRole('menuitem').filter({ hasText: '決定' }).click();
+    await expectBody('inn', 'INN');
+
+    // 受付を止めている間（応答待ち）だけ true
+    await page.evaluate(() => window.__wiz!.setDelay(500));
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'やすむ' }).click();
+    await expect(body).toHaveAttribute('data-busy', 'true');
+    await expect(body).toHaveAttribute('data-busy', 'false');
+    await page.evaluate(() => window.__wiz!.setDelay(0));
+
+    // ダンジョン → 戦闘 → 入れ替え → クリア
+    await page.evaluate((seed) => window.__wiz!.useSeed(seed), SEEDS.noEncounter);
+    await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
+    await expectBody('dungeon', 'DUNGEON');
+    await writeScene(page, { state: storedInn({ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) }) });
+    await expectBody('battle', 'BATTLE');
+    await writeScene(page, { state: storedInn({ location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() }) });
+    await expectBody('swap', 'SWAP');
+    await writeScene(page, { state: storedInn({ location: 'CLEARED' }) });
+    await expectBody('clear', 'CLEARED');
   });
 
   test('TC-0038-06 setDelay(1000) のあいだ data-busy が true で、300ms を過ぎると ▼ が出る。応答のあとで消える', async ({ page }) => {

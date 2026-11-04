@@ -3,8 +3,8 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.1
-updated: 2026-11-02
+version: 1.2
+updated: 2026-11-04
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-GUI-0001（v1.1）
@@ -57,14 +57,16 @@ verified: null
 | --- | --- | --- |
 | `game-frame` | `hideNameOnNarrow`（ダンジョン・戦闘。画面名の `<h1>` に visuallyHidden の class を、狭い画面でだけ効かせる） | §11.3、§11.11 |
 | `game-window` | `compact`（1 行のステータス用。狭い画面で見出しの下の余白を上 8px・下 6px にする class） | §11.3、§11.6 |
-| `command-menu` | なし（行の高さは CSS。§5） | §11.4 |
+| `command-menu` | `onCursorChange`（v1.2。カーソルの行が替わったとき。装備画面の のうりょく の変化を出す）。行の高さは CSS（§5）。`maxHeight` でスクロールするときは `position: relative` にし、中の読み上げ用の隠し文（`position: absolute`）もスクロールの枠で切る（v1.2。切らないとページが縦に伸びる） | §11.4 |
+| `confirm-menu` | `framed`（v1.2。false なら「かくにん」のウィンドウで包まない。入れ替えの画面のウィンドウの中に置く） | §11.4 |
 | `message-log` | `rows` | §11.8 |
 | `status-panel` | `variant: 'full' \| 'compact'`、`title`（full の見出し。狭い画面は名前、広い画面は「ステータス」と「なまえ」の行）。compact は常に見出し「ステータス」の 1 行 | §11.6 |
 | `status-screen` | `recordsWindow(records)` を export（宿屋の広い画面でも使う） | §11.7 |
 | `first-person-view` | `setWidth(px)` | §11.5 |
 | `auto-map` | `setSize(px)`（正方形。狭い画面では呼ばない） | §11.5 |
 | `move-pad` | なし（大きさは置かれた場所の CSS で決まる） | §11.5 |
-| `item-list` | `maxHeight`（狭い画面で、画面に合わせて画面が渡す） | §11.7 |
+| `item-list` | 高さは部品の中で `fitItemList`（§6）を呼んで決める（v1.2。v1.1 では画面が `maxHeight` を渡すとしていた。もちもの・入れ替えの両方で同じ合わせ方をするため、部品に持たせた） | §11.7 |
+| `equipment-panel`・`inventory-panel` | `{ store, api, command, onClose }` を受け、操作（`command.run`）・取り直しの反映・一番下の `errorPanel` まで部品の中で行う（v1.2。宿屋とダンジョンの両方から同じ形で開くため） | §11.7、§11.9 |
 | `enemy-image` | なし（256×256 を 256px で出す。読めなければ消す） | §13.2 |
 | `error-panel` | なし（置き場所は画面が決める。TD-0004） | §11.9 |
 
@@ -91,7 +93,7 @@ verified: null
 
 ## 6. 画面の大きさへの合わせ方（`fit`）
 
-ページが縦にはみ出すときに、縮めてよい部品を縮める。ダンジョンと、もちもの（狭い画面）だけで行う。
+ページが縦にはみ出すときに、縮めてよい部品を縮める。ダンジョンと、装備の一覧（もちもの・入れ替えの一覧と、装備画面の候補の一覧。v1.2 で候補の一覧を足した：所持品が多いと 375 × 667 で のうりょく が画面の外に出たため）だけで行う。
 
 ```
 fitDungeon(screen)          … 描いた直後・resize（requestAnimationFrame で 1 回にまとめる）・メッセージ欄を差し替えたあと
@@ -106,8 +108,10 @@ fitDungeon(screen)          … 描いた直後・resize（requestAnimationFrame
     残り = min(上の段の幅 − fpv の幅 − 8, 上の段の左の高さ) − 地図の枠
     map.setSize(max(176, floor(残り × 0.9)))
     地図の下の余白 = max(0, floor((fpv の高さ − 地図の外の高さ) / 2))   … 縦の中心をそろえる
-fitItemList(screen)         … 狭い画面だけ
-  list.maxHeight = 9999 → over を測る → max(4 行分, 一覧の高さ − over)
+fitItemList(list)           … 描いた直後・しぼりこみを替えたあと・resize（requestAnimationFrame で 1 回にまとめる）
+  上限：広い画面 8 行分（416px）、狭い画面 9999
+  list.maxHeight = 上限 → over を測る → over > 0 なら max(4 行分, floor(一覧の高さ − over))（端数で残ればもう一度）
+  （v1.2：広い画面でも、1366 × 657 の入れ替えの画面で 416px では縦にはみ出したので、上限のまま縮める）
 ```
 
 - 値は GUI-0001 §7・GUI-0004 §1.3 で試作を測って決めたもの（仕様書 §11.5・§15.4）。

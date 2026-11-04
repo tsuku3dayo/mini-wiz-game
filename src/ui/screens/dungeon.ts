@@ -2,9 +2,11 @@
 // 狭い画面：階と向き → 疑似3D → メッセージ欄 → ステータス → ［地図｜移動ボタン］→ 操作の行［階段｜≡ メニュー］
 // 広い画面：上 ［階と向き・疑似3D］｜地図、下 メッセージ欄（6 行）｜［ステータス・［移動ボタン｜階段／メニュー］］
 // メニューを開くと、操作の場所（狭い画面は地図と移動ボタン・操作の行、広い画面は右下のボタン）を GameMenu に替える
-// そうび・もちもの・ステータス画面・おとは、それぞれの TASK でつなぐ
+// そうび・もちもの・ステータス画面（狭い画面だけ）は、画面全体を差し替える。「おと」は TASK-0017 でつなぐ
 import type { MoveAction, StairsView } from '../../api/types';
 import { autoMap, type AutoMap } from '../components/auto-map';
+import { equipmentPanel } from '../components/equipment-panel';
+import { inventoryPanel } from '../components/inventory-panel';
 import { errorPanel } from '../components/error-panel';
 import { columns, gameFrame } from '../components/game-frame';
 import { gameMenu, type GameMenu } from '../components/game-menu';
@@ -35,8 +37,8 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
 
   // 画面に固有の状態（作り直しても残す）
   let menuOpen = false;
-  /** ステータス画面を出しているか（狭い画面だけ） */
-  let statusOpen = false;
+  /** 画面全体を差し替えて出している画面（ステータスは狭い画面だけ） */
+  let sub: 'status' | 'equip' | 'items' | null = null;
 
   let parts: { destroy(): void }[] = [];
   let label: ReturnType<typeof locationLabel> | null = null;
@@ -92,10 +94,16 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
         onClose: () => setMenu(false),
         // 使ってもメニューは開いたまま、カーソルもそのまま（仕様書 §11.4）
         onHeal: () => void command.run(() => api.heal()),
-        onEquip: () => undefined,
-        onItems: () => undefined,
+        onEquip: () => {
+          sub = 'equip';
+          build();
+        },
+        onItems: () => {
+          sub = 'items';
+          build();
+        },
         onStatus: () => {
-          statusOpen = true;
+          sub = 'status';
           build();
         },
         onToggleSound: () => undefined,
@@ -116,9 +124,13 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
     if (!state || !state.dungeon) return;
     const wide = isWide();
 
-    // ステータス画面（狭い画面だけ）：画面全体を差し替える。広い画面へ切り替わったらダンジョンに戻す（TD-0004 §7）
-    if (statusOpen && wide) statusOpen = false;
-    if (statusOpen) {
+    // ステータス画面（狭い画面だけ）・そうび・もちもの：画面全体を差し替える。
+    // 広い画面へ切り替わったら、ステータス画面はダンジョンに戻す（TD-0004 §7）
+    if (sub === 'status' && wide) {
+      sub = null;
+      menuOpen = false;
+    }
+    if (sub) {
       label = null;
       fpv = null;
       map = null;
@@ -133,17 +145,16 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
       logEl = null;
       top = null;
       viewCol = null;
-      const screen = statusScreen({
-        character: state.character,
-        records: state.records,
-        // 閉じるとダンジョン（メニューは閉じた状態）に戻り、フォーカスは「≡ メニュー」
-        onBack: () => {
-          statusOpen = false;
-          menuOpen = false;
-          build();
-          menuButton?.focus();
-        },
-      });
+      // 閉じるとダンジョン（メニューは閉じた状態）に戻り、フォーカスは「≡ メニュー」
+      const onClose = () => {
+        sub = null;
+        menuOpen = false;
+        build();
+        menuButton?.focus();
+      };
+      const screen = sub === 'status'
+        ? statusScreen({ character: state.character, records: state.records, onBack: onClose })
+        : (sub === 'equip' ? equipmentPanel : inventoryPanel)({ store, api, command, onClose });
       root.replaceChildren(screen.el);
       parts.push(screen);
       return;
@@ -265,7 +276,8 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
   };
   const offStore = store.subscribe(onChange);
   const offCommand = command.subscribe(onChange);
-  const offWide = onWideChange(build);
+  // そうび・もちものは CSS だけで並びが替わるので、作り直さない（カーソルなどを残す）
+  const offWide = onWideChange(() => { if (sub !== 'equip' && sub !== 'items') build(); });
   build();
 
   return {

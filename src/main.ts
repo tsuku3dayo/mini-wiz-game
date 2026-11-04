@@ -1,5 +1,5 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// 音・BGM・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア（ほかは作る TASK で足す）
+// 音・BGM・演出の層は、その TASK で足す。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
@@ -20,6 +20,7 @@ import { mountClear } from './ui/screens/clear';
 import { mountDungeon } from './ui/screens/dungeon';
 import { mountInn } from './ui/screens/inn';
 import { mountNameEntry } from './ui/screens/name-entry';
+import { mountSwap } from './ui/screens/swap';
 import { mountTitle } from './ui/screens/title';
 import { createStore } from './ui/store';
 import { prefersReducedMotion } from './ui/dom';
@@ -67,7 +68,7 @@ if (app) {
     api,
     command,
     queue,
-    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear },
+    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear, swap: mountSwap },
     onScreenChange: (name) => banner.setAllowed(name === 'title' || name === 'inn'),
   });
   router.start();

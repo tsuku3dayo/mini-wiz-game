@@ -91,6 +91,18 @@ test.describe('タイトル', () => {
     await page.close();
   });
 
+  test('TC-0006-07 プレイ中のゲームの場所が INN・DUNGEON・BATTLE・CLEARED・SWAP のとき、どのハッシュを開いても、その場所の画面のハッシュになる', async ({ page }) => {
+    const places = [['INN', 'inn', '#/inn'], ['DUNGEON', 'dungeon', '#/dungeon'], ['BATTLE', 'battle', '#/battle'], ['CLEARED', 'clear', '#/clear'], ['SWAP', 'swap', '#/swap']] as const;
+    for (const [location, screen, expected] of places) {
+      await startAt(page, location);
+      for (const hash of ['#/', '#/new', '#/inn', '#/dungeon', '#/battle', '#/clear', '#/swap', '#/nothing']) {
+        await page.goto(`./?debug=1${hash}`);
+        await page.waitForURL((url) => url.hash === expected);
+        await expect(page.locator('body'), `${location} ${hash}`).toHaveAttribute('data-screen', screen);
+      }
+    }
+  });
+
   test('TC-0006-08 プレイ中のゲーム（宿屋）があるとき、#/nothing を開くと #/inn の宿屋になり、履歴は増えない', async ({ page, context }) => {
     await startAt(page, 'INN');
     const base = await historyLengthOf(context, '#/inn');

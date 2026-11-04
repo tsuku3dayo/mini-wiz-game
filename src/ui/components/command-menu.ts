@@ -22,6 +22,8 @@ export interface CommandMenuOptions {
   maxHeight?: string;
   /** メニュー全体を無効にする */
   disabled?: boolean;
+  /** カーソル（▶）の行が替わったとき（装備画面の のうりょく の変化） */
+  onCursorChange?: (index: number) => void;
 }
 
 export interface CommandMenu {
@@ -89,8 +91,10 @@ export function commandMenu(opts: CommandMenuOptions): CommandMenu {
 
   function setCursor(index: number, focus = true) {
     const hadFocus = ul.contains(document.activeElement);
+    const prev = cursor;
     cursor = clampCursor(index, items.length);
     paint();
+    if (cursor !== prev) opts.onCursorChange?.(cursor);
     const row = rowAt(cursor);
     if (row && (focus || hadFocus)) {
       row.focus({ preventScroll: true });
