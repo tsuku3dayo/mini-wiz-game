@@ -83,6 +83,105 @@ test.describe('更新の帯', () => {
   });
 });
 
+/** Service Worker が動き出し、このページを受け持つまで待つ（初めて開いたページは受け持たないので、1 回読み込み直す） */
+async function waitForServiceWorker(page: Page) {
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  if (!(await page.evaluate(() => !!navigator.serviceWorker.controller))) await page.reload();
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+}
+
+const slimeBattle = () => storedInn({ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('slime', 12) });
+const enemyImg = (page: Page) => page.getByTestId('enemy-image-frame').locator('img');
+const imgLoaded = (page: Page) => expect.poll(() => enemyImg(page).evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth)).toBe(256);
+const menuItem = (page: Page, menu: string, text: string) => page.getByRole('menu', { name: menu }).getByRole('menuitem').filter({ hasText: text });
+
+/** タイトル →「はじめから」→ 名前「ゆうしゃ」で決定 → 宿屋 */
+async function newGame(page: Page) {
+  await menuItem(page, 'タイトル', 'はじめから').click();
+  await page.getByRole('textbox', { name: 'なまえ' }).fill('ゆうしゃ');
+  await menuItem(page, 'なまえ入力', '決定').click();
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+}
+
+test.describe('このアプリの外と通信しない・通信なしで遊べる', () => {
+  test('TC-0001-03 タイトルから戦闘（敵の絵）まで、通信はすべて同じオリジンの GET で、フォントと音声ファイルを読まない', async ({ page }) => {
+    const requests: { url: string; method: string }[] = [];
+    page.on('request', (r) => requests.push({ url: r.url(), method: r.method() }));
+    await page.goto('./?debug=1');
+    await newGame(page);
+    await menuItem(page, '宿屋', 'ダンジョンへ').click();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    await page.evaluate((s) => window.__wiz!.writeState(s), slimeBattle());
+    await imgLoaded(page);
+    const origin = await page.evaluate(() => location.origin);
+    expect(requests.length).toBeGreaterThan(0);
+    expect(requests.filter((r) => new URL(r.url).origin !== origin)).toEqual([]);
+    expect(requests.filter((r) => r.method !== 'GET')).toEqual([]);
+    expect(requests.filter((r) => /\.(woff2?|ttf|otf|mp3|ogg|wav|m4a)(\?|$)/i.test(r.url))).toEqual([]);
+    expect(requests.some((r) => r.url.endsWith('enemies/slime.png'))).toBe(true);
+  });
+
+  test('TC-0001-04 遊んで「おと：オン」にしたあと、localStorage のキーはすべて mini-wiz-game- で、sessionStorage のキーはすべて mini-wiz-game: で始まる', async ({ page }) => {
+    await page.goto('./?debug=1');
+    await newGame(page);
+    await menuItem(page, '宿屋', 'セーブ').click();
+    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('セーブしました');
+    await menuItem(page, '宿屋', 'メニュー').click();
+    await menuItem(page, 'メニュー', 'おと：オフ').click();
+    await expect(menuItem(page, 'メニュー', 'おと：')).toHaveText(/おと：オン$/);
+    const { local, session } = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+    expect(local.sort()).toEqual(['mini-wiz-game-game', 'mini-wiz-game-save', 'mini-wiz-game-schema', 'mini-wiz-game-sound']);
+    expect(session.every((k) => k.startsWith('mini-wiz-game:'))).toBe(true);
+  });
+
+  test('TC-0003-01 一度開いたあと通信を切って読み込み直しても、タイトルから宿屋・ダンジョン・戦闘（敵の絵）・つづきからまで遊べる', async ({ page, context }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('./?debug=1');
+    await waitForServiceWorker(page);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+    await newGame(page);
+    await menuItem(page, '宿屋', 'セーブ').click();
+    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('セーブしました');
+    await menuItem(page, '宿屋', 'ダンジョンへ').click();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    await page.evaluate((s) => window.__wiz!.writeState(s), slimeBattle());
+    await imgLoaded(page);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    await imgLoaded(page);
+    // 宿屋に戻して「タイトルへ戻る」→「つづきから」
+    await page.evaluate((s) => window.__wiz!.writeState(s), storedInn());
+    await menuItem(page, '宿屋', 'タイトルへ戻る').click();
+    await menuItem(page, 'かくにん', 'はい').click();
+    await menuItem(page, 'タイトル', 'つづきから').click();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
+    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('ゆうしゃは 宿屋で めをさました');
+    expect(errors).toEqual([]);
+    await context.setOffline(false);
+  });
+
+  test('TC-0003-02 Service Worker の事前キャッシュに、index.html・manifest・ビルドの js と css・敵の絵 6 枚が入っている', async ({ page }) => {
+    await page.goto('./');
+    await waitForServiceWorker(page);
+    const urls = await page.evaluate(async () => {
+      const all: string[] = [];
+      for (const name of await caches.keys()) {
+        for (const req of await (await caches.open(name)).keys()) all.push(new URL(req.url).pathname);
+      }
+      return all;
+    });
+    const has = (end: string | RegExp) => urls.some((u) => (typeof end === 'string' ? u.endsWith(end) : end.test(u)));
+    for (const end of ['/index.html', '/manifest.webmanifest', ...['slime', 'goblin', 'skeleton', 'orc', 'darkKnight', 'necromancer'].map((k) => `/enemies/${k}.png`)]) {
+      expect(has(end), end).toBe(true);
+    }
+    expect(has(/\/assets\/[^/]+\.js$/)).toBe(true);
+    expect(has(/\/assets\/[^/]+\.css$/)).toBe(true);
+  });
+});
+
 // 開いている details の data-platform の一覧
 const openPlatforms = (page: Page) =>
   page.locator('#install-dialog details').evaluateAll((list) => list.filter((d) => (d as HTMLDetailsElement).open).map((d) => d.getAttribute('data-platform')));

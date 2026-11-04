@@ -1,5 +1,5 @@
 // npm run build の後に dist/ を確かめる（仕様書 §29.4）
-// TASK ごとに確かめることを足していく：敵の絵（TASK-0018）
+// 敵の絵（TASK-0018）も確かめる
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -46,6 +46,17 @@ else {
 if (!exists('icons/apple-touch-icon.png')) errors.push('icons/apple-touch-icon.png がない');
 if (exists('index.html') && !/rel="apple-touch-icon"/.test(read('index.html'))) errors.push('index.html に apple-touch-icon の link がない');
 if (!exists('sw.js')) errors.push('sw.js がない');
+
+// 敵の絵 6 枚（256×256）が dist/ と事前キャッシュにある（仕様書 §13.1、TD-0005 §4）
+const ENEMY_KINDS = ['slime', 'goblin', 'skeleton', 'orc', 'darkKnight', 'necromancer'];
+const sw = exists('sw.js') ? read('sw.js') : '';
+for (const kind of ENEMY_KINDS) {
+  const p = `enemies/${kind}.png`;
+  if (!exists(p)) { errors.push(`${p} がない`); continue; }
+  const b = fs.readFileSync(path.join(dist, p));
+  if (b.readUInt32BE(16) !== 256 || b.readUInt32BE(20) !== 256) errors.push(`${p} が 256×256 でない`);
+  if (!sw.includes(p)) errors.push(`${p} が Service Worker の事前キャッシュにない`);
+}
 
 // Web フォントを同梱しない（端末のフォントを使う。ADR-0010）
 const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(path.join(dir, d.name)) : [path.join(dir, d.name)]));
