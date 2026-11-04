@@ -2,7 +2,7 @@
 id: MWIZ-AC-0014
 type: Attested Computation
 title: 装備のルールとゲーム API の実施記録
-status: draft
+status: review
 version: 1.0
 updated: 2026-11-02
 sources:
