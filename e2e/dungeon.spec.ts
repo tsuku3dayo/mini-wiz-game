@@ -217,4 +217,26 @@ test.describe('ダンジョンの画面', () => {
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
     expect((await debugDungeon(page)).walls).not.toEqual(before.walls);
   });
+
+  test('TC-0037-02 前進を押してから疑似3D が変わるまで、向きを変えて階と向きの表示が変わるまで、「たたかう」から最初の行まで、どれも 300ms 未満', async ({ page }) => {
+    // 本物の時間で測る（偽の時計は入れない）。押してから DOM が変わるまでを、ページの中で performance.now() で測る
+    const until = (target: string, press: string) => page.evaluate(([t, p]) => new Promise<number>((resolve) => {
+      const el = document.querySelector(t)!;
+      const t0 = performance.now();
+      const ob = new MutationObserver(() => { ob.disconnect(); resolve(performance.now() - t0); });
+      ob.observe(el, { childList: true, subtree: true, characterData: true });
+      (document.querySelector(p) as HTMLElement).click();
+    }), [target, press] as const);
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 5, y: 5 }) } });
+    const forward = await until('[data-testid="first-person-view"]', 'button[aria-label="前進"]');
+    await expect.poll(async () => (await debugDungeon(page)).player).toEqual({ x: 5, y: 4, facing: 'N' });
+    const turn = await until('[data-testid="location-label"]', 'button[aria-label="右を向く"]');
+    await expect(label(page)).toHaveText('1F　東');
+
+    await startAt(page, 'BATTLE');
+    const attack = await until('[role="log"]', '[role="menu"][aria-label="戦闘"] [role="menuitem"]');
+    await expect.poll(() => logLines(page)).not.toEqual([]);
+    console.log(`TC-0037-02 前進 ${forward.toFixed(1)}ms、回転 ${turn.toFixed(1)}ms、たたかう ${attack.toFixed(1)}ms`);
+    for (const ms of [forward, turn, attack]) expect(ms).toBeLessThan(300);
+  });
 });

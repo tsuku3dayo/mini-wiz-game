@@ -97,4 +97,17 @@ describe('迷宮の生成の決まり', () => {
     expect(generateFloorWalls(seq)).toEqual(expected);
     seq.assertExhausted();
   });
+
+  test('TC-0037-07 generateFloors はシード 1〜100 のどれも 150ms 未満（目標 50ms の 3 倍）。平均も記録する', () => {
+    generateFloors(new SeededRng(0)); // JIT の準備（測らない）
+    const times: number[] = [];
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const t0 = performance.now();
+      generateFloors(new SeededRng(seed));
+      times.push(performance.now() - t0);
+    }
+    const avg = times.reduce((a, b) => a + b, 0) / times.length;
+    console.log(`TC-0037-07 generateFloors：平均 ${avg.toFixed(2)}ms、最大 ${Math.max(...times).toFixed(2)}ms`);
+    for (const [i, ms] of times.entries()) expect(ms, `シード ${i + 1}`).toBeLessThan(150);
+  });
 });
