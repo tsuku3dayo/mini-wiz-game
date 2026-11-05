@@ -2,7 +2,7 @@
 id: MWIZ-AC-0024
 type: Attested Computation
 title: リリース 1.0.0 の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-05
 sources:
@@ -10,7 +10,7 @@ sources:
   - MWIZ-TST-0001（v1.0）
   - MWIZ-EP-0010（v1.0）
   - docs/SDD-PROCESS_v3.md §4.5
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T15:27:06+09:00" }
 ---
 
 # AC-0024 リリース 1.0.0 の実施記録
