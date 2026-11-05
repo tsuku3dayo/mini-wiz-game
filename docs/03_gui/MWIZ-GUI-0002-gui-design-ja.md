@@ -2,7 +2,7 @@
 id: MWIZ-GUI-0002
 type: GUI Design
 title: タイトル画面・名前入力
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-05
 sources:
@@ -14,7 +14,7 @@ sources:
   - MWIZ-US-0012（v1.1）
   - MWIZ-US-0032（v1.1）
   - docs/specification-ja.md (v1.3) §2.1、§11.5、§11.12、§12.1
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 ---
 
 # GUI-0002 タイトル画面・名前入力

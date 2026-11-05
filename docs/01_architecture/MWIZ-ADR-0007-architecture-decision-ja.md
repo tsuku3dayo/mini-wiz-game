@@ -2,14 +2,14 @@
 id: MWIZ-ADR-0007
 type: Architecture Decision
 title: アプリ識別子を mini-wiz-game にする
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-05
 sources:
   - MWIZ-PB-0001（v1.2）§5、§10
   - docs/specification-ja.md (v1.3) §19.1、§21.2、§30.4、§32
   - mini-blockbreaking-game doc/01_architecture/MBRK-ADR-0007（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 ---
 
 # ADR-0007 アプリ識別子を mini-wiz-game にする

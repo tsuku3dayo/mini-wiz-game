@@ -2,13 +2,13 @@
 id: MWIZ-US-0002
 type: User Story
 title: ホーム画面に追加する
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-05
 sources:
   - MWIZ-EP-0001（v1.0）
   - docs/specification-ja.md (v1.3) §11.12、§16.6、§30.2
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 ---
 
 # US-0002 ホーム画面に追加する
