@@ -14,7 +14,7 @@ verified: null
 
 # WS-0008 敵の姿を見る
 
-- 実施の順：8 / 10（エピックの段階 8。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：8 / 11（エピックの段階 8。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0008](../02_requirements/MWIZ-EP-0008-epic-ja.md)
 - ユーザーストーリー：US-0033
 

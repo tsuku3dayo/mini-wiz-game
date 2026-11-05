@@ -18,7 +18,7 @@ verified: null
 
 # WS-0003 迷宮を探索する
 
-- 実施の順：3 / 10（エピックの段階 3。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：3 / 11（エピックの段階 3。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0003](../02_requirements/MWIZ-EP-0003-epic-ja.md)
 - ユーザーストーリー：US-0013、US-0014、US-0015、US-0016、US-0017
 

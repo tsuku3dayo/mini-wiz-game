@@ -16,7 +16,7 @@ verified: null
 
 # WS-0005 ボスを倒し、周回して記録を残す
 
-- 実施の順：5 / 10（エピックの段階 5。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：5 / 11（エピックの段階 5。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0005](../02_requirements/MWIZ-EP-0005-epic-ja.md)
 - ユーザーストーリー：US-0024、US-0025、US-0026
 

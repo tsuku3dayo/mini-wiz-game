@@ -15,7 +15,7 @@ verified: null
 
 # WS-0007 演出と効果音で盛り上げる
 
-- 実施の順：7 / 10（エピックの段階 7。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：7 / 11（エピックの段階 7。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0007](../02_requirements/MWIZ-EP-0007-epic-ja.md)
 - ユーザーストーリー：US-0031、US-0032
 

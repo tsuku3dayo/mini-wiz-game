@@ -19,7 +19,7 @@ verified: null
 
 # WS-0004 敵と戦い、強くなる
 
-- 実施の順：4 / 10（エピックの段階 4。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：4 / 11（エピックの段階 4。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0004](../02_requirements/MWIZ-EP-0004-epic-ja.md)
 - ユーザーストーリー：US-0018、US-0019、US-0020、US-0021、US-0022、US-0023
 

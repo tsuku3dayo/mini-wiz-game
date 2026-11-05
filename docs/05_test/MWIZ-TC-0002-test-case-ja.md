@@ -3,13 +3,13 @@ id: MWIZ-TC-0002
 type: Test Case
 title: ホーム画面に追加する
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-05
 sources:
   - MWIZ-US-0002（v1.1）
   - MWIZ-TST-0001（v1.0）
-  - MWIZ-TD-0004（v1.1）
-  - MWIZ-TD-0005（v1.4）
+  - MWIZ-TD-0004（v1.2）
+  - MWIZ-TD-0005（v1.5）
   - MWIZ-GUI-0002（v1.1）
   - MWIZ-GUI-0007（v1.1）
   - docs/specification-ja.md (v1.3) §11.12、§16.6、§27.1、§30.1、§30.2
@@ -30,8 +30,8 @@ verified: null
 | TC-0002-03 | 2 | 案内の「とじる」をタップすると閉じ（`dialog.open` が false）、フォーカスが「インストール」のボタンに戻る | E2E（タッチ） | `e2e/pwa.spec.ts` |
 | TC-0002-04 | 2 | 案内を開いて Esc を押すと閉じ、フォーカスが「インストール」のボタンに戻る | E2E（キー、`desktop`） | `e2e/pwa.spec.ts` |
 | TC-0002-05 | 3 | インストール済み（`matchMedia('(display-mode: standalone)').matches` が true、または `navigator.standalone === true`）のとき、タイトル画面に「インストール」のボタンがない。版の表記「v1.0」は右に残る | E2E | `e2e/pwa.spec.ts` |
-| TC-0002-06 | 4 | `manifest.webmanifest` の `name`・`short_name` が「WIZ」、`display` が `standalone`、`start_url` が `./`、アイコン 192・512・512（maskable）がある。`index.html` の `apple-mobile-web-app-title` が `WIZ`、`apple-touch-icon` がある | E2E | `e2e/pwa.spec.ts` |
-| TC-0002-07 | 4 | iPhone 11 の Safari でホーム画面に追加でき、アイコンの下のアプリ名が「WIZ」で切れない。追加したアプリから起動して、はじめから → 宿屋 → ダンジョンまで遊べる | 手動 | 実機（iPhone 11） |
+| TC-0002-06 | 4 | `manifest.webmanifest` の `name`・`short_name` が「WIZミニ」、`display` が `standalone`、`start_url` が `./`、アイコン 192・512・512（maskable）がある。`index.html` の `apple-mobile-web-app-title` が `WIZミニ`、`apple-touch-icon` がある | E2E | `e2e/pwa.spec.ts` |
+| TC-0002-07 | 4 | iPhone 11 の Safari でホーム画面に追加でき、アイコンの下のアプリ名が「WIZミニ」で切れない。追加したアプリから起動して、はじめから → 宿屋 → ダンジョンまで遊べる | 手動 | 実機（iPhone 11） |
 
 ## 2. 準備
 
@@ -51,4 +51,4 @@ verified: null
 
 | 確認 ID | 手順 | 期待する結果 |
 | --- | --- | --- |
-| TC-0002-07 | iPhone 11 の Safari で公開 URL を開く → 共有 → 「ホーム画面に追加」→ 追加 → ホーム画面のアイコンから開き、「はじめから」で名前を付けて宿屋 →「ダンジョンへ」 | アプリ名が「WIZ」で、「…」で切れない。アドレスバーのない画面で開き、ダンジョンまで遊べる。Android の実機はないので、AC の「確認できなかったこと」に書く（TST-0001 §6） |
+| TC-0002-07 | iPhone 11 の Safari で公開 URL を開く → 共有 → 「ホーム画面に追加」→ 追加 → ホーム画面のアイコンから開き、「はじめから」で名前を付けて宿屋 →「ダンジョンへ」 | アプリ名が「WIZミニ」で、「…」で切れない（すでに追加してあったアプリは、名前が古いままのことがあるので、消してから追加し直す）。アドレスバーのない画面で開き、ダンジョンまで遊べる。Android の実機はないので、AC の「確認できなかったこと」に書く（TST-0001 §6） |

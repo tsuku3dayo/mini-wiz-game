@@ -16,7 +16,7 @@ verified: null
 
 # WS-0010 スマートフォンで快適に、誰でも使える（品質）
 
-- 実施の順：10 / 10（エピックの段階 10。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：10 / 11（エピックの段階 10。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0010](../02_requirements/MWIZ-EP-0010-epic-ja.md)
 - ユーザーストーリー：US-0035、US-0036、US-0037
 - US-0038 の確認 ID は WS-0002〜0007 の TASK に分けた（WS-0002 を参照）。
