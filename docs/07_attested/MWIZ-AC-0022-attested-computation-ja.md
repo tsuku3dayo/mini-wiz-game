@@ -2,13 +2,13 @@
 id: MWIZ-AC-0022
 type: Attested Computation
 title: キーボードと読み上げの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-05
 sources:
   - MWIZ-TASK-0022（v1.0）
   - MWIZ-TC-0036（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T14:57:34+09:00" }
 ---
 
 # AC-0022 キーボードと読み上げの実施記録

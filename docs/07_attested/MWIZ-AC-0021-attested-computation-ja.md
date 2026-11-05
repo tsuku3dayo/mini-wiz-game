@@ -2,14 +2,14 @@
 id: MWIZ-AC-0021
 type: Attested Computation
 title: 画面の大きさとタッチ（全画面の通し）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-05
 sources:
   - MWIZ-TASK-0021（v1.0）
   - MWIZ-TC-0035（v1.0）
   - MWIZ-TD-0003（v1.2）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-05T14:57:34+09:00" }
 ---
 
 # AC-0021 画面の大きさとタッチ（全画面の通し）の実施記録
