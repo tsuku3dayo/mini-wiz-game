@@ -3,13 +3,13 @@ id: MWIZ-ADR-0007
 type: Architecture Decision
 title: アプリ識別子を mini-wiz-game にする
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-11-05
 sources:
-  - MWIZ-PB-0001（v1.1）§5、§10
-  - docs/specification-ja.md (v1.2) §19.1、§21.2、§30.4、§32
+  - MWIZ-PB-0001（v1.2）§5、§10
+  - docs/specification-ja.md (v1.3) §19.1、§21.2、§30.4、§32
   - mini-blockbreaking-game doc/01_architecture/MBRK-ADR-0007（v1.1）
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 ---
 
 # ADR-0007 アプリ識別子を mini-wiz-game にする
@@ -26,7 +26,7 @@ GitHub Pages では、同じアカウントのアプリはすべて同じサイ�
 - 保存のキー：`mini-wiz-game-<名前>`（`game`・`save`・`sound`・`schema`）
 - 起動の復旧の印：sessionStorage の `mini-wiz-game:boot-repair-at`
 - `index.html` の `<meta name="app-id" content="mini-wiz-game">`（`boot.js` が読む）
-- 表示名（manifest の `name`・`short_name`、`apple-mobile-web-app-title`）：「WIZ」。ページの題名：「WIZ ～死霊術師の迷宮～」。表示名は保存のキーに使わないので、変えても保存は引き継がれる
+- 表示名（manifest の `name`・`short_name`、`apple-mobile-web-app-title`）：「WIZミニ」。ページの題名：「WIZミニ ～死霊術師の迷宮～」（v1.1 で「WIZ」から変えた。仕様書 v1.3）。表示名は保存のキーに使わないので、変えても保存は引き継がれる
 
 ## 検討した選択肢
 
