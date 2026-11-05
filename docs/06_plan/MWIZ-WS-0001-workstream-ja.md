@@ -18,7 +18,7 @@ verified: null
 
 # WS-0001 土台（公開・CI・PWA・更新・起動の復旧）
 
-- 実施の順：1 / 10（エピックの段階 1。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：1 / 11（エピックの段階 1。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md)
 - ユーザーストーリー：US-0001、US-0002、US-0003、US-0004、US-0005
 

@@ -3,8 +3,8 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.4
-updated: 2026-11-04
+version: 1.5
+updated: 2026-11-05
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TS-0001（v1.1）
@@ -38,7 +38,7 @@ verified: null
 
 | モジュール | 受け持ち |
 | --- | --- |
-| `vite.config.ts` の `VitePWA` | manifest（名前「WIZ」・`standalone`・`portrait`・アイコン）、Workbox の事前キャッシュ（`enemies/*.png` を含む全ファイル）、`registerType: 'prompt'` |
+| `vite.config.ts` の `VitePWA` | manifest（名前「WIZミニ」・`standalone`・`portrait`・アイコン）、Workbox の事前キャッシュ（`enemies/*.png`・`title/title.png` を含む全ファイル）、`registerType: 'prompt'` |
 | `platform/pwa.ts` | Service Worker の登録（本番のビルドだけ）。新しい版を受け取ったら `update-banner` を出せる状態にし、ルーターがタイトル・宿屋のときだけ出す。「更新」で切り替えて読み込み直す |
 | `platform/install.ts` | 端末の判定（iPhone／Android／PC）、`beforeinstallprompt` を持っておき「今すぐインストール」に使う、インストール済みの判定（`display-mode: standalone`） |
 | `public/boot.js` | 起動の見張り（8 秒）。失敗したらこのアプリのキャッシュと Service Worker だけを消して 1 回読み込み直す。2 分以内に続けて失敗したら `#boot-error`。**「なおす」を押したら、2 分の制限を待たずに、自動の復旧と同じこと（時刻を書く・このアプリの Service Worker とキャッシュだけ消す・読み込み直す）をすぐ行う**（仕様書 §30.4 に書かれていなかったので TASK-0003 で決めた。v1.2） |
@@ -79,7 +79,7 @@ verified: null
 | 項目 | 作り |
 | --- | --- |
 | `package.json` のスクリプト | 仕様書 §19.1・§29.1（`dev`・`build`・`preview`・`test`・`test:e2e`・`lint`・`check:dist`・`check:docs`・`verify`） |
-| `scripts/check-dist.mjs` | 仕様書 §29.4。`enemies/` の 6 枚（256×256）が `dist/` と事前キャッシュにあることも確かめる |
+| `scripts/check-dist.mjs` | 仕様書 §29.4。`enemies/` の 6 枚（256×256）と `title/title.png`（1080 × 720）が `dist/` と事前キャッシュにあること、manifest の `name` が「WIZミニ」であることも確かめる |
 | `scripts/check-docs.mjs` | 仕様書 §29.5。`mini-blockbreaking-game` のものを接頭辞 `MWIZ`・置き場所 `docs/` に合わせる。SDD-PROCESS_v3 §7.2 のエラーを出す |
 | `scripts/make-icons.mjs` | 仕様書 §30.5 |
 | `.github/workflows/test.yml` | PR と main への push で `npm run verify` と E2E（仕様書 §30.6） |

@@ -17,7 +17,7 @@ verified: null
 
 # WS-0006 装備を集めて強くする
 
-- 実施の順：6 / 10（エピックの段階 6。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：6 / 11（エピックの段階 6。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0006](../02_requirements/MWIZ-EP-0006-epic-ja.md)
 - ユーザーストーリー：US-0027、US-0028、US-0029、US-0030
 

@@ -14,7 +14,7 @@ verified: null
 
 # WS-0009 場面ごとの BGM を流す
 
-- 実施の順：9 / 10（エピックの段階 9。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
+- 実施の順：9 / 11（エピックの段階 9。[EP-0001](../02_requirements/MWIZ-EP-0001-epic-ja.md) の優先順位）
 - エピック：[EP-0009](../02_requirements/MWIZ-EP-0009-epic-ja.md)
 - ユーザーストーリー：US-0034
 

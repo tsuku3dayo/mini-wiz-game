@@ -3,8 +3,8 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.1
-updated: 2026-11-02
+version: 1.2
+updated: 2026-11-05
 sources:
   - MWIZ-TD-0003（v1.2）
   - MWIZ-GUI-0001（v1.1）
@@ -24,7 +24,9 @@ verified: null
 
 ## 1. タイトル（`ui/screens/title.ts`、`#/`）
 
-- 部品：飾り線・「WIZ」・副題・`commandMenu`（タイトル）・［`install` ボタン｜版］。**メッセージ欄は作らない**。
+- 部品：タイトル画像（`<h1 class="title-logo">` の中に `<img src="title/title.png" alt="WIZミニ ～死霊術師の迷宮～" width="1080" height="720">`）・`commandMenu`（タイトル）・［`install` ボタン｜版］。**メッセージ欄は作らない**（v1.2 の飾り線・「WIZ」・副題はタイトル画像に替えた。仕様書 v1.3）。
+- タイトル画像の大きさは CSS で決める：`width: 100%; max-width: 450px; height: auto; aspect-ratio: 3 / 2`。画像の URL は `logic/title-image.ts` の `TITLE_IMAGE_URL`（相対パス。`enemyImageUrl` と同じ考え方）。
+- 画像の `error` で `<img>` を消し、`<h1>` の中身を文字の「WIZミニ」（`.logo` の見た目）にして、`<h1>` の下に副題「～ 死霊術師の迷宮 ～」（`.subtitle`）を足す。同じ画面の中では読み直さない。
 - 「つづきから」が無効のとき、`onDisabledSelect` を渡さない（選んでも何も出さない）。
 - 「おと」は `sound.toggle()` のあと、項目の文字だけを変える（`commandMenu.update`）。メッセージは出さない。
 - エラー：メニューを無効にし、メニューの下に `errorPanel`。
