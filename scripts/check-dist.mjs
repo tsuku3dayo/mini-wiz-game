@@ -30,7 +30,7 @@ else if (!read('boot.js').includes('__appStarted')) errors.push('boot.js が __a
 if (!exists('manifest.webmanifest')) errors.push('manifest.webmanifest がない');
 else {
   const m = JSON.parse(read('manifest.webmanifest'));
-  if (m.name !== 'WIZ') errors.push(`manifest の name が「WIZ」でない（${m.name}）`);
+  if (m.name !== 'WIZミニ') errors.push(`manifest の name が「WIZミニ」でない（${m.name}）`);
   if (m.display !== 'standalone') errors.push('manifest の display が standalone でない');
   if (!m.start_url) errors.push('manifest に start_url がない');
   if (m.orientation !== 'portrait') errors.push('manifest の orientation が portrait でない');
@@ -56,6 +56,14 @@ for (const kind of ENEMY_KINDS) {
   const b = fs.readFileSync(path.join(dist, p));
   if (b.readUInt32BE(16) !== 256 || b.readUInt32BE(20) !== 256) errors.push(`${p} が 256×256 でない`);
   if (!sw.includes(p)) errors.push(`${p} が Service Worker の事前キャッシュにない`);
+}
+
+// タイトル画像（1080 × 720）が dist/ と事前キャッシュにある（仕様書 §13.6、TD-0005 §4）
+if (!exists('title/title.png')) errors.push('title/title.png がない');
+else {
+  const t = fs.readFileSync(path.join(dist, 'title/title.png'));
+  if (t.readUInt32BE(16) !== 1080 || t.readUInt32BE(20) !== 720) errors.push('title/title.png が 1080×720 でない');
+  if (!sw.includes('title/title.png')) errors.push('title/title.png が Service Worker の事前キャッシュにない');
 }
 
 // Web フォントを同梱しない（端末のフォントを使う。ADR-0010）

@@ -28,8 +28,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'WIZ',
-        short_name: 'WIZ',
+        name: 'WIZミニ',
+        short_name: 'WIZミニ',
         description: '宿屋を拠点に、5 階層の迷宮を探索する 1 人用のダンジョン RPG',
         lang: 'ja',
         display: 'standalone',
