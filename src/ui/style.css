@@ -230,7 +230,8 @@ body {
   border: 2px solid var(--wiz-color-primary);
   border-radius: 0;
 }
-.wiz-input:focus { outline: none; border-color: var(--wiz-color-secondary); }
+/* フォーカスで枠を secondary に。リング（*:focus-visible）も消さずに出す（TC-0036-02） */
+.wiz-input:focus { border-color: var(--wiz-color-secondary); }
 .wiz-text-input.has-error .wiz-input { border-color: var(--wiz-color-error); }
 .wiz-input:disabled { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); }
 .wiz-input-foot { display: flex; justify-content: space-between; gap: var(--wiz-gap); }
