@@ -197,6 +197,8 @@ async function eachScene(page: Page, info: TestInfo, check: (name: string) => Pr
   for (const s of scenes(page, press)) {
     if (s.narrowOnly && !narrow) continue;
     await s.open();
+    // 一覧の高さは描いた次のコマで画面に合わせる（fitItemList）。2 コマ待ってから測る（遅い CI では、待たないと合わせる前を測る）
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     await check(s.name);
   }
 }
