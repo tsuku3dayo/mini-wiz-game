@@ -57,7 +57,7 @@ mini-wiz-game/
 └─ docs/               仕様書と、開発の成果物（要件・設計・テスト・作業計画・実施記録・ふりかえり）
 ```
 
-仕様は `docs/specification-ja.md`、開発の進め方は `docs/SDD-PROCESS_v3.md` にあります。
+仕様は `docs/specification-ja.md`、開発の進め方は `docs/SDD-PROCESS_v3.md` にあります。この 1 冊で同じものを作り直せるようにまとめた再現開発仕様書（製品の仕様と、実際の作りに合わせた実装の仕様）は `docs/reproduction-specification.md` です。
 
 ## 権利とクレジット
 
