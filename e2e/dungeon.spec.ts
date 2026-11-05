@@ -93,6 +93,32 @@ test.describe('ダンジョンの画面', () => {
     expect(labelBottom).toBeLessThanOrEqual(fpvTop);
   });
 
+  test('TC-0036-08 疑似3D と地図の <svg> は role="img" で、説明文（aria-label）が付く', async ({ page }) => {
+    // 3F の (5,5) 北向き、足元がくだり階段。前方 2 マス先（(5,3) の北）が壁、右（東）は 2 段とも壁、左は通路。3 マス踏破済み
+    const size = 10;
+    const walls = Array.from({ length: size * size }, (_, i) => {
+      const x = i % size;
+      const y = Math.floor(i / size);
+      let w = (y === 0 ? 1 : 0) | (x === size - 1 ? 2 : 0) | (y === size - 1 ? 4 : 0) | (x === 0 ? 8 : 0);
+      if (x === 5 && y === 3) w |= 1;
+      if (x === 5 && y === 2) w |= 4;
+      if (x === 5 && (y === 4 || y === 5)) w |= 2;
+      if (x === 6 && (y === 4 || y === 5)) w |= 8;
+      return w;
+    });
+    const dungeon = dungeonMap({ x: 5, y: 5, floor: 3, walls }) as { floors: { down: unknown; visited: boolean[] }[] };
+    dungeon.floors[2].down = { x: 5, y: 5 };
+    dungeon.floors[2].visited = dungeon.floors[2].visited.map((_, j) => [55, 45, 35].includes(j));
+    await startAt(page, 'DUNGEON', { state: { dungeon } });
+    const fpv = page.getByTestId('first-person-view');
+    await expect(fpv).toHaveJSProperty('tagName', 'svg');
+    await expect(fpv).toHaveAttribute('role', 'img');
+    await expect(fpv).toHaveAttribute('aria-label', '3F 北を向いている。前方 2 マス先は かべ。左に わかれみち。足元に くだり階段。');
+    const map = page.getByTestId('auto-map');
+    await expect(map).toHaveAttribute('role', 'img');
+    await expect(map).toHaveAttribute('aria-label', '3F の地図。踏破済み 3 マス。');
+  });
+
   test('TC-0015-04 自動地図：大きさ・塗りのマスの数・記号・説明。歩くと塗りが増え、向きで矢印が変わる', async ({ page }, info) => {
     await startAt(page, 'DUNGEON');
     const map = page.getByTestId('auto-map');
