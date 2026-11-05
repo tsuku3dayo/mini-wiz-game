@@ -642,3 +642,62 @@ describe('ゲーム API の骨組み', () => {
     expect(store.raw('game')).not.toBeNull();
   });
 });
+
+// 速さ（TC-0037-01。TST-0001 §7：目標 100ms の 3 倍まで許す）
+describe('操作の速さ', () => {
+  test('TC-0037-01 どの操作も、所持品 50 個・踏破済みの多い 5F の重い状態で、呼び出しから結果まで 300ms 未満', async () => {
+    const items = Array.from({ length: 50 }, (_, i) => makeItem(i + 10, 'weapon1', 'N', 1));
+    const inventory = {
+      equipped: { weapon: makeItem(1, 'weapon6', 'UR', 28), armor: makeItem(2, 'armor4', 'R', 10), shield: null, accessory: null },
+      items, nextId: 60, pending: null,
+    };
+    const heavy = { ...CHARACTER, level: 15, hp: 40, maxHp: 120, mp: 40, maxMp: 40, inventory };
+    /** floor 階で player に立つ地図。その階はボスのマスを除いて全部踏破済み */
+    const map = (floor: number, player: { x: number; y: number }) => {
+      const d = openMap(player, {}, floor);
+      d.floors[floor - 1].visited = d.floors[floor - 1].visited.map((_, j) => !(floor === 5 && j === 9));
+      return d;
+    };
+    const deep = (overrides: Partial<GameStateData> = {}) => makeState('DUNGEON', { ...heavy, dungeon: map(5, { x: 5, y: 5 }), ...overrides });
+    // セーブは、重い宿屋の状態から本物の save で作る
+    const saver = setup({ game: storedGame(makeState('INN', heavy)) });
+    await saver.api.save();
+    const save = JSON.parse(saver.store.raw('save')!) as Record<string, unknown>;
+    const cases: [string, Record<string, unknown>, (a: GameApi) => Promise<unknown>][] = [
+      ['startGame', {}, (a) => a.startGame({ name: 'ゆうしゃ' })],
+      ['getGame', { game: storedGame(deep()), save: save }, (a) => a.getGame()],
+      ['getSave', { save: save }, (a) => a.getSave()],
+      ['rest', { game: storedGame(makeState('INN', heavy)) }, (a) => a.rest()],
+      ['save', { game: storedGame(makeState('INN', heavy)) }, (a) => a.save()],
+      ['load', { save: save }, (a) => a.load()],
+      ['enterDungeon', { game: storedGame(makeState('INN', heavy)) }, (a) => a.enterDungeon()],
+      ['move', { game: storedGame(deep()) }, (a) => a.move({ action: 'forward' })],
+      ['stairs', { game: storedGame(deep({ dungeon: map(5, { x: 0, y: 9 }) })) }, (a) => a.stairs({ direction: 'up' })],
+      ['returnToInn', { game: storedGame(deep({ dungeon: map(1, { x: 0, y: 9 }) })) }, (a) => a.returnToInn()],
+      ['heal', { game: storedGame(deep()) }, (a) => a.heal()],
+      ['battle', { game: storedGame(makeState('BATTLE', { ...heavy, dungeon: map(5, { x: 5, y: 5 }), battle: { enemy: { kind: 'darkKnight', hp: 1 }, isBoss: false } })) }, (a) => a.battle({ command: 'attack' })],
+      ['equip', { game: storedGame(makeState('INN', heavy)) }, (a) => a.equip({ itemId: 10 })],
+      ['unequip', { game: storedGame(makeState('INN', { ...heavy, inventory: { ...inventory, items: items.slice(1) } })) }, (a) => a.unequip({ slot: 'weapon' })],
+      ['discard', { game: storedGame(makeState('INN', heavy)) }, (a) => a.discard({ itemId: 10 })],
+      ['lootTake', { game: storedGame(makeState('SWAP', { ...heavy, dungeon: map(5, { x: 5, y: 5 }), inventory: { ...inventory, pending: { item: makeItem(70, 'weapon8', 'LG', 60), thenClear: false } } })) }, (a) => a.lootTake({ discardId: 10 })],
+      ['lootAbandon', { game: storedGame(makeState('SWAP', { ...heavy, dungeon: map(5, { x: 5, y: 5 }), inventory: { ...inventory, pending: { item: makeItem(70, 'weapon8', 'LG', 60), thenClear: false } } })) }, (a) => a.lootAbandon()],
+      ['continueGame', { game: storedGame(makeState('CLEARED', heavy)) }, (a) => a.continueGame()],
+    ];
+    const times: Record<string, number> = {};
+    for (const [name, initial, call] of cases) {
+      // 1 回目は JIT の準備として捨て、2 回目を測る（どちらも新しい保存から）
+      let ms = 0;
+      for (let round = 0; round < 2; round += 1) {
+        const { api } = setup(structuredClone(initial));
+        const t0 = performance.now();
+        const result = await call(api);
+        ms = performance.now() - t0;
+        expect(result, name).toBeDefined();
+      }
+      times[name] = Math.round(ms * 100) / 100;
+    }
+    console.log('TC-0037-01 操作の時間（ms）', JSON.stringify(times));
+    for (const [name, ms] of Object.entries(times)) expect(ms, name).toBeLessThan(300);
+    expect(Object.keys(times)).toHaveLength(18);
+  });
+});

@@ -451,4 +451,27 @@ test.describe('場面ごとの BGM', () => {
     await page.waitForTimeout(300);
     expect(await audioEvents(page)).toEqual([]);
   });
+
+  test('TC-0037-05 音がオンで、前進のタップ（PC は ↑ キー）から遭遇の音（app:sound の encounter）まで 300ms 未満', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await startAt(page, 'DUNGEON', { state: { hp: 999, maxHp: 999, dungeon: dungeonMap({ x: 4, y: 4 }) }, seed: SEEDS.slimeNext });
+    // 音の受け手で時刻を記録し、操作の直前の時刻との差を見る（本物の時間）
+    await page.evaluate(() => {
+      const w = window as Window & { __heardAt?: number; __pressAt?: number };
+      window.addEventListener('app:sound', (e) => {
+        if ((e as CustomEvent<{ name: string }>).detail.name === 'encounter') w.__heardAt = performance.now();
+      });
+      w.__pressAt = performance.now();
+    });
+    if (info.project.name === 'desktop') await page.keyboard.press('ArrowUp');
+    else await forward(page).tap();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    const ms = await page.evaluate(() => {
+      const w = window as Window & { __heardAt?: number; __pressAt?: number };
+      return w.__heardAt! - w.__pressAt!;
+    });
+    console.log(`TC-0037-05 前進から遭遇の音まで ${ms.toFixed(1)}ms（操作を送る時間を含む）`);
+    expect(ms).toBeGreaterThan(0);
+    expect(ms).toBeLessThan(300);
+  });
 });

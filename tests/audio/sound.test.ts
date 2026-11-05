@@ -161,4 +161,19 @@ describe('効果音', () => {
     target.dispatchEvent(new Event('click'));
     expect(state.contexts[1].resume).not.toHaveBeenCalled();
   });
+
+  test('TC-0037-04 encounter は遅れなしで鳴り始め（頭は休符でない）、1 秒以内に鳴り終わる', async () => {
+    const s = await load();
+    s.audioContext();
+    const ac = ctx();
+    ac.currentTime = 3.25;
+    s.playSfx('encounter');
+    const oscs = ac.oscillators;
+    expect(oscs.length).toBeGreaterThan(0);
+    expect(oscs[0].startAt).toBe(3.25);
+    expect(s.SFX.encounter[0].freq).toBeGreaterThan(0);
+    const last = Math.max(...oscs.map((o) => o.stops[0] ?? 0));
+    expect(close(last, 3.25 + 0.68)).toBe(true);
+    expect(last - 3.25).toBeLessThan(1);
+  });
 });
