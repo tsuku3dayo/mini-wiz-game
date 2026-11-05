@@ -48,8 +48,10 @@ body {
   gap: 16px;
   align-content: center;
 }
-.deco { width: 60%; margin: 0 auto; display: flex; align-items: center; gap: 8px; color: var(--wiz-color-blood); }
-.deco::before, .deco::after { content: ""; flex: 1; border-top: 1px solid var(--wiz-color-blood); }
+/* タイトル画像（仕様書 §11.5・§13.6）：横幅いっぱい・最大 450px、3：2。width・height の属性で読み込みの前から場所を確保する */
+.title-logo { margin: 0; }
+.title-image { display: block; width: 100%; max-width: 450px; height: auto; aspect-ratio: 3 / 2; margin: 0 auto; }
+/* 画像が読めないときの文字の名前と副題 */
 .logo { margin: 0; text-align: center; font-size: 36px; line-height: 1.2; font-weight: normal; color: var(--wiz-color-frame); letter-spacing: 0.5em; padding-left: 0.5em; }
 @media (min-width: 600px) { .logo { font-size: 48px; } }
 .subtitle { margin: 0; text-align: center; color: var(--wiz-color-arcane); }

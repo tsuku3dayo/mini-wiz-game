@@ -5,13 +5,9 @@ const title = (page: Page) => page.getByRole('menu', { name: 'タイトル' });
 const item = (page: Page, text: string) => title(page).getByRole('menuitem').filter({ hasText: text });
 
 test.describe('タイトル', () => {
-  test('TC-0006-01 飾り線 2 本（aria-hidden）・「WIZ」・副題・メニュー（はじめから・つづきから・おと：オフ）・インストール・版。メッセージ欄はない', async ({ page }) => {
+  test('TC-0006-01 見出しの中のタイトル画像・メニュー（はじめから・つづきから・おと：オフ）・インストール・版。メッセージ欄はない', async ({ page }) => {
     await page.goto('./');
-    const deco = page.locator('.deco');
-    await expect(deco).toHaveCount(2);
-    for (const d of await deco.all()) await expect(d).toHaveAttribute('aria-hidden', 'true');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('WIZ');
-    await expect(page.getByText('～ 死霊術師の迷宮 ～')).toBeVisible();
+    await expect(page.locator('h1 img')).toHaveAttribute('src', 'title/title.png');
     await expect(title(page)).toHaveAttribute('role', 'menu');
     expect((await title(page).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''))).toEqual(['はじめから', 'つづきから', 'おと：オフ']);
     await expect(page.getByRole('button', { name: 'インストール', exact: true })).toBeVisible();
@@ -19,9 +15,52 @@ test.describe('タイトル', () => {
     await expect(page.getByRole('log')).toHaveCount(0);
   });
 
-  test('TC-0001-02 ページの題名は「WIZ ～死霊術師の迷宮～」で、html の lang は ja', async ({ page }) => {
+  test('TC-0006-09 タイトル画像の alt と見出しの名前が「WIZミニ ～死霊術師の迷宮～」。width・height があり、読み込まれている。飾り線・副題の文字はない', async ({ page }) => {
     await page.goto('./');
-    await expect(page).toHaveTitle('WIZ ～死霊術師の迷宮～');
+    const img = page.locator('h1 img');
+    await expect(img).toHaveAttribute('alt', 'WIZミニ ～死霊術師の迷宮～');
+    await expect(page.getByRole('heading', { level: 1, name: 'WIZミニ ～死霊術師の迷宮～' })).toBeVisible();
+    await expect(img).toHaveAttribute('width', '1080');
+    await expect(img).toHaveAttribute('height', '720');
+    await expect.poll(() => img.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(1080);
+    await expect(page.locator('.deco')).toHaveCount(0);
+    await expect(page.getByText('～ 死霊術師の迷宮 ～')).toHaveCount(0);
+  });
+
+  test('TC-0006-10 画像の大きさ：375×667 で 359×239.3、414×715 で 398×265.3、1280×800 で 450×300（3：2、最大 450）。中央にある', async ({ page }) => {
+    for (const [w, h, iw, ih] of [[375, 667, 359, 239.33], [414, 715, 398, 265.33], [1280, 800, 450, 300]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto('about:blank');
+      await page.goto('./');
+      const img = page.locator('h1 img');
+      await expect.poll(() => img.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(1080);
+      const box = await img.evaluate((e) => {
+        const r = e.getBoundingClientRect();
+        return { w: r.width, h: r.height, left: r.left, right: window.innerWidth - r.right };
+      });
+      expect(Math.abs(box.w - iw), `${w}×${h} 幅`).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(box.h - ih), `${w}×${h} 高さ`).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(box.left - box.right), `${w}×${h} 中央`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test.describe('タイトル画像が読めないとき', () => {
+    // Service Worker が保存したファイルを先に出すと、止めたつもりの読み込みが止まらない（SDD-PROCESS §8「05 テスト」）
+    test.use({ serviceWorkers: 'block' });
+    test('TC-0006-11 画像を読めなくすると、画像が消えて文字の「WIZミニ」と副題が出る。エラーは出ない', async ({ page }) => {
+      await page.route('**/title/title.png', (r) => r.abort());
+      await page.goto('./');
+      await expect(page.locator('h1 img')).toHaveCount(0);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('WIZミニ');
+      await expect(page.getByText('～ 死霊術師の迷宮 ～')).toBeVisible();
+      await expect(page.getByTestId('error-panel')).toHaveCount(0);
+      await expect(title(page)).toBeVisible();
+    });
+  });
+
+  test('TC-0001-02 ページの題名は「WIZミニ ～死霊術師の迷宮～」で、html の lang は ja', async ({ page }) => {
+    await page.goto('./');
+    await expect(page).toHaveTitle('WIZミニ ～死霊術師の迷宮～');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
   });
 

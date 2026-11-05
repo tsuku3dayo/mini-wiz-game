@@ -272,15 +272,15 @@ test.describe('ホーム画面に追加する', () => {
     const href = await page.locator('link[rel="manifest"]').getAttribute('href');
     expect(href).toContain('manifest.webmanifest');
     const manifest = await (await page.request.get(new URL(href!, page.url()).href)).json();
-    expect(manifest.name).toBe('WIZ');
-    expect(manifest.short_name).toBe('WIZ');
+    expect(manifest.name).toBe('WIZミニ');
+    expect(manifest.short_name).toBe('WIZミニ');
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('./');
     const has = (sizes: string, purpose: string) => manifest.icons.some((i: { sizes: string; purpose?: string }) => i.sizes === sizes && (i.purpose ?? 'any').includes(purpose));
     expect(has('192x192', 'any')).toBe(true);
     expect(has('512x512', 'any')).toBe(true);
     expect(has('512x512', 'maskable')).toBe(true);
-    await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'WIZ');
+    await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'WIZミニ');
     const touch = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
     expect((await page.request.get(new URL(touch!, page.url()).href)).status()).toBe(200);
   });
