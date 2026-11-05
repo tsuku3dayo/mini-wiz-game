@@ -226,4 +226,124 @@ test.describe('メニューとコマンド', () => {
     await expect(confirm).toHaveCount(0);
     expect(await cursorLabel(page, '宿屋')).toBe('タイトルへ戻る');
   });
-});
+
+  test('TC-0036-03 メニュー・確認を閉じると、フォーカスが開いたもの（宿屋は「メニュー」・ダンジョンはメニューボタン・確認は開いた項目）に戻る', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
+    const focused = () => page.evaluate(() => {
+      const a = document.activeElement as HTMLElement | null;
+      return (a?.getAttribute('aria-label') ?? a?.textContent ?? '').replace(/^[▶\s]+/, '').trim();
+    });
+    const innAt = async (text: string) => {
+      await expect(page.getByRole('menu', { name: '宿屋' })).toBeVisible();
+      await expect.poll(focused).toBe(text);
+    };
+    const items = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, itemId: 'weapon1', rarity: 'N', value: 1 }));
+    await startAt(page, 'INN', { state: { inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: null }, items, nextId: 4, pending: null } } });
+    await expect.poll(focused).toBe('やすむ');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await innAt('メニュー');
+
+    // GameMenu を Esc で閉じる・「もどる」で閉じる
+    await page.keyboard.press('Enter');
+    await expect.poll(focused).toBe('そうび');
+    await page.keyboard.press('Escape');
+    await innAt('メニュー');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await innAt('メニュー');
+
+    // そうび・もちものを閉じる（Esc・もどる）
+    for (const [down, name] of [[0, 'そうび'], [1, 'もちもの']] as const) {
+      await page.keyboard.press('Enter');
+      for (let i = 0; i < down; i += 1) await page.keyboard.press('ArrowDown');
+      await expect.poll(focused).toBe(name);
+      await page.keyboard.press('Enter');
+      await expect(page.locator('.wiz-frame-name', { hasText: name })).toBeAttached();
+      await page.keyboard.press('Escape');
+      await innAt('メニュー');
+    }
+
+    // もちものの確認を閉じると、選んだ個体に戻る
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menu', { name: 'もちもの' })).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    const chosen = await focused();
+    expect(chosen).toMatch(/ショートソード/);
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menu', { name: 'かくにん' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'もちもの' })).toBeVisible();
+    await expect.poll(focused).toBe(chosen);
+    await page.keyboard.press('Escape');
+    await innAt('メニュー');
+
+    // 宿屋の確認（タイトルへ戻る）
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await innAt('タイトルへ戻る');
+    await page.keyboard.press('Enter');
+    await expect.poll(focused).toBe('いいえ');
+    await page.keyboard.press('Escape');
+    await innAt('タイトルへ戻る');
+
+    // ダンジョン：メニューボタンに Tab で移り、GameMenu・そうびを閉じるとボタンに戻る
+    await startAt(page, 'DUNGEON');
+    for (let i = 0; i < 20 && (await focused()) !== '≡ メニュー'; i += 1) await page.keyboard.press('Tab');
+    expect(await focused()).toBe('≡ メニュー');
+    await page.keyboard.press('Enter');
+    await expect.poll(focused).toBe('ヒール');
+    await page.keyboard.press('Escape');
+    await expect.poll(focused).toBe('≡ メニュー');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ArrowDown');
+    await expect.poll(focused).toBe('そうび');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wiz-frame-name', { hasText: 'そうび' })).toBeAttached();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    await expect.poll(focused).toBe('≡ メニュー');
+  });
+
+  test('TC-0036-04 確認・GameMenu・ステータス・もちもの一覧を開いているあいだ、Tab・Shift+Tab を 20 回ずつ押してもフォーカスが外へ出ない', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
+    const press = (name: string) => page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: name }).click();
+    const sub = (name: string) => page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').filter({ hasText: name }).click();
+    const trapped = async (label: string) => {
+      const box = page.getByRole('menu', { name: label, exact: true });
+      await expect(box).toBeVisible();
+      const inside = () => box.evaluate((m) => m.contains(document.activeElement));
+      await expect.poll(inside, label).toBe(true);
+      for (const key of ['Tab', 'Shift+Tab']) {
+        for (let i = 0; i < 20; i += 1) {
+          await page.keyboard.press(key);
+          expect(await inside(), `${label} ${key} ${i + 1} 回目`).toBe(true);
+        }
+      }
+    };
+    const items = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, itemId: 'weapon1', rarity: 'N', value: 1 }));
+    const state = { inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: null }, items, nextId: 4, pending: null } };
+
+    await startAt(page, 'INN', { state });
+    await press('タイトルへ戻る');
+    await trapped('かくにん');
+
+    await startAt(page, 'INN', { state });
+    await press('メニュー');
+    await trapped('メニュー');
+
+    await startAt(page, 'INN', { state });
+    await press('メニュー');
+    await sub('もちもの');
+    await trapped('もちもの');
+
+    // ステータス画面は狭い画面だけにある（広い画面では宿屋に出す）
+    await page.setViewportSize({ width: 500, height: 900 });
+    await startAt(page, 'INN', { state });
+    await press('メニュー');
+    await sub('ステータス');
+    await trapped('ステータス');
+  });});

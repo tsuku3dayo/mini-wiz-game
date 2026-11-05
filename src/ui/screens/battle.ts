@@ -95,9 +95,12 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
     if (state) status?.update(state.character);
     if (menu && shown) {
       const key = `${shown.canHeal}|${shown.canFlee}`;
+      const wasDisabled = menu.el.getAttribute('aria-disabled') === 'true';
       // 押される行は、ヒール・にげるの可否が変わったときだけ作り直す（TD-0003 §7）
       menu.update({ items: key === drawnKey ? undefined : items(shown), disabled: locked() });
       drawnKey = key;
+      // 遭遇の行を出している途中で開いたら、出し終えたところでフォーカスを置く（キーボードで続けられるように）
+      if (wasDisabled && !locked() && !root.contains(document.activeElement)) menu.focus();
     }
   }
 

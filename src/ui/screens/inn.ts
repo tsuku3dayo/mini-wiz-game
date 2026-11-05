@@ -210,7 +210,10 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
       records?.update(state.records);
     }
     const locked = innLocked();
+    const wasDisabled = innMenu?.el.getAttribute('aria-disabled') === 'true';
     innMenu?.update({ disabled: locked });
+    // 開いたときに行を出している途中だった（名前入力から来たときなど）ら、出し終えたところでフォーカスを置く
+    if (innMenu && wasDisabled && !locked && !root.contains(document.activeElement)) innMenu.focus();
     menuWindow?.update({ disabled: command.fatal !== null });
     confirm?.setDisabled(quitting || command.fatal !== null);
     renderError();

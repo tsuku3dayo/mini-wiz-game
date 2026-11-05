@@ -34,7 +34,10 @@ export function mountClear(root: HTMLElement, ctx: ScreenContext): { destroy(): 
 
   let panel: { el: HTMLElement; destroy(): void } | null = null;
   function onChange() {
+    const wasDisabled = menu.el.getAttribute('aria-disabled') === 'true';
     menu.update({ disabled: locked() });
+    // ボスを倒した行を出している途中で開いたら、出し終えたところでフォーカスを置く（キーボードで続けられるように）
+    if (wasDisabled && !locked() && !root.contains(document.activeElement)) menu.focus();
     // clear の演出の行を出しているあいだ、見出しを浮かび上がらせる
     heading.classList.toggle('rising', queue.activeEffect?.effect === 'clear');
     if (command.fatal && !panel) {
