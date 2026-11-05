@@ -7,7 +7,7 @@ version: 1.1
 updated: 2026-11-02
 sources:
   - MWIZ-EP-0002（v1.0）
-  - MWIZ-US-0006（v1.1）
+  - MWIZ-US-0006（v1.2）
   - MWIZ-US-0007（v1.0）
   - MWIZ-US-0008（v1.0）
   - MWIZ-US-0009（v1.0）

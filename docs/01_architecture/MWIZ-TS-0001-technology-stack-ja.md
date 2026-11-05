@@ -6,9 +6,9 @@ status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
-  - MWIZ-PB-0001（v1.1）
+  - MWIZ-PB-0001（v1.2）
   - MWIZ-SA-0001（v1.0）
-  - docs/specification-ja.md (v1.2) §18、§19、§29、§30
+  - docs/specification-ja.md (v1.3) §18、§19、§29、§30
   - mini-blockbreaking-game package.json (v1.0.0)、doc/01_architecture/MBRK-TS-0001（v1.0）
 verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---

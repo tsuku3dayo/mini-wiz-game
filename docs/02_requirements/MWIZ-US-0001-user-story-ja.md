@@ -2,13 +2,13 @@
 id: MWIZ-US-0001
 type: User Story
 title: 公開 URL を開いて遊び始める
-status: stable
-version: 1.0
-updated: 2026-10-26
+status: review
+version: 1.1
+updated: 2026-11-05
 sources:
   - MWIZ-EP-0001（v1.0）
-  - docs/specification-ja.md (v1.2) §1.3、§11.12、§14、§16.6、§21.2
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
+  - docs/specification-ja.md (v1.3) §1.3、§11.12、§14、§16.6、§21.2
+verified: null
 ---
 
 # US-0001 公開 URL を開いて遊び始める
@@ -23,7 +23,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ## 受け入れ条件
 
 - [ ] 公開 URL（https://tsuku3dayo.github.io/mini-wiz-game/ ）を開くと、登録・インストールなしでタイトル画面が出る（§16.6）
-- [ ] ページの題名は「WIZ ～死霊術師の迷宮～」（§11.11）
+- [ ] ページの題名は「WIZミニ ～死霊術師の迷宮～」（§11.11）
 - [ ] 外部へデータを送らない。外部の CDN・Web フォント・音声ファイルを読み込まない（§14）
 - [ ] 同じサイトのほかのアプリ（例：ブロック崩しミニ）と、保存・キャッシュが混ざらない（保存のキーが `mini-wiz-game-` で始まり、起動の復旧はこのアプリの範囲だけを消す）（§16.6）
 

@@ -10,8 +10,8 @@ sources:
   - MWIZ-SA-0001（v1.0）
   - MWIZ-ADR-0004（v1.0）
   - MWIZ-ADR-0006（v1.0）
-  - MWIZ-ADR-0007（v1.0）
-  - docs/specification-ja.md (v1.2) §2〜§10、§20.3、§21〜§24
+  - MWIZ-ADR-0007（v1.1）
+  - docs/specification-ja.md (v1.3) §2〜§10、§20.3、§21〜§24
 verified: null
 ---
 
