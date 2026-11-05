@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code when working in this repository.
 
-ブラウザで遊ぶ 1 人用のダンジョン探索 RPG「WIZ ～死霊術師の迷宮～」（PWA、サーバーなし）。仕様は `docs/specification-ja.md`、目的・範囲は `docs/00_brief/MWIZ-PB-0001-project-brief-ja.md`。
+ブラウザで遊ぶ 1 人用のダンジョン探索 RPG「WIZミニ ～死霊術師の迷宮～」（PWA、サーバーなし）。仕様は `docs/specification-ja.md`、目的・範囲は `docs/00_brief/MWIZ-PB-0001-project-brief-ja.md`。
 
 ## 基本方針
 
