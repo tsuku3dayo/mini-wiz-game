@@ -9,7 +9,7 @@ sources:
   - MWIZ-US-0002（v1.1）
   - MWIZ-TST-0001（v1.0）
   - MWIZ-TD-0004（v1.2）
-  - MWIZ-TD-0005（v1.5）
+  - MWIZ-TD-0005（v1.6）
   - MWIZ-GUI-0002（v1.1）
   - MWIZ-GUI-0007（v1.1）
   - docs/specification-ja.md (v1.4) §11.12、§16.6、§27.1、§30.1、§30.2

@@ -3,13 +3,13 @@ id: MWIZ-TC-0006
 type: Test Case
 title: タイトル画面から始める
 status: stable
-version: 1.1
-updated: 2026-11-05
+version: 1.2
+updated: 2026-11-06
 sources:
   - MWIZ-US-0006（v1.2）
   - MWIZ-TST-0001（v1.0）
   - MWIZ-TD-0002（v1.6）
-  - MWIZ-TD-0003（v1.2）
+  - MWIZ-TD-0003（v1.3）
   - MWIZ-TD-0004（v1.2）
   - MWIZ-GUI-0002（v1.1）
   - docs/specification-ja.md (v1.4) §10.1、§11.2、§11.4、§11.5、§16.4、§19.1、§27.4
@@ -35,7 +35,7 @@ verified: null
 | TC-0006-09 | 1 | タイトル画像の `alt` が「WIZミニ ～死霊術師の迷宮～」で、見出し（`role="heading"`、レベル 1）の名前も同じ。`<img>` に `width="1080"`・`height="720"` がある。画像が読み込まれている（`naturalWidth` が 1080）。飾り線（`.deco`）・副題の文字は出ていない | E2E | `e2e/title.spec.ts` |
 | TC-0006-10 | 1 | 画像の表示の大きさ：375 × 667 で横 359 × 縦 239.3、414 × 715 で 398 × 265.3、1280 × 800 で 450 × 300（横：縦が 3：2、横は最大 450）。中央にある（左右の余白の差 1px 以内） | E2E | `e2e/title.spec.ts` |
 | TC-0006-11 | 1 | 画像を読めなくすると（`page.route` で `title/title.png` を止める）、`<img>` が消え、`<h1>` の文字が「WIZミニ」、その下に「～ 死霊術師の迷宮 ～」が出る。エラーの表示は出ない | E2E | `e2e/title.spec.ts` |
-| TC-0006-12 | 1 | `public/title/title.png` があり、PNG の署名・`IHDR`・幅 1080・高さ 720、MD5 が仕様書 §13.6 の値（`b7bdabf36d32d509c17da90df9e73120`）と同じ | 単体 | `tests/assets/title-image.test.ts` |
+| TC-0006-12 | 1 | `public/title/title.png` があり、PNG の署名・`IHDR`・幅 1080・高さ 720、MD5 が仕様書 §13.6 の値（`36dd93edda255751560af6e4bcfb1aab`。v1.2 で v2 の画像に）と同じ | 単体 | `tests/assets/title-image.test.ts` |
 | TC-0006-13 | 1 | iPhone 11 で、タイトル画像がぼやけず、文字（「WIZミニ」「～死霊術師の迷宮～」）が読め、メニューと重ならずに 1 画面に収まる。PC でも同じ | 手動 | 実機（iPhone 11・PC） |
 | TC-0006-08 | 5 | プレイ中のゲームがある（INN）とき、`#/nothing` を開くと `#/` を経て `#/inn` になり、宿屋の画面が出る | E2E | `e2e/title.spec.ts` |
 
