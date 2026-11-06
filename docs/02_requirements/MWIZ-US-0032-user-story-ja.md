@@ -2,13 +2,13 @@
 id: MWIZ-US-0032
 type: User Story
 title: 効果音を鳴らす・切り替える
-status: stable
-version: 1.1
-updated: 2026-10-30
+status: review
+version: 1.2
+updated: 2026-11-06
 sources:
   - MWIZ-EP-0007（v1.0）
-  - docs/specification-ja.md (v1.6) §12.1、§15.5、§16.5、§25
-verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
+  - docs/specification-ja.md (v1.7) §12.1、§15.5、§16.5、§25
+verified: null
 ---
 
 # US-0032 効果音を鳴らす・切り替える
@@ -34,7 +34,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 - [ ] 音がオフのときは、どの出来事でも鳴らない（§16.5）
 - [ ] Web Audio が使えないブラウザでも、エラーなく遊べる（§16.5）
 - [ ] 操作前に suspended だった場合、最初のタップ・クリック／キー（Shift だけは除く）で音が出るようになる。iPhone の Safari でも、最初のタップで音が出る（§16.5）
-- [ ] 各音の波形・周波数・長さが §25.2 の表と同じ（§16.5）
+- [ ] 各音の音色・周波数・長さが §25.2 と同じ（§16.5）
 
 ## 確かめ方
 
