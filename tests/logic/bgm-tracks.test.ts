@@ -3,11 +3,12 @@ import { BGM, FM_PATCHES, loopBeats, loopSec } from '../../src/logic/bgm-tracks'
 
 // 仕様書 §26.9 の諸元と §26.3 の音色の表（書き写しの誤りを見つける。§26.10）
 const SPEC = {
-  title: { name: '鐘と祈り', bpm: 66, bpb: 4, bars: 16, sec: 58.18, parts: [['メロディ', 'クワイア', 0.65], ['和音', 'パッド', 0.17], ['鐘', 'チューブラーベル', 0.26], ['ベース', '柔らかいベース', 0.8]], drums: [] as string[] },
-  inn: { name: '灰の暖炉', bpm: 84, bpb: 3, bars: 16, sec: 34.29, parts: [['メロディ', '木管', 0.75], ['竪琴', 'ハープ', 0.3], ['ベース', 'ベース', 0.7]], drums: [] },
-  dungeon: { name: '見られている迷宮', bpm: 84, bpb: 4, bars: 16, sec: 45.71, parts: [['ベース', 'ウッドベース', 0.85], ['メロディ', '笛', 0.6], ['しずく', 'しずく', 0.2], ['濁り', '金属のうなり', 0.09]], drums: [] },
-  battle: { name: '裂ける夜', bpm: 172, bpb: 4, bars: 16, sec: 22.33, parts: [['メロディ', 'シンセリード', 0.75], ['5 度の和音', 'ブラス', 0.24], ['ベース', 'スラップベース', 0.85], ['ベースの重ね', 'ひずみ', 0.1]], drums: ['hat', 'kick', 'snare'] },
-  boss: { name: '鉄の行進', bpm: 120, bpb: 4, bars: 16, sec: 32.0, parts: [['震える和音', '弦のきざみ', 0.4], ['角笛', 'ホルン', 0.55], ['和音', 'ブラス', 0.18], ['ベース', '柔らかいベース', 0.85]], drums: ['boom', 'snare'] },
+  title: { name: 'ローエングリン 第 1 幕への前奏曲（ワーグナー）', bpm: 52, bpb: 4, bars: 16, sec: 73.85, parts: [['旋律', '高い弦', 0.6], ['高い和音', '高い弦', 0.16], ['和音', 'パッド', 0.12], ['ベース', '柔らかいベース', 0.45]], drums: [] as string[] },
+  inn: { name: 'グリーンスリーヴス（イングランド民謡）', bpm: 100, bpb: 3, bars: 16, sec: 28.8, parts: [['旋律', '笛', 0.7], ['竪琴', 'ハープ', 0.28], ['ベース', 'ベース', 0.55]], drums: [] },
+  dungeon: { name: '死の島（ラフマニノフ）', bpm: 72, bpb: 2.5, bars: 16, sec: 33.33, parts: [['揺れる低い弦', '低い弦', 0.7], ['低い和音', 'パッド', 0.13], ['怒りの日', 'ホルン', 0.45], ['しずく', 'しずく', 0.12]], drums: [] },
+  battle: { name: '火星 — 戦いの神（ホルスト『惑星』）', bpm: 168, bpb: 5, bars: 16, sec: 28.57, parts: [['くり返し', '弦のきざみ', 0.5], ['くり返しの重ね', 'ひずみ', 0.08], ['金管の主題', 'ブラス', 0.45], ['和音', 'ホルン', 0.2]], drums: ['boom', 'snare'] },
+  boss: { name: 'カタコンベ（ローマ時代の墓）（ムソルグスキー『展覧会の絵』）', bpm: 60, bpb: 3, bars: 16, sec: 48.0, parts: [['強い和音', 'ブラス', 0.4], ['弱い和音', 'パッド', 0.2], ['上の声', 'ホルン', 0.4], ['ベース', '柔らかいベース', 0.85]], drums: ['boom', 'snare'] },
+  clear: { name: 'イン・パラディス（フォーレ『レクイエム』）', bpm: 66, bpb: 3, bars: 16, sec: 43.64, parts: [['オルガンの分散和音', 'オルガン', 0.22], ['ソプラノ', 'クワイア', 0.5], ['ペダル', '柔らかいベース', 0.5]], drums: [] },
 } as const;
 
 // キー・name・ratio・index・sustain・idecay・attack・adecay・asus・ring・vib
@@ -29,11 +30,14 @@ const PATCHES: [string, string, number, number, number, number, number, number, 
   ['ひずみ', 'ひずみ', 1, 5, 0.8, 0.3, 0.003, 1, 0.9, 1, false],
   ['弦のきざみ', '弦のきざみ', 1, 2, 0.4, 0.08, 0.008, 0.3, 0.7, 1, false],
   ['ホルン', 'ホルン', 1, 2.2, 0.6, 0.25, 0.06, 1.5, 0.85, 1, true],
+  ['高い弦', '高い弦', 1, 0.7, 0.85, 0.8, 0.35, 3, 0.95, 1, true],
+  ['オルガン', 'オルガン', 2, 0.5, 0.95, 1, 0.02, 4, 0.95, 1, false],
+  ['低い弦', '低い弦', 1, 1.4, 0.7, 0.3, 0.04, 1.5, 0.85, 1, false],
 ];
 
 describe('BGM の曲データ', () => {
-  test('TC-0034-22 5 曲の諸元・パートの並び（label・音色・vol）・拍数・打楽器・音色 17 種・音域が仕様書のとおり', () => {
-    expect(Object.keys(BGM)).toEqual(['title', 'inn', 'dungeon', 'battle', 'boss']);
+  test('TC-0034-22 6 曲の諸元・パートの並び（label・音色・vol）・拍数・打楽器・音色 20 種・音域が仕様書のとおり', () => {
+    expect(Object.keys(BGM)).toEqual(['title', 'inn', 'dungeon', 'battle', 'boss', 'clear']);
     const patchKey = new Map(Object.entries(FM_PATCHES).map(([k, v]) => [v, k]));
     for (const [name, spec] of Object.entries(SPEC)) {
       const t = BGM[name as keyof typeof BGM];
@@ -45,15 +49,14 @@ describe('BGM の曲データ', () => {
       // 打楽器は 1 周の中
       expect(t.drums.every((d) => d.beat >= 0 && d.beat < loopBeats(t)), name).toBe(true);
       expect([...new Set(t.drums.map((d) => d.kind))].sort(), name).toEqual(spec.drums);
-      // 音域 24〜96、メロディは 82（B♭5）まで
+      // 音域 24〜96
       for (const p of t.parts) {
         const pitches = p.notes.flatMap((n) => (n.p === null ? [] : Array.isArray(n.p) ? n.p : [n.p as number]));
         expect(Math.min(...pitches), `${name} ${p.label}`).toBeGreaterThanOrEqual(24);
         expect(Math.max(...pitches), `${name} ${p.label}`).toBeLessThanOrEqual(96);
-        if (p.label === 'メロディ') expect(Math.max(...pitches), `${name} メロディ`).toBeLessThanOrEqual(82);
       }
     }
-    expect(Object.keys(FM_PATCHES)).toHaveLength(17);
+    expect(Object.keys(FM_PATCHES)).toHaveLength(20);
     for (const [key, ...v] of PATCHES) {
       const p = FM_PATCHES[key as keyof typeof FM_PATCHES];
       expect([p.name, p.ratio, p.index, p.sustain, p.idecay, p.attack, p.adecay, p.asus, p.ring, p.vib], key).toEqual(v);

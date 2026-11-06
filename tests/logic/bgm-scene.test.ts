@@ -29,10 +29,10 @@ describe('場面と曲', () => {
     expect(sceneBgm('/nothing', inn, null)).toBeNull();
   });
 
-  test('TC-0034-05 /clear と、場所が CLEARED のときは、どのパスでも null', () => {
-    expect(sceneBgm('/clear', cleared, null)).toBeNull();
+  test('TC-0034-05 場所が CLEARED のときは、どのパスでも（/clear でも）クリアの曲。状態がない /clear は null', () => {
+    expect(sceneBgm('/clear', cleared, null)).toBe('clear');
     expect(sceneBgm('/clear', null, null)).toBeNull();
-    for (const path of ['/', '/inn', '/dungeon', '/battle', '/swap']) expect(sceneBgm(path, cleared, null), path).toBeNull();
+    for (const path of ['/', '/inn', '/dungeon', '/battle', '/swap']) expect(sceneBgm(path, cleared, null), path).toBe('clear');
   });
 
   test('TC-0034-12 ボスの出現・撃破の演出のあいだは、パスによらず null。ほかの演出では止めない', () => {
@@ -44,9 +44,14 @@ describe('場面と曲', () => {
     expect(sceneBgm('/dungeon', dungeon, { effect: 'rareDrop' })).toBe('dungeon');
   });
 
-  test('TC-0034-14 場所が SWAP でダンジョンがない（ボスのあとの入れ替え）ときは null、ダンジョンがあるときは /swap でダンジョンの曲', () => {
-    expect(sceneBgm('/swap', swapAfterBoss, null)).toBeNull();
-    expect(sceneBgm('/battle', swapAfterBoss, null)).toBeNull();
+  test('TC-0034-14 場所が SWAP でダンジョンがない（ボスのあとの入れ替え）ときはクリアの曲、ダンジョンがあるときは /swap でダンジョンの曲', () => {
+    expect(sceneBgm('/swap', swapAfterBoss, null)).toBe('clear');
+    expect(sceneBgm('/battle', swapAfterBoss, null)).toBe('clear');
+    // とどめの一撃のあと、撃破の行が出るまで（戦闘の画面）は止めておく。入れ替え・クリアの画面ではクリアの曲
+    expect(sceneBgm('/battle', swapAfterBoss, null, false)).toBeNull();
+    expect(sceneBgm('/battle', cleared, null, false)).toBeNull();
+    expect(sceneBgm('/swap', swapAfterBoss, null, false)).toBe('clear');
+    expect(sceneBgm('/clear', cleared, null, false)).toBe('clear');
     expect(sceneBgm('/swap', swap, null)).toBe('dungeon');
   });
 });

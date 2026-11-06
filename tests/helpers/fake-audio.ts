@@ -49,6 +49,7 @@ export class FakeBufferSource extends FakeNode {
 export class FakeFilter extends FakeNode {
   type = 'lowpass';
   frequency = new FakeParam();
+  Q = new FakeParam();
 }
 
 export interface FakeAudioState {
