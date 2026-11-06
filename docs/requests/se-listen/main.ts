@@ -1,6 +1,6 @@
 // 効果音の試聴ページ：いまの音（ビープ音風）と、FM 音源風の案を聴き比べる
 import { audioContext, playSfx, stopSfx, type SfxName } from '../../../src/audio/sound.ts';
-import { patchOf, playFm, stopFm, variantDuration, type Variant } from './sfx-fm';
+import { FRESH, freshDuration, patchOf, playFm, playFresh, stopFm, variantDuration, type Variant } from './sfx-fm';
 
 const ITEMS: { name: SfxName; label: string; when: string }[] = [
   { name: 'encounter', label: '遭遇', when: 'ダンジョンで敵に出会ったとき' },
@@ -41,11 +41,32 @@ for (const it of ITEMS) {
     <p class="meta">暗い案の音色：${patchOf(it.name, 'dark').name}${it.name === 'bossAppear' ? '（音の並びはもともと低いので、いまのまま）' : ''}</p>`;
   const row = document.createElement('div');
   row.className = 'row';
+  // まったく違う音（遭遇・ボス撃破・ゲームクリアだけ）
+  (FRESH[it.name] ?? []).forEach((f, i) => {
+    freshDuration(it.name, i);
+    const p = document.createElement('p');
+    p.className = 'meta fresh';
+    p.innerHTML = `<b>${f.title}</b>：${f.desc}`;
+    li.append(p);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'main';
+    b.textContent = `▶ ${f.title.split('：')[0]}`;
+    b.addEventListener('click', () => {
+      const ac = unlock();
+      if (!ac) return;
+      stopSfx();
+      playFresh(ac, it.name, i);
+      status.textContent = `${f.title}：${it.label}`;
+    });
+    row.append(b);
+  });
   for (const { v, label, cls } of VARIANTS) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = cls;
-    b.textContent = label;
+    b.className = FRESH[it.name] ? 'sub' : cls;
+    // 新しい音のある 3 つは、暗い案を小さいボタンにして名前を短く
+    b.textContent = FRESH[it.name] ? (v === 'dark' ? '暗い案' : label) : label;
     b.addEventListener('click', () => {
       const ac = unlock();
       if (!ac) return;

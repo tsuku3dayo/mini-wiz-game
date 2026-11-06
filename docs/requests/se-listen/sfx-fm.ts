@@ -105,12 +105,19 @@ function stopAll(): void {
 }
 
 /** FM の 1 音。end（並びの終わり）を過ぎて鳴らさない */
-function tone(ac: AudioContext, out: AudioNode, f: number, t: number, len: number, end: number, p: SePatch, last: boolean): void {
+function tone(ac: AudioContext, out: AudioNode, f: number, t: number, len: number, end: number, p: SePatch, last: boolean, glide = 1): void {
   const stop = Math.min(end, t + len + p.tail);
   const carrier = ac.createOscillator();
   carrier.frequency.value = f;
   const mod = ac.createOscillator();
   mod.frequency.value = f * p.ratio;
+  if (glide !== 1) {
+    // 音の高さを、音の長さのあいだに glide 倍まで動かす（沈む・うなる）
+    carrier.frequency.setValueAtTime(f, t);
+    carrier.frequency.exponentialRampToValueAtTime(f * glide, t + len);
+    mod.frequency.setValueAtTime(f * p.ratio, t);
+    mod.frequency.exponentialRampToValueAtTime(f * p.ratio * glide, t + len);
+  }
   const mg = ac.createGain();
   const dev = p.index * f * p.ratio;
   mg.gain.setValueAtTime(dev, t);
@@ -184,4 +191,122 @@ export function variantDuration(name: SfxName, variant: Variant): number {
 
 export function stopFm(): void {
   stopAll();
+}
+
+// ===================== まったく違う効果音（遭遇・ボス撃破・ゲームクリア）=====================
+// 2026-11-06 のオーナーの希望「暗い音色で、まったく違う SE を」。音の並びから作り直す。
+// 長さは、いまと同じ（ゲームの間を変えないため）。和音（同時に鳴る音）と、高さが動く音（glide）も使う
+
+/** 1 つの音（または和音）。at・len は ms */
+export interface SeEvent { f: readonly number[]; at: number; len: number; patch: SePatch; glide?: number }
+export interface FreshSe { title: string; desc: string; events: readonly SeEvent[] }
+
+const DARK = {
+  growl: se('うなる低い金管', { ratio: 1, index: 1.8, sustain: 0.7, idecay: 0.4, attack: 0.03, adecay: 0.8, asus: 0.8, tail: 0, lowpass: 700, vol: 0.22 }),
+  bell: se('暗い鐘', { ratio: 3, index: 0.8, sustain: 0, idecay: 0.15, attack: 0.003, adecay: 0.45, asus: 0, tail: 0, lowpass: 1500, vol: 0.22 }),
+  thump: se('こもった太鼓', { ratio: 1, index: 2, sustain: 0, idecay: 0.02, attack: 0.002, adecay: 0.08, asus: 0, tail: 0, lowpass: 400, vol: 0.55 }),
+  organ: se('暗いオルガン', { ratio: 2, index: 0.5, sustain: 0.9, idecay: 1, attack: 0.15, adecay: 2, asus: 0.9, tail: 0, lowpass: 1100, vol: 0.11 }),
+  choir: se('低い声', { ratio: 1, index: 0.6, sustain: 0.8, idecay: 0.6, attack: 0.08, adecay: 1.2, asus: 0.85, tail: 0, lowpass: 900, vol: 0.12 }),
+};
+const ev = (f: number | readonly number[], at: number, len: number, patch: SePatch, glide?: number): SeEvent => ({ f: typeof f === 'number' ? [f] : f, at, len, patch, glide });
+
+// 音の高さ（Hz）
+const A1 = 55, C2 = 65.4, G2 = 98, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, C4 = 261.6, Eb4 = 311.1, E4 = 329.6, Ab4 = 415.3, A4 = 440;
+
+export const FRESH: Readonly<Partial<Record<SfxName, readonly FreshSe[]>>> = {
+  // 680 ms
+  encounter: [
+    {
+      title: '新しい音 1：不意打ちの一撃',
+      desc: '低い太鼓と、ぶつかり合う低い金管の和音が同時に鳴り、上で暗い鐘が 2 回、半音下がって鳴る',
+      events: [
+        ev(A1, 0, 160, DARK.thump, 0.7),
+        ev([A2, Bb2, E3], 0, 680, DARK.growl),
+        ev(A4, 120, 220, DARK.bell),
+        ev(Ab4, 340, 340, DARK.bell),
+      ],
+    },
+    {
+      title: '新しい音 2：鼓動',
+      desc: '心臓の鼓動のような低い太鼓が 2 回。そのあと不安な和音（増 4 度）が、うなりながら少し沈む',
+      events: [
+        ev(A1, 0, 150, DARK.thump, 0.7),
+        ev(A1, 180, 150, DARK.thump, 0.7),
+        ev([A2, Eb3], 380, 300, DARK.growl, 0.94),
+      ],
+    },
+  ],
+  // 500 ms
+  bossDefeat: [
+    {
+      title: '新しい音 1：崩れ落ちる',
+      desc: '不安な和音（増 4 度）が、半分の高さまで沈んでいく。下で太鼓が鳴る',
+      events: [
+        ev(A1, 0, 300, DARK.thump, 0.5),
+        ev([G3, 277.2], 0, 500, DARK.growl, 0.5),
+      ],
+    },
+    {
+      title: '新しい音 2：低い鐘の一打',
+      desc: '低い鐘を 1 回、深く打つ（ハ短調の重い和音）。余韻が長く残る',
+      events: [
+        ev(C2, 0, 220, DARK.thump, 0.8),
+        ev([C3, G3, Eb4], 0, 500, DARK.bell),
+      ],
+    },
+  ],
+  // 2350 ms（ゲームでは演出の 1500 ms で止まる。1.5 秒で聞き終わるように作る）
+  clear: [
+    {
+      title: '新しい音 1：鎮魂の和音',
+      desc: '暗い短調の和音（ハ短調）が静かに広がり、最後に明るい和音（ハ長調）へ変わって、安らかに終わる',
+      events: [
+        ev([C3, G3, C4, Eb4], 0, 800, DARK.organ),
+        ev([C3, G3], 0, 800, DARK.choir),
+        ev([C3, G3, C4, E4], 800, 1550, DARK.organ),
+        ev([C3, E3, G3], 800, 1550, DARK.choir),
+        ev(C2, 0, 2350, DARK.choir),
+      ],
+    },
+    {
+      title: '新しい音 2：遠い鐘',
+      desc: '遠くで暗い鐘が 3 回鳴る（ド・ソ・ド）。最後の鐘は低い声と重なって長く残る',
+      events: [
+        ev([C3, C4], 0, 450, DARK.bell),
+        ev([G2, G3], 450, 450, DARK.bell),
+        ev([C3, Eb3, C4], 900, 1450, DARK.bell),
+        ev([C3, G3], 900, 1450, DARK.choir),
+      ],
+    },
+  ],
+};
+
+/** まったく違う効果音の長さ（ms）。いまと同じでなければ試聴ページを作るときに止める */
+export function freshDuration(name: SfxName, i: number): number {
+  const s = FRESH[name]![i];
+  const ms = Math.max(...s.events.map((e) => e.at + e.len));
+  if (ms !== sfxDuration(name)) throw new Error(`${name} ${s.title}: ${ms}ms（いまは ${sfxDuration(name)}ms）`);
+  return ms;
+}
+
+export function playFresh(ac: AudioContext, name: SfxName, i: number): void {
+  stopAll();
+  const s = FRESH[name]![i];
+  const start = ac.currentTime + 0.02;
+  const end = start + freshDuration(name, i) / 1000;
+  for (const e of s.events) {
+    // 音色ごとにローパスを通す
+    let out: AudioNode = ac.destination;
+    if (e.patch.lowpass > 0) {
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = e.patch.lowpass;
+      lp.Q.value = 0.7;
+      lp.connect(ac.destination);
+      out = lp;
+    }
+    const vol = e.f.length > 1 ? 1 / Math.sqrt(e.f.length) : 1; // 和音は 1 音あたり小さく
+    const p = { ...e.patch, vol: e.patch.vol * vol };
+    for (const f of e.f) tone(ac, out, f, start + e.at / 1000, e.len / 1000, end, p, false, e.glide ?? 1);
+  }
 }
