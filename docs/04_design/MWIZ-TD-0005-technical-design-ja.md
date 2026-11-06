@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.7
+version: 1.8
 updated: 2026-11-06
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -24,13 +24,13 @@ verified: null
 | モジュール | 受け持ち | つなぎ方 |
 | --- | --- | --- |
 | `sound-setting.ts` | オン／オフ（`mini-wiz-game-sound`、初期オフ）、`toggle()`、`subscribe`、`soundLabel`。保存には文字列 `'on'`／`'off'` をそのまま書く（Web Storage の `getItem`・`setItem` を受け取る。ゲームの保存の `KeyValueStore` は JSON にするので使わない。v1.4） | タイトルのメニュー・GameMenu の「おと」が呼ぶ（画面には `ScreenContext.sound` で渡す）。オンにした瞬間に `toggle` の音（`main.ts` が `onTurnOn` でつなぐ） |
-| `sound.ts` | 効果音 8 種の合成（仕様書 §25）、`playSfx(name)`・`stopSfx()`・`sfxRemainingSec()`・`onSfx`（仕様書 §25.3 の名前。v1.3 は `play`・`stop` と書いていた）、自動再生の制限への対処（入力のたびに `resume`）。`sfx(name, { muted })` が `app:sound` イベントを出し、muted でなければ `playSfx` を呼ぶ（v1.4） | `main.ts` が、`ui/command.ts` の `onEncounter`（遭遇）と `ui/message-queue.ts` の `onEffectStart`・`onEffectEnd`（演出の開始・終了）に `sfx`・`stopSfx` をつなぐ |
+| `sound.ts` | 効果音 8 種の合成（仕様書 §25。v1.8 から FM 音源風：出来事（音・和音、頭・長さ、音色、高さの動き）の並びを、音色ごとのローパスを通して鳴らす。長さは `SFX_MS`）、`playSfx(name)`・`stopSfx()`・`sfxRemainingSec()`・`onSfx`（仕様書 §25.3 の名前。v1.3 は `play`・`stop` と書いていた）、自動再生の制限への対処（入力のたびに `resume`）。`sfx(name, { muted })` が `app:sound` イベントを出し、muted でなければ `playSfx` を呼ぶ（v1.4） | `main.ts` が、`ui/command.ts` の `onEncounter`（遭遇）と `ui/message-queue.ts` の `onEffectStart`・`onEffectEnd`（演出の開始・終了）に `sfx`・`stopSfx` をつなぐ |
 | `bgm.ts` | FM 合成の再生エンジン（仕様書 §26.2〜§26.6）、ダッキング・フェード | `bgm-director.ts` だけが呼ぶ |
 | `bgm-director.ts` | 場面（パス・状態・演出）から曲を決め、変わったときだけ替える（仕様書 §26.7）。替えたら `app:bgm` イベント | ストア・ルーター・キュー・音の設定を購読する。LocationGuard の外に置き、エラーの画面でも止めない |
 
 - 曲の選び方は `logic/bgm-scene.ts`、記譜と曲データは `logic/bgm-notation.ts`・`logic/bgm-tracks.ts`（純粋関数とデータ）。
 - どの関数も例外を外に出さない（Web Audio がなくても遊べる）。
-- テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の波形・周波数・長さ・順を確かめる（仕様書 §26.11）。実際の聞こえ方は手動テスト。
+- テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の周波数・頭・止める時刻・音色（変調の深さ・ローパス）を確かめる（仕様書 §26.11。v1.8）。曲は 6 曲（v1.8）で、5/8 拍子（1 小節 2.5 拍）・5/4 拍子も同じ仕組みで鳴らす（1 周の秒 = 小節数 × 1 小節の拍数 × 60 ÷ bpm）。実際の聞こえ方は手動テスト。
 
 ## 2. PWA（`src/platform/pwa.ts`・`install.ts`・`public/boot.js`）
 
