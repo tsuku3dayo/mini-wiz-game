@@ -6,8 +6,8 @@ status: stable
 version: 1.0
 updated: 2026-10-26
 sources:
-  - MWIZ-PB-0001（v1.3）§4.2、§5、§9
-  - docs/specification-ja.md (v1.4) §11.3、§14、§18.1
+  - MWIZ-PB-0001（v1.4）§4.2、§5、§9
+  - docs/specification-ja.md (v1.5) §11.3、§14、§18.1
   - docs/requests/2026-10-26-serverless-pwa.md §4（オーナーの回答）
 verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---

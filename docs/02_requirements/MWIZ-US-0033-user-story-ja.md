@@ -3,12 +3,12 @@ id: MWIZ-US-0033
 type: User Story
 title: 戦闘で敵の絵を見る
 status: stable
-version: 1.2
+version: 1.3
 updated: 2026-11-06
 sources:
-  - MWIZ-EP-0008（v1.2）
-  - docs/specification-ja.md (v1.4) §13、§16.5
-verified: { by: "tsuku3dayo", at: "2026-11-06T10:05:31+09:00" }
+  - MWIZ-EP-0008（v1.3）
+  - docs/specification-ja.md (v1.5) §13、§16.5
+verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 ---
 
 # US-0033 戦闘で敵の絵を見る
@@ -26,7 +26,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T10:05:31+09:00" }
 - [ ] どの画面の大きさでも 256px で出て、ぼやけない（§16.5）
 - [ ] 画像の alt は敵の名前（§16.5）
 - [ ] 画像が読めないとき、枠ごと消えて名前だけが出る（エラーにならない）（§16.5）
-- [ ] 6 枚とも 128×128・背景透過で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る（§16.5）
+- [ ] 6 枚とも 256×256・背景透過で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る（§16.5）
 
 ## 確かめ方
 

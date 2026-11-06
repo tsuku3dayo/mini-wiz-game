@@ -3,14 +3,14 @@ id: MWIZ-TS-0001
 type: Technology Stack
 title: WIZ 技術スタック
 status: stable
-version: 1.2
+version: 1.3
 updated: 2026-11-06
 sources:
-  - MWIZ-PB-0001（v1.3）
+  - MWIZ-PB-0001（v1.4）
   - MWIZ-SA-0001（v1.0）
-  - docs/specification-ja.md (v1.4) §18、§19、§29、§30
+  - docs/specification-ja.md (v1.5) §18、§19、§29、§30
   - mini-blockbreaking-game package.json (v1.0.0)、doc/01_architecture/MBRK-TS-0001（v1.0）
-verified: { by: "tsuku3dayo", at: "2026-11-06T10:05:31+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 ---
 
 # 技術スタック（technology-stack）
@@ -31,7 +31,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T10:05:31+09:00" }
 | 効果音・BGM | Web Audio API（ブラウザ標準） | — | 音声ファイル・音のライブラリなし。[ADR-0008](MWIZ-ADR-0008-architecture-decision-ja.md) |
 | 保存 | localStorage（ブラウザ標準）、`navigator.storage.persist()` | — | [ADR-0006](MWIZ-ADR-0006-architecture-decision-ja.md) |
 | フォント | 端末のフォント | — | 同梱しない。[ADR-0010](MWIZ-ADR-0010-architecture-decision-ja.md) |
-| 画像 | 敵の絵 6 枚（PNG、128×128。オーナーが用意した。v1.4 で v2 に差し替え）、アイコン（スクリプトで作る） | — | 仕様書 §13・§30.5 |
+| 画像 | 敵の絵 6 枚（PNG、256×256。オーナーが用意した。v1.5 で v2 に差し替え）、アイコン（スクリプトで作る） | — | 仕様書 §13・§30.5 |
 
 **実行時の依存はない**（`dependencies` は空）。外部のライブラリ（UI フレームワーク・状態管理・ルーター・ゲームエンジン・3D・音・アニメーション・乱数・Web フォント）は使わない。
 
