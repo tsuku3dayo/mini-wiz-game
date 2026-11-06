@@ -1,6 +1,6 @@
 // 戦闘（#/battle。仕様書 §11.5「戦闘」、GUI-0005 §1、TD-0004 §5）
 // 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）
-// 敵の絵（256×256）は名前の上。敵の種類が変わったら作り直す（仕様書 §13.2）
+// 敵の絵（128×128 を 2 倍の 256px）は名前の上。敵の種類が変わったら作り直す（仕様書 §13.2）
 import type { BattleView } from '../../api/types';
 import { commandMenu, type CommandMenu, type MenuItem } from '../components/command-menu';
 import { enemyImage } from '../components/enemy-image';
