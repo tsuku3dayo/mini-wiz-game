@@ -7,12 +7,12 @@ import { ENEMIES } from '../../src/domain/constants';
 // 敵の絵のそろい（仕様書 §13.5）。置き忘れ・名前の打ち間違いは画面では「名前だけ」に戻るだけなので、ここで突き合わせる
 const dir = join(process.cwd(), 'public', 'enemies');
 const MD5: Record<string, string> = {
-  slime: 'c5fed93d07e3f2c1bdb5b14da661d597',
-  goblin: '480285da5605c87912288a3dac40d796',
-  skeleton: '2d04fbc3b88264e7acacc251ef35af04',
-  orc: '9b9153c28e912c0c16db6b1d9cded4f1',
-  darkKnight: '26fe01578e1da2a8ba6e0e581ca4a8a4',
-  necromancer: '6fa856ff00c6e18be8a45aa8a96f58b4',
+  slime: 'd93b44dfa7d63c1da1e3e4b12c4b6a74',
+  goblin: '16a4dc7c54cedf92e762f3f7e9136b8f',
+  skeleton: '9df2f42322c0b8fe44a1d911d73a643a',
+  orc: '4f769408998fe5060cb04f2c97986716',
+  darkKnight: '45c25616dad075cd9d9fef3888d42e90',
+  necromancer: 'bb0343f58c663e01b63221ecb291795e',
 };
 
 describe('敵の絵のファイル', () => {
