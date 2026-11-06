@@ -20,7 +20,7 @@
   .row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   button { min-height: 48px; padding: 0 18px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--line); background: #1b1925; color: var(--fg); cursor: pointer; }
   button.main { border-color: var(--gold); color: var(--gold); flex: 1 1 100%; }
-  button.sub { flex: 1 1 40%; }
+  button.sub { flex: 1 1 28%; padding: 0 10px; font-size: 0.95rem; }
   button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   .bar { position: fixed; left: 0; right: 0; bottom: 0; background: #12111a; border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
   .bar-in { max-width: 640px; margin: 0 auto; }
@@ -32,7 +32,8 @@
   <h1>WIZミニ 効果音の試聴（FM 音源風の案）</h1>
   <ul class="lead">
     <li>いまの効果音（ビープ音風）と同じ音の並び・同じ長さで、音色だけを FM 音源風にした案です。</li>
-    <li>「湿った案」は、最初の案のトゲトゲした感じを減らしたものです（変調を浅く・高い音を削る・立ち上がりを少しやわらかく）。「最初の案」「いまの音」と聴き比べられます。</li>
+    <li>「暗い案（短調・低め）」は、音色を暗くし（高い音を大きく削る・ゆっくり沈む）、明るい和音を短調にして、高い音を 1 オクターブ下げたものです。</li>
+    <li>「音色だけ」は、音の並びはいまのまま、音色だけを暗くしたものです。「湿った案」「いまの音」とも聴き比べられます。</li>
     <li>長さを変えていないのは、ゲームの間（BGM の音量を下げる長さ、効果音のあとに曲が始まるまで、演出の長さ）が効果音の長さで決まっているためです。</li>
     <li>端末の音量を上げてください。iPhone は、消音スイッチ（マナーモード）がオンだと鳴らないことがあります。</li>
   </ul>

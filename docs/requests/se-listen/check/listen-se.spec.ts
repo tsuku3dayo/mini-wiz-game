@@ -28,7 +28,7 @@ test('効果音の試聴ページ：エラーなし・8 種・FM の音はいま
   for (let i = 0; i < 8; i++) {
     const secText = await cards.nth(i).locator('.meta').first().textContent();
     const sec = Number(/長さ ([\d.]+) 秒/.exec(secText ?? '')![1]);
-    for (const [label, button] of [['湿った案', cards.nth(i).locator('button.main')], ['最初の案', cards.nth(i).locator('button.sub').nth(0)]] as const) {
+    for (const [label, button] of [['暗い案', cards.nth(i).locator('button.main')], ['暗い音色だけ', cards.nth(i).locator('button.sub').nth(0)], ['湿った案', cards.nth(i).locator('button.sub').nth(1)]] as const) {
       await page.evaluate(() => { (window as unknown as { __log: unknown[] }).__log = []; });
       await button.click();
       await expect(page.locator('#status')).toContainText(label);
@@ -39,7 +39,7 @@ test('効果音の試聴ページ：エラーなし・8 種・FM の音はいま
       console.log(i, label, `音 ${log.length} 個、${(last - first).toFixed(3)} 秒（いまの長さ ${sec} 秒）`);
       expect(last - first).toBeLessThanOrEqual(sec + 0.001);
     }
-    await cards.nth(i).locator('button.sub').nth(1).click();
+    await cards.nth(i).locator('button.sub').nth(2).click();
     await expect(page.locator('#status')).toContainText('いまの音');
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
