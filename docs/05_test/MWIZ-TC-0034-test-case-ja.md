@@ -37,7 +37,7 @@ verified: null
 | TC-0034-11 | 5 | 音がオンで通常の敵に遭遇すると、`app:sound`（`encounter`）のあとに `app:bgm`（`battle`）が出る。音がオフの状態でタイトルを開いて「おと：オフ」を選ぶと、`app:sound`（`toggle`）のあとに `app:bgm`（`title`）が出る | E2E | `e2e/sound.spec.ts` |
 | TC-0034-12 | 6 | `sceneBgm` は `active.effect` が `bossAppear` または `bossDefeat` のとき、パスによらず `null` | 単体 | `tests/logic/bgm-scene.test.ts` |
 | TC-0034-13 | 6 | 音がオンでボスのマスに入ると、bossAppear の演出が立ったときに `app:bgm` `{ name: null }`、演出の 1200ms が過ぎたときに `{ name: 'boss' }`。演出中にメッセージ欄をクリックしたときは、その場で `{ name: 'boss' }` | E2E | `e2e/sound.spec.ts` |
-| TC-0034-14 | 7 | `sceneBgm` が、`location` が `SWAP` で `dungeon === null` のとき `'clear'`（v1.1）、`SWAP` で `dungeon` があるとき（`'/swap'`）`'dungeon'` | 単体 | `tests/logic/bgm-scene.test.ts` |
+| TC-0034-14 | 7 | `sceneBgm` が、`location` が `SWAP` で `dungeon === null` のとき `'clear'`（v1.1。ただし戦闘の画面 `'/battle'` で `defeatShown` が false＝とどめの一撃のあと撃破の行がまだのときは `null`。`'/swap'`・`'/clear'` では `defeatShown` によらず `'clear'`）、`SWAP` で `dungeon` があるとき（`'/swap'`）`'dungeon'` | 単体 | `tests/logic/bgm-scene.test.ts` |
 | TC-0034-15 | 7 | ボスを倒すと bossDefeat の演出で `app:bgm` `{ name: null }` が出て、演出が終わると `{ name: 'clear' }`。そのあと撃破のメッセージ・クリア画面のあいだ次の `app:bgm` が出ない。所持品 50 個でボスを倒したときの入れ替え画面でも `clear` のまま出ない。入れ替え画面で再読み込みすると `{ name: 'clear' }`。クリア画面の「宿屋へ」で `{ name: 'inn' }`（v1.1） | E2E | `e2e/sound.spec.ts` |
 | TC-0034-16 | 8 | 通常の敵に勝つと、勝利のメッセージを出しているあいだ（`body[data-screen]` が `battle`）は `app:bgm` が出ず、ダンジョン画面に移ったときに `{ name: 'dungeon' }`。倒れたときは宿屋に移ったときに `{ name: 'inn' }` | E2E | `e2e/sound.spec.ts` |
 | TC-0034-17 | 9 | 効果音を鳴らすと（`duckBgm(sec)`）、`bus.gain` に `setTargetAtTime(0.0105, 今, 0.02)` と `setTargetAtTime(0.035, 今 + sec, 0.02)` が予約される。前の効果音の途中で次が鳴ったら、遅いほうの終わりまで下げたまま。`duckBgm(0)`（止めた）ではすぐ 0.035 に戻す | 単体 | `tests/audio/bgm.test.ts` |
