@@ -6,8 +6,8 @@ status: stable
 version: 1.3
 updated: 2026-11-06
 sources:
-  - MWIZ-EP-0008（v1.3）
-  - docs/specification-ja.md (v1.5) §13、§16.5
+  - MWIZ-EP-0008（v1.4）
+  - docs/specification-ja.md (v1.6) §13、§16.5
 verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 ---
 
