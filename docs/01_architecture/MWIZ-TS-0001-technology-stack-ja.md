@@ -2,7 +2,7 @@
 id: MWIZ-TS-0001
 type: Technology Stack
 title: WIZ 技術スタック
-status: review
+status: stable
 version: 1.3
 updated: 2026-11-06
 sources:
@@ -10,7 +10,7 @@ sources:
   - MWIZ-SA-0001（v1.0）
   - docs/specification-ja.md (v1.5) §18、§19、§29、§30
   - mini-blockbreaking-game package.json (v1.0.0)、doc/01_architecture/MBRK-TS-0001（v1.0）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 ---
 
 # 技術スタック（technology-stack）
