@@ -1,6 +1,6 @@
 // 効果音の試聴ページ：いまの音（ビープ音風）と、FM 音源風の案を聴き比べる
 import { audioContext, playSfx, sfxDuration, stopSfx, type SfxName } from '../../../src/audio/sound.ts';
-import { playFm, SE_PATCH, stopFm } from './sfx-fm';
+import { patchOf, playFm, stopFm, type Variant } from './sfx-fm';
 
 const ITEMS: { name: SfxName; label: string; when: string }[] = [
   { name: 'encounter', label: '遭遇', when: 'ダンジョンで敵に出会ったとき' },
@@ -28,20 +28,26 @@ for (const it of ITEMS) {
   li.innerHTML = `
     <p class="scene">${it.when}</p>
     <h2>${it.label}</h2>
-    <p class="meta">長さ ${(sfxDuration(it.name) / 1000).toFixed(2)} 秒（いまと同じ）・FM の音色：${SE_PATCH[it.name].name}</p>`;
+    <p class="meta">長さ ${(sfxDuration(it.name) / 1000).toFixed(2)} 秒（いまと同じ）</p>
+    <p class="meta">湿った案：${patchOf(it.name, 'wet').name}／最初の案：${patchOf(it.name, 'first').name}</p>`;
   const row = document.createElement('div');
   row.className = 'row';
-  const fm = document.createElement('button');
-  fm.type = 'button';
-  fm.className = 'main';
-  fm.textContent = '▶ FM 音源風';
-  fm.addEventListener('click', () => {
-    const ac = unlock();
-    if (!ac) return;
-    stopSfx();
-    playFm(ac, it.name);
-    status.textContent = `FM 音源風：${it.label}`;
-  });
+  const fmButton = (variant: Variant, label: string, cls: string) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      const ac = unlock();
+      if (!ac) return;
+      stopSfx();
+      playFm(ac, it.name, variant);
+      status.textContent = `${variant === 'wet' ? '湿った案' : '最初の案'}：${it.label}`;
+    });
+    return b;
+  };
+  const fm = fmButton('wet', '▶ 湿った案', 'main');
+  const first = fmButton('first', '最初の案', 'sub');
   const old = document.createElement('button');
   old.type = 'button';
   old.className = 'sub';
@@ -52,7 +58,7 @@ for (const it of ITEMS) {
     playSfx(it.name);
     status.textContent = `いまの音（ビープ音風）：${it.label}`;
   });
-  row.append(fm, old);
+  row.append(fm, first, old);
   li.append(row);
   list.append(li);
 }
