@@ -210,8 +210,20 @@ const DARK = {
 };
 const ev = (f: number | readonly number[], at: number, len: number, patch: SePatch, glide?: number): SeEvent => ({ f: typeof f === 'number' ? [f] : f, at, len, patch, glide });
 
+/** ドロップの分散和音：3 音 × times 回（1 音 60ms）。lastMs があれば最後に 3 音目を長く鳴らす。鐘は次の音に重ねて少し響かせる（並びの終わりは越えない） */
+function sparkleEvents(notes: readonly number[], times: number, lastMs: number): SeEvent[] {
+  const out: SeEvent[] = [];
+  const total = times * notes.length * 60 + lastMs;
+  for (let k = 0; k < times * notes.length; k++) {
+    const at = k * 60;
+    out.push(ev(notes[k % notes.length], at, Math.min(180, total - at), DARK.bell));
+  }
+  if (lastMs > 0) out.push(ev(notes[notes.length - 1], total - lastMs, lastMs, DARK.bell));
+  return out;
+}
+
 // 音の高さ（Hz）
-const A1 = 55, C2 = 65.4, G2 = 98, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, Gs3 = 207.7, A3 = 220, B3 = 246.9, C4 = 261.6, Eb4 = 311.1, E4 = 329.6, Ab4 = 415.3, A4 = 440;
+const A1 = 55, C2 = 65.4, G2 = 98, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, Gs3 = 207.7, A3 = 220, B3 = 246.9, C4 = 261.6, Eb4 = 311.1, E4 = 329.6, G4 = 392, Ab4 = 415.3, A4 = 440, C5 = 523.3;
 
 export const FRESH: Readonly<Partial<Record<SfxName, readonly FreshSe[]>>> = {
   // 680 ms
@@ -286,6 +298,40 @@ export const FRESH: Readonly<Partial<Record<SfxName, readonly FreshSe[]>>> = {
         ev([A3, Eb4], 0, 680, DARK.choir, 0.5),
       ],
     },
+    // 5b の派生（2026-11-06 のオーナーの希望）
+    {
+      title: '新しい音 5c：もっと低いため息',
+      desc: '5b を 1 オクターブ低くした。重く、地の底から聞こえるため息',
+      events: [
+        ev([A2, Eb3], 0, 680, DARK.choir, 0.5),
+      ],
+    },
+    {
+      title: '新しい音 5d：重なるため息',
+      desc: '5b の和音に 1 音足して（減 3 和音）、さらに不安に。下で暗いオルガンが低く支える',
+      events: [
+        ev([A3, C4, Eb4], 0, 680, DARK.choir, 0.55),
+        ev(A2, 0, 680, DARK.organ),
+      ],
+    },
+    {
+      title: '新しい音 5e：息を吸って、吐く',
+      desc: '和音が一瞬だけ上がり（息をのむ）、そのあと長く下がっていく（ため息）',
+      events: [
+        ev([A3, Eb4], 0, 220, DARK.choir, 1.12),
+        ev([B3, 349.2], 220, 460, DARK.choir, 0.5),
+      ],
+    },
+  ],
+  // 360 ms：低い音（2026-11-06 のオーナーの希望）。いまの並び（3 音の分散和音 × 2）を、短調にして低くした
+  rareDrop: [
+    { title: '低い音 1：2 オクターブ下', desc: '暗い鐘で、ミ♭・ソ・ドの分散和音を 2 回（いまより 2 オクターブ低い）', events: sparkleEvents([Eb4, G4, C5], 2, 0) },
+    { title: '低い音 2：3 オクターブ下', desc: '同じ並びを、さらに 1 オクターブ低く（いまより 3 オクターブ低い）', events: sparkleEvents([Eb3, G3, C4], 2, 0) },
+  ],
+  // 1020 ms：分散和音 × 4 と、最後の長い音
+  rareDropLG: [
+    { title: '低い音 1：2 オクターブ下', desc: '暗い鐘で、ミ♭・ソ・ドの分散和音を 4 回、最後に長いドの音（いまより 2 オクターブ低い）', events: sparkleEvents([Eb4, G4, C5], 4, 300) },
+    { title: '低い音 2：3 オクターブ下', desc: '同じ並びを、さらに 1 オクターブ低く（いまより 3 オクターブ低い）', events: sparkleEvents([Eb3, G3, C4], 4, 300) },
   ],
   // 500 ms
   bossDefeat: [

@@ -35,7 +35,7 @@ test('効果音の試聴ページ：エラーなし・8 種・どのボタンの
       const label = ((await buttons.nth(k).textContent()) ?? '').replace('▶ ', '');
       await page.evaluate(() => { (window as unknown as { __log: unknown[] }).__log = []; });
       await buttons.nth(k).click();
-      if (label.startsWith('新しい音')) fresh++;
+      if (label.startsWith('新しい音') || label.startsWith('低い音')) fresh++;
       if (label === 'いまの音') {
         await expect(page.locator('#status')).toContainText('いまの音');
         continue;
@@ -48,7 +48,7 @@ test('効果音の試聴ページ：エラーなし・8 種・どのボタンの
       expect(last - first).toBeLessThanOrEqual(sec + 0.001);
     }
   }
-  expect(fresh).toBe(12);
+  expect(fresh).toBe(19);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
   if (out) {
     await page.evaluate(() => window.scrollTo(0, 0));
