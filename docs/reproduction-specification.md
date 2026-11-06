@@ -1,6 +1,6 @@
 # WIZ 再現開発仕様書
 
-- 版：アプリ 1.0.0 の再現開発仕様書（2026-11-06）。第 1 部は仕様書 `docs/specification-ja.md` v1.4 と同じ。第 2 部は v1.2 を元に、main の実装に合わせて直した（v1.4 のタイトル画像と敵の絵の v2 への差し替えまで）
+- 版：アプリ 1.0.0 の再現開発仕様書（2026-11-06）。第 1 部は仕様書 `docs/specification-ja.md` v1.5 と同じ。第 2 部は v1.2 を元に、main の実装に合わせて直した（v1.5 の敵の絵の 256×256 の v2 への差し替えまで）
 - 対象：「WIZ」（正式版 v1.0 ＋ Update4〜6。画面の版表示は `1.0`）を、サーバーなしの PWA として作り直すための仕様
 - 位置づけ：この 1 冊だけで作れるようにまとめた仕様書。ブラウザで遊ぶ 1 人用のダンジョン探索 RPG を、ブラウザだけで動くアプリ（インストール可・オフライン動作の PWA）として作り、GitHub Pages で公開する。スマートフォンの縦画面のタップで遊べ、PC のキーボード・マウスでも遊べる。構成は `mini-blockbreaking-game` と同じ
 
@@ -31,6 +31,8 @@
 | 再現 1.0.0 → v1.3 | 2026-11-05 | 第 1 部を仕様書 v1.3 に合わせた（タイトル画像・名前「WIZミニ」）。第 2 部の §19.2・§20.1・§29.4・§30.1 を実装に合わせた |
 | 1.4 | 2026-11-06 | タイトル画像と敵の絵 6 枚を、オーナーが用意した v2 の絵に差し替えた（§13）。タイトル画像は大きさ・形式が同じで、ドット絵の画風に描き直したもの（§13.6）。敵の絵は 128×128 になり、表示はいまと同じ 256px（2 倍に拡大し、ぼかさない。§13.2）。§1.2・§11.5・§12・§15.4・§15.5・§16.5・§20.1・§29.2・§32・付録 A.5 を合わせて直した。ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.4-images-v2.md`） |
 | 再現 1.0.0 → v1.4 | 2026-11-06 | 第 1 部を仕様書 v1.4 に合わせた（タイトル画像と敵の絵の v2 への差し替え）。第 2 部の §20.1・§29.2・§29.4・§32・付録 A.5 の敵の絵の大きさを実装に合わせた |
+| 1.5 | 2026-11-06 | 敵の絵 6 枚を、オーナーが用意した 256×256 の v2 の絵（v1.4 と同じ絵柄を細かく描いたもの）に差し替え、表示を 256px のまま拡大しない形に戻した（§13.1・§13.2・§13.3・§13.5）。§1.2・§11.5・§12・§15.4・§15.5・§16.5・§20.1・§29.2・§32・付録 A.5 を合わせて直した。タイトル画像（v1.4）・ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.5-enemy-images-256.md`） |
+| 再現 1.0.0 → v1.5 | 2026-11-06 | 第 1 部を仕様書 v1.5 に合わせた（敵の絵の 256×256 の v2 への差し替え）。第 2 部の §20.1・§29.2・§29.4・§32・付録 A.5 の敵の絵の大きさを実装に合わせた |
 
 ---
 
@@ -103,7 +105,7 @@
 | Update2（ハクスラ化） | 装備 32 種（4 部位 × 8 段階）、レアリティ 5 段階、ドロップ、所持品 50 個、付け替え・捨てる・入れ替え |
 | Update3（正式版 v1.0） | 周回、ボス撃破の経験値 1,000 とレジェンド装備、実績、ステータス画面、演出と効果音、ダークファンタジーの配色と二重線のウィンドウ |
 | Update4（操作性の改善） | 「もどる」を一番上に、カーソルは端で止まる、装備の強い順・弱い順、ダンジョンでのヒール、遭遇の音、ソロモンのゆびわの防御 |
-| Update5（敵の絵） | 戦闘画面に敵のドット絵（6 体、64×64。v1.2 で 256×256 の絵に、v1.4 で 128×128 の絵に替えた。§13） |
+| Update5（敵の絵） | 戦闘画面に敵のドット絵（6 体、64×64。v1.2 で 256×256 の絵に、v1.4 で 128×128 の絵に、v1.5 で 256×256 の v2 の絵に替えた。§13） |
 | Update6（BGM） | 場面ごとの FM 音源風 BGM（5 曲） |
 
 元の WIZ は、各フェーズの更新で保存データの形を古い版から読み込めるようにしていた（第 2 部「端末内保存」）。v1.1 は最初から最新の形で作り、古い版の読み込み（移行）の関数も同じように持つ（§21.4）。
@@ -1846,7 +1848,7 @@ TextInput：
 
 - GameFrame（画面名「戦闘」。狭い画面では見た目で隠す）。
 - 敵のウィンドウ（全幅、見出しなし。外の箱に `data-testid="enemy-window"`・`data-boss`）：
-  - 敵の絵（EnemyImage、敵の種類 `enemyKind` が変わったら作り直す）。中身は別章。置き方：中央、名前との間 0px。表示枠は **どの画面も 256×256px**（128×128 の絵を 2 倍。v1.4）。`enemies/{enemyKind}.png`（相対パス。§13.1）を `image-rendering: pixelated`、`alt` は敵の名前。読めなければ枠ごと消す。
+  - 敵の絵（EnemyImage、敵の種類 `enemyKind` が変わったら作り直す）。中身は別章。置き方：中央、名前との間 0px。表示枠は **どの画面も 256×256px**（絵の大きさのまま。v1.5）。`enemies/{enemyKind}.png`（相対パス。§13.1）を `image-rendering: pixelated`、`alt` は敵の名前。読めなければ枠ごと消す。
   - 敵の名前：h2（24px、行の高さ 1.1）の `<p>`、中央。ボス（`isBoss`）は error 色、それ以外は primary。敵の HP は出さない。
 - その下の並び（v1.2）：
   - 狭い画面：メッセージ欄（5 行。続けられないエラーなら ErrorPanel）→ StatusPanel(compact) → GameWindow「コマンド」の中に CommandMenu（label「戦闘」、`autoFocus`）。
@@ -2216,7 +2218,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 - 音はすべてブラウザ標準の Web Audio API でその場で合成する。**音声ファイル・音のライブラリは使わない**（効果音も BGM も）。
 - 音は飾り。音の機能がない・初期化に失敗した・途中で例外が出た、のどれでも、ゲームはそのまま動く（すべて `try/catch` で握りつぶす）。
-- 敵の絵は 128×128 の PNG を 6 枚、タイトル画像は 1080 × 720 の PNG を 1 枚、静的ファイルとして同梱する（§13。v1.1 は 64×64）。
+- 敵の絵は 256×256 の PNG を 6 枚、タイトル画像は 1080 × 720 の PNG を 1 枚、静的ファイルとして同梱する（§13。v1.1 は 64×64）。
 
 関係するファイル：
 
@@ -2360,15 +2362,15 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 敵の種類（`EnemyKind`） | 表示名（alt） | ファイル | バイト数 | MD5 | 出どころ（`docs/requests/monster/`） |
 | --- | --- | --- | --- | --- | --- |
-| `slime` | スライム | `slime.png` | 7,156 | `54fd821a1a65086167e7f944908ca45b` | オーナーが用意（`monster_slime_pixel128-v2.png`） |
-| `goblin` | ゴブリン | `goblin.png` | 8,248 | `5786c7f1224d409b42f33e59e59ca1fb` | オーナーが用意（`monster_goblin_pixel128-v2.png`） |
-| `skeleton` | スケルトン | `skeleton.png` | 11,886 | `5138ec2dd0fcf6aa1197729bc3ed50a0` | オーナーが用意（`monster_skeleton_pixel128-v2.png`） |
-| `orc` | オーク | `orc.png` | 14,074 | `26c758185fbac746728186b11635b4e2` | オーナーが用意（`monster_orc_lord_pixel128-v2.png`） |
-| `darkKnight` | ダークナイト | `darkKnight.png` | 11,490 | `a390b6283bc0014c4cb9b5dbaad5bbd0` | オーナーが用意（`monster_dark_knight_pixel128-v2.png`） |
-| `necromancer` | 暗黒のネクロマンサー | `necromancer.png` | 13,687 | `7d48073ecad4ec8cfe622cf759945193` | オーナーが用意（`monster_necromancer_pixel128-v2.png`） |
+| `slime` | スライム | `slime.png` | 23,347 | `c5fed93d07e3f2c1bdb5b14da661d597` | オーナーが用意（`monster_slime_pixel256-v2.png`） |
+| `goblin` | ゴブリン | `goblin.png` | 30,775 | `480285da5605c87912288a3dac40d796` | オーナーが用意（`monster_goblin_pixel256-v2.png`） |
+| `skeleton` | スケルトン | `skeleton.png` | 49,242 | `2d04fbc3b88264e7acacc251ef35af04` | オーナーが用意（`monster_skeleton_pixel256-v2.png`） |
+| `orc` | オーク | `orc.png` | 56,298 | `9b9153c28e912c0c16db6b1d9cded4f1` | オーナーが用意（`monster_orc_lord_pixel256-v2.png`） |
+| `darkKnight` | ダークナイト | `darkKnight.png` | 51,707 | `26fe01578e1da2a8ba6e0e581ca4a8a4` | オーナーが用意（`monster_dark_knight_pixel256-v2.png`） |
+| `necromancer` | 暗黒のネクロマンサー | `necromancer.png` | 58,473 | `6fa856ff00c6e18be8a45aa8a96f58b4` | オーナーが用意（`monster_necromancer_pixel256-v2.png`） |
 
-- v1.2 で、元の WIZ の 64×64 の絵から、オーナーが用意した 256×256 の絵に替えた（`docs/requests/2026-10-30-spec-1.2-screen-design.md`）。v1.4 で、オーナーが用意した 128×128 の v2 の絵に替えた（`docs/requests/2026-11-06-spec-1.4-images-v2.md`）。名前を付け替えて置く（名前を変えても MD5 は変わらない）。前の版の表（v1.1 は元の WIZ の 6 枚、v1.3 までは 256×256 の 6 枚の MD5）は、その版の仕様書（git の履歴）を見る。
-- 規格：PNG、**128×128**、ビット深度 8・RGBA（カラータイプ 6）、背景透過、半透明の点なし。置き場所は `public/enemies/<種類>.png`（Vite の public なので `enemies/<種類>.png` で配信）。URL は `enemyImageUrl(kind) = 'enemies/' + kind + '.png'`（相対パス。GitHub Pages のサブパスでも読める）。
+- v1.2 で、元の WIZ の 64×64 の絵から、オーナーが用意した 256×256 の絵に替えた（`docs/requests/2026-10-30-spec-1.2-screen-design.md`）。v1.4 で、オーナーが用意した 128×128 の v2 の絵に替えた（`docs/requests/2026-11-06-spec-1.4-images-v2.md`）。v1.5 で、同じ絵柄の 256×256 の v2 の絵に替えた（`docs/requests/2026-11-06-spec-1.5-enemy-images-256.md`）。名前を付け替えて置く（名前を変えても MD5 は変わらない）。前の版の表（v1.1 は元の WIZ の 6 枚、v1.3 までは 256×256 の 6 枚、v1.4 は 128×128 の v2 の 6 枚の MD5）は、その版の仕様書（git の履歴）を見る。
+- 規格：PNG、**256×256**、ビット深度 8・RGBA（カラータイプ 6）、背景透過、半透明の点なし。置き場所は `public/enemies/<種類>.png`（Vite の public なので `enemies/<種類>.png` で配信）。URL は `enemyImageUrl(kind) = 'enemies/' + kind + '.png'`（相対パス。GitHub Pages のサブパスでも読める）。
 - 事前キャッシュに入れ、通信なしでも出す（§30.1）。
 - v1.0 で「採用画像」として置いていた複製（`docs/requests/2026-10-14-enemy-images/`）は持たない。ファイルが正しいかは MD5 で確かめる（§13.5）。
 
@@ -2377,8 +2379,8 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | 項目 | 内容 |
 | --- | --- |
 | 場所 | 戦闘画面の敵のウィンドウ、敵の名前の上。中央寄せ、名前との間 0px |
-| 大きさ | **どの画面も 256×256px**（128×128 の絵をちょうど 2 倍に拡大する。v1.4。v1.2〜v1.3 は 256×256 の絵を拡大せずに出していた）。画面の大きさで切り替えない（v1.1 の `@media (min-width:600px) and (min-height:680px)` はなくした）。戦闘画面の高さは、狭い画面 714px（iPhone 11 の Safari の 715 に収まる）、1280 × 800 で 581px |
-| 描き方 | `img` を枠いっぱい（`width/height: 100%`、`display: block`）に置き、`image-rendering: pixelated`（2 倍に拡大するときと、画素の細かい画面でブラウザが拡大するときにぼかさない。絵の 1 点が 2 × 2 の点になる） |
+| 大きさ | **どの画面も 256×256px**（絵の大きさのまま、拡大しない。v1.2〜v1.3 と同じ。v1.4 だけは 128×128 の絵を 2 倍にしていた）。画面の大きさで切り替えない（v1.1 の `@media (min-width:600px) and (min-height:680px)` はなくした）。戦闘画面の高さは、狭い画面 714px（iPhone 11 の Safari の 715 に収まる）、1280 × 800 で 581px |
+| 描き方 | `img` を枠いっぱい（`width/height: 100%`、`display: block`）に置き、`image-rendering: pixelated`（画素の細かい画面でブラウザが拡大するときにぼかさない） |
 | alt | 敵の名前（`battle.enemyName`。例「暗黒のネクロマンサー」） |
 | 読み込めないとき | `error` イベントで表示枠ごと消し、敵の名前だけの表示に戻す。エラーは出さない。同じ部品の中では読み直さない |
 | 作り直し | 敵の種類（`battle.enemyKind`）が変わったら部品を作り直す（失敗の記録も消える） |
@@ -2388,11 +2390,11 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 敵 | 方法 |
 | --- | --- |
-| 6 体すべて | **オーナーが用意した 128×128 の PNG**（`docs/requests/monster/monster_*_pixel128-v2.png`。v1.4）を `public/enemies/<種類>.png` の名前で置く。中身は MD5 で確かめる。加工（減色など）はしない |
+| 6 体すべて | **オーナーが用意した 256×256 の PNG**（`docs/requests/monster/monster_*_pixel256-v2.png`。v1.5）を `public/enemies/<種類>.png` の名前で置く。中身は MD5 で確かめる。加工（減色など）はしない |
 
 - 利用条件（生成 AI の規約・素材のライセンス）はオーナーが確かめた（公開リポジトリ・公開 URL に置いてよい。2026-10-30。v2 の絵は 2026-11-06）。
 - 置くまでは、§13.2 の「読み込めないとき」のとおり、敵の名前だけで戦闘画面が動く。§13.5 のテストは、ファイルを置いた時点で入れる（06 作業計画で TASK にする）。
-- `docs/requests/monster/` のほかの絵（v1.3 まで使った `monster_*_pixel256.png`、途中の案の `monster_*_pixel128.png`・`monster_slime_pixel128_60colors.png`）と減色のスクリプト（`reduce-colors.mjs`）は、記録として残し、使わない。
+- `docs/requests/monster/` のほかの絵（v1.3 まで使った `monster_*_pixel256.png`、v1.4 で使った `monster_*_pixel128-v2.png`、途中の案の `monster_*_pixel128.png`・`monster_slime_pixel128_60colors.png`）と減色のスクリプト（`reduce-colors.mjs`）は、記録として残し、使わない。
 
 ### 13.4 スライムの生成手順（元の WIZ の記録）
 
@@ -2406,7 +2408,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | # | 確かめること |
 | --- | --- |
 | 1 | 各種類の `public/enemies/<種類>.png` がある |
-| 2 | PNG の署名（`89 50 4E 47 0D 0A 1A 0A`）、12〜15 バイトが `IHDR`、幅・高さ（16・20 バイト目からの 32 ビット BE）が 128・128 |
+| 2 | PNG の署名（`89 50 4E 47 0D 0A 1A 0A`）、12〜15 バイトが `IHDR`、幅・高さ（16・20 バイト目からの 32 ビット BE）が 256・256 |
 | 3 | MD5 が §13.1 の表と同じ（v1.0 の「採用画像とバイト単位で同じ」の代わり） |
 | 4 | `public/enemies/` の PNG が、種類の一覧とちょうど同じ（余分なファイルがない） |
 
@@ -2537,7 +2539,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | 記号の大きさ | 12px | FirstPersonView・AutoMap |
 | 操作の行の左列 | 8.5em | screens/dungeon |
 | もちもの一覧の高さ | calc(8 × 52px)＝416px | ItemList |
-| 敵の絵 | 256px（どの画面も。128×128 の絵を 2 倍） | EnemyImage |
+| 敵の絵 | 256px（どの画面も。絵の大きさのまま） | EnemyImage |
 | メッセージの最大行数 | 持つのは 7。出すのは 狭い画面 5、広い画面のダンジョン 6・戦闘 7・ほか 5 | message-plan・MessageLog |
 | 逐次表示の間隔 | 400ms | message-plan |
 | 演出の長さ | levelUp 1000／rareDrop 800／rareDrop LG 1200／bossAppear 1200／bossDefeat 600／clear 1500 ms | message-plan |
@@ -2575,7 +2577,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | リリース | min(0.08, len/4)、時定数はその 1/4 | bgm.ts |
 | 打楽器の音量 | vel × 0.75（kick/boom のサイン波 ×1.6、ノイズ ×0.5） | bgm.ts |
 | ノイズ | 1 秒・1 ch、読み始め 0〜0.5 秒をランダム | bgm.ts |
-| 敵の絵 | 128×128 PNG、表示 256px（どの画面も。2 倍）、pixelated | enemy-image.ts |
+| 敵の絵 | 256×256 PNG、表示 256px（どの画面も）、pixelated | enemy-image.ts |
 | タイトル画像 | 1080 × 720 PNG、表示は横幅いっぱい・最大 450 × 300px（3：2） | title.ts・style.css |
 
 ---
@@ -2753,7 +2755,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 - [ ] どの画面の大きさでも 256px で出て、ぼやけない。
 - [ ] 画像の alt は敵の名前。
 - [ ] 画像が読めないとき、枠ごと消えて名前だけが出る（エラーにならない）。
-- [ ] 6 枚とも 128×128・背景透過で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る。
+- [ ] 6 枚とも 256×256・背景透過で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る。
 
 ### 16.6 インストール・オフライン・更新（v1.1 で追加）
 
@@ -2934,7 +2936,7 @@ mini-wiz-game/
 ├─ public/
 │  ├─ boot.js              起動の見張りと復旧（ビルドを通さない。§30.4）
 │  ├─ icons/               icon.svg・icon-192.png・icon-512.png・icon-maskable-512.png・apple-touch-icon.png
-│  ├─ enemies/             slime・goblin・skeleton・orc・darkKnight・necromancer の .png（128×128。§13）
+│  ├─ enemies/             slime・goblin・skeleton・orc・darkKnight・necromancer の .png（256×256。§13）
 │  └─ title/               title.png（タイトル画像。1080 × 720。§13.6）
 ├─ src/
 │  ├─ main.ts              起動（§27.2）
@@ -4656,7 +4658,7 @@ v1.0 の TanStack Query のクエリ `['game']`・`['save']` に当たる。
 | `tests/platform/` | `storage.ts`（キーに識別子を付ける・読めない値と使えないときの失敗・まとめて書いて途中で失敗したら戻す・版がなければ 1 を書く）を偽の Storage で確かめる | — | backend の `test/*.e2e-spec.ts`（DB の代わりに偽の保存） |
 | `tests/logic/` | 表示の計算（name・version・describe-view・view-to-segments・map-to-shapes・arrival・low-hp・item-text・sort-items・stat-diff・menu-model・message-plan・bgm-scene・bgm-tracks） | frontend の `src/game/*.test.ts` のうち純粋関数のもの |
 | `tests/audio/` | 効果音・BGM を偽の `AudioContext` で確かめる（§26.11） | frontend の `sound`・`soundTiming`・`bgm` |
-| `tests/assets/` | 敵の絵 6 枚がそろい、128×128 の PNG で、MD5 が §13.1 と同じ（§13.5） | backend の `enemy-images.spec.ts` |
+| `tests/assets/` | 敵の絵 6 枚がそろい、256×256 の PNG で、MD5 が §13.1 と同じ（§13.5） | backend の `enemy-images.spec.ts` |
 
 テスト用の部品（`tests/helpers/`）：
 
@@ -4690,7 +4692,7 @@ v1.0 の TanStack Query のクエリ `['game']`・`['save']` に当たる。
 - `manifest.webmanifest` があり、`index.html` から読み込む。`name` が「WIZミニ」、`display` が `standalone`、`start_url` がある、`orientation` が `portrait`。
 - アイコン 192（any）・512（any）・512（maskable）が manifest にあり、ファイルもある。`apple-touch-icon` がある。`sw.js` がある。
 - `index.html` に `#app`・`#boot-error` があり、`boot.js` を読み込み、`<meta name="app-id" content="mini-wiz-game">` がある。`boot.js` が `__appStarted` を見ている。
-- `enemies/` に 6 枚の PNG（128×128）があり、`sw.js` の事前キャッシュに入っている。
+- `enemies/` に 6 枚の PNG（256×256）があり、`sw.js` の事前キャッシュに入っている。
 - `title/title.png` があり、1080 × 720 で、`sw.js` の事前キャッシュに入っている。
 - Web フォントのファイル（`.woff`・`.woff2`・`.ttf`・`.otf`）が `dist/` にない（端末のフォントを使う決まり）。
 
@@ -4827,7 +4829,7 @@ npm と github-actions を週に 1 回。開発用の依存は 1 つの PR に�
 - **保存の形を変えるとき**：`GAME_SCHEMA_VERSION`（今は 5）・`SAVE_SCHEMA_VERSION`（3）を上げ、`src/domain/game-state.ts` の `migrateGameState`・`migrateSave` に古い形からの移行を足す。保存全体の形を変えるときは `STORAGE_VERSION`（1）と `migrateStorage`（`src/platform/storage.ts`）。古いセーブを捨てない。
 - **バージョンを上げるとき**：`package.json` の `version` だけを変える。タイトル画面の版の表記と、Service Worker の更新の確認に使う。
 - **依存の版**：§18.1 の版より新しいものを使うときは、vite-plugin-pwa の `registerType: 'prompt'` と `virtual:pwa-register` の使い方、Playwright のデバイス定義（Pixel 7・Desktop Chrome）が変わっていないかを確かめる。
-- **素材**：敵の絵 6 枚はオーナーが用意した 128×128 の画像（§13。v1.4。v1.2〜v1.3 は 256×256）。公開してよいことはオーナーが確かめた（2026-10-30。v2 の絵は 2026-11-06）。
+- **素材**：敵の絵 6 枚はオーナーが用意した 256×256 の画像（§13。v1.5 の v2。v1.4 だけは 128×128）。公開してよいことはオーナーが確かめた（2026-10-30。v2 の絵は 2026-11-06）。
 - **公開リポジトリにするとき**：ほかのプロジェクトの内部情報・個人の ID・機密を含むファイルを入れない。
 
 ---
@@ -4911,7 +4913,7 @@ npm と github-actions を週に 1 回。開発用の依存は 1 つの PR に�
 4. **鳴り終わり時刻の記録**：`bgm.ts` はノードの終わりを `t + len + 0.05`（打楽器は stop 時刻）で記録、試聴ページは `t + len`。一覧から外すタイミングだけの差で、聞こえ方は同じ。
 5. **画面が隠れたときの処理がない**：`visibilitychange` での停止・`suspend` はしていない（手本の別アプリにはある）。BGM はタイマーが止まって予約に間に合わなかった場合、戻ったときに曲の頭から鳴らし直す。
 6. **オフにしたとき効果音は止めない**：オフで止まるのは BGM だけ。鳴っている効果音を止める処理はない（演出中は入力を受け付けないので、実際には `toggle`・`encounter` の残りが重なる程度）。
-7. **192px の条件**：依頼文の「PC 192px／狭い画面 128px」は、コードでは「幅 600px 以上**かつ高さ 680px 以上**」で 192px。高さ 640px の PC では 128px になる。（v1.2 で、絵を 256×256 に替え、どの画面も 256px に改めた。v1.4 で絵は 128×128 になり、2 倍の 256px で出す。§13.2）
+7. **192px の条件**：依頼文の「PC 192px／狭い画面 128px」は、コードでは「幅 600px 以上**かつ高さ 680px 以上**」で 192px。高さ 640px の PC では 128px になる。（v1.2 で、絵を 256×256 に替え、どの画面も 256px に改めた。v1.4 で絵は 128×128 になり 2 倍の 256px で出したが、v1.5 で 256×256 の v2 の絵に戻した。§13.2）
 8. **スライムの画像の版**：`enemy-images-ja.md` の前半はスライム v2・ゴブリン v4 を採用画像と書いているが、2026-10-15 の差し替えで現在はスライム v1（スクリプト生成）・ゴブリンはユーザー提供画像。ファイル（MD5）を正とした。
 9. **ゴブリンの半透明**：ゴブリンだけ半透明の点（alpha 224〜254 が 952 点、32 未満が 89 点）を含む。加工せずそのまま使う。
 10. **パッチ名の重複**：`FM_PATCHES` のキー「柔らかいベース」の `name` は「ベース」で、キー「ベース」と `name` が同じ（値は別）。試聴ページとの突き合わせは `name` も含めて比べるので、このまま写すこと。
