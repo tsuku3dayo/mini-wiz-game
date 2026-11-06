@@ -15,7 +15,7 @@ sources:
   - MWIZ-TC-0029（v1.0）
   - MWIZ-TC-0030（v1.0）
   - MWIZ-TC-0038（v1.0）
-  - MWIZ-TD-0003（v1.3）
+  - MWIZ-TD-0003（v1.4）
   - MWIZ-TD-0004（v1.2）
 verified: null
 ---

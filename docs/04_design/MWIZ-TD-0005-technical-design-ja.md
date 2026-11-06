@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.6
+version: 1.7
 updated: 2026-11-06
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -79,7 +79,7 @@ verified: null
 | 項目 | 作り |
 | --- | --- |
 | `package.json` のスクリプト | 仕様書 §19.1・§29.1（`dev`・`build`・`preview`・`test`・`test:e2e`・`lint`・`check:dist`・`check:docs`・`verify`） |
-| `scripts/check-dist.mjs` | 仕様書 §29.4。`enemies/` の 6 枚（128×128。v1.6）と `title/title.png`（1080 × 720）が `dist/` と事前キャッシュにあること、manifest の `name` が「WIZミニ」であることも確かめる |
+| `scripts/check-dist.mjs` | 仕様書 §29.4。`enemies/` の 6 枚（256×256。v1.7）と `title/title.png`（1080 × 720）が `dist/` と事前キャッシュにあること、manifest の `name` が「WIZミニ」であることも確かめる |
 | `scripts/check-docs.mjs` | 仕様書 §29.5。`mini-blockbreaking-game` のものを接頭辞 `MWIZ`・置き場所 `docs/` に合わせる。SDD-PROCESS_v3 §7.2 のエラーを出す |
 | `scripts/make-icons.mjs` | 仕様書 §30.5 |
 | `.github/workflows/test.yml` | PR と main への push で `npm run verify` と E2E（仕様書 §30.6） |

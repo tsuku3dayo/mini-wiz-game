@@ -3,7 +3,7 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.3
+version: 1.4
 updated: 2026-11-06
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -67,7 +67,7 @@ verified: null
 | `move-pad` | なし（大きさは置かれた場所の CSS で決まる） | §11.5 |
 | `item-list` | 高さは部品の中で `fitItemList`（§6）を呼んで決める（v1.2。v1.1 では画面が `maxHeight` を渡すとしていた。もちもの・入れ替えの両方で同じ合わせ方をするため、部品に持たせた） | §11.7 |
 | `equipment-panel`・`inventory-panel` | `{ store, api, command, onClose }` を受け、操作（`command.run`）・取り直しの反映・一番下の `errorPanel` まで部品の中で行う（v1.2。宿屋とダンジョンの両方から同じ形で開くため） | §11.7、§11.9 |
-| `enemy-image` | なし（128×128 の絵を 256px で出す。ぼかさずに 2 倍。読めなければ消す。v1.3） | §13.2 |
+| `enemy-image` | なし（256×256 の絵を 256px で出す。拡大しない。読めなければ消す。v1.4） | §13.2 |
 | `error-panel` | なし（置き場所は画面が決める。TD-0004） | §11.9 |
 
 ## 5. 狭い画面と広い画面（CSS と `ui/dom.ts`）
