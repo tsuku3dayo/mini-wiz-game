@@ -10,14 +10,14 @@ sources:
   - MWIZ-TC-0001（v1.1）
   - MWIZ-TC-0004（v1.0）
   - MWIZ-TC-0005（v1.1）
-  - MWIZ-TC-0006（v1.1）
+  - MWIZ-TC-0006（v1.2）
   - MWIZ-TC-0007（v1.0）
   - MWIZ-TC-0008（v1.0）
   - MWIZ-TC-0009（v1.0）
   - MWIZ-TC-0010（v1.0）
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0038（v1.0）
-  - MWIZ-TD-0003（v1.2）
+  - MWIZ-TD-0003（v1.3）
   - MWIZ-TD-0004（v1.2）
   - MWIZ-GUI-0002（v1.1）
   - MWIZ-GUI-0003（v1.0）
