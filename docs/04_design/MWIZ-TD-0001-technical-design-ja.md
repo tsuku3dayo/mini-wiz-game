@@ -7,12 +7,12 @@ version: 1.1
 updated: 2026-11-02
 sources:
   - MWIZ-SA-0001（v1.0）
-  - MWIZ-TS-0001（v1.1）
+  - MWIZ-TS-0001（v1.2）
   - MWIZ-ADR-0003（v1.0）
   - MWIZ-ADR-0004（v1.0）
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0011（v1.0）
-  - docs/specification-ja.md (v1.3) §11.1、§19.4、§20、§22.3、§27.2
+  - docs/specification-ja.md (v1.4) §11.1、§19.4、§20、§22.3、§27.2
 verified: null
 ---
 

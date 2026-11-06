@@ -13,7 +13,7 @@ sources:
   - MWIZ-US-0021（v1.0）
   - MWIZ-US-0026（v1.1）
   - MWIZ-US-0032（v1.1）
-  - docs/specification-ja.md (v1.3) §7.2、§9.4、§11.4、§11.5、§11.6、§11.7
+  - docs/specification-ja.md (v1.4) §7.2、§9.4、§11.4、§11.5、§11.6、§11.7
 verified: { by: "tsuku3dayo", at: "2026-10-30T16:41:32+09:00" }
 ---
 

@@ -3,12 +3,12 @@ id: MWIZ-PB-0001
 type: Project Brief
 title: WIZ ～死霊術師の迷宮～ プロジェクト概要
 status: stable
-version: 1.2
-updated: 2026-11-05
+version: 1.3
+updated: 2026-11-06
 sources:
-  - docs/specification-ja.md (v1.3)
+  - docs/specification-ja.md (v1.4)
   - docs/requests/2026-10-26-serverless-pwa.md
-verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-11-06T10:05:31+09:00" }
 ---
 
 # プロジェクト概要（project-brief）
@@ -77,7 +77,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 | 画面 | スマートフォンの縦画面での表示を最優先する。配置は 03 の試作を実機で触って決める（仕様書 §11.1） |
 | 公開 | GitHub Pages（GitHub アカウント `tsuku3dayo`）。公開 URL は https://tsuku3dayo.github.io/mini-wiz-game/ 。リポジトリは https://github.com/tsuku3dayo/mini-wiz-game （公開）。同じサイト（`tsuku3dayo.github.io`）に `mini-blockbreaking-game` などほかのアプリも載るので、保存のキー・キャッシュをアプリ識別子で分ける |
 | 通信・個人情報 | 外部へデータを送らない。名前は端末の中にだけ保存する |
-| 素材 | 画像は敵の絵 6 枚（オーナーが用意した 256×256 の PNG）とタイトル画像 1 枚（オーナーが用意した 1080 × 720 の PNG）。どちらも公開してよいことはオーナーが確かめた（仕様書 v1.3 §13）。アイコンはスクリプトで作る。音はコードで合成する。フォントは端末のもの。外部のフォント・スクリプト・CDN に頼らない |
+| 素材 | 画像は敵の絵 6 枚（オーナーが用意した 128×128 の PNG。画面では 2 倍の 256px）とタイトル画像 1 枚（オーナーが用意した 1080 × 720 の PNG）。どちらも v1.4 で v2 の絵に差し替えた。公開してよいことはオーナーが確かめた（仕様書 v1.4 §13）。アイコンはスクリプトで作る。音はコードで合成する。フォントは端末のもの。外部のフォント・スクリプト・CDN に頼らない |
 | 変えないもの | ゲームのルール・数値・乱数を引く順序・画面の文言・効果音の音色・BGM の曲データ（仕様書 v1.0 から変えていない） |
 | 環境 | Node.js v24.0.0・npm 11.3.0・Git 2.51.0・GitHub CLI はインストール済み。リポジトリは Git 管理済みで、GitHub に push 済み |
 
@@ -142,7 +142,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-05T17:15:05+09:00" }
 | スマートフォンでの画面の配置・アイコンの図柄 | 03 の試作を実機で触って決める | 03 |
 | テストケースの番号の決め方（非機能・手動のテストケースの置き方） | user-story と同じ番号にし、非機能・手動はまとめて最後の番号にする | 05 |
 | attested-computation の単位と置き場所 | 実装タスク 1 件につき 1 ファイル（番号は TASK と同じ） | 06 |
-| 敵の絵を入れる時期 | オーナーが 256×256 の 6 枚を用意した（2026-10-30、`docs/requests/monster/`）。敵の絵の WS で `public/enemies/` に置く | 06 |
+| 敵の絵を入れる時期 | オーナーが 256×256 の 6 枚を用意した（2026-10-30、`docs/requests/monster/`）。敵の絵の WS で `public/enemies/` に置く（済み。v1.4 で 128×128 の v2 の 6 枚に差し替えた。2026-11-06） | 06 |
 | 成果物の整合性の検査（`npm run check:docs`）を入れる時期 | `package.json` ができる 07 の土台の WS で入れる。それまでは SDD-PROCESS_v3.md §7.1 の整合性チェックを手で確かめる | 06 |
 | GitHub Pages の設定（Settings → Pages の Source を「GitHub Actions」に） | 07 の土台の WS で、最初の公開の前にオーナーが行う | 06 |
 | リリースの版番号 | 1.0.0（画面の表記は v1.0） | リリース |
