@@ -105,9 +105,9 @@ test.describe('戦闘の画面', () => {
   const frame = (page: Page) => page.getByTestId('enemy-window').getByTestId('enemy-image-frame');
   const img = (page: Page) => frame(page).locator('img');
   /** 絵が読めるまで待つ */
-  const loaded = (page: Page) => expect.poll(() => img(page).evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth)).toBe(256);
+  const loaded = (page: Page) => expect.poll(() => img(page).evaluate((e) => (e as HTMLImageElement).complete && [(e as HTMLImageElement).naturalWidth, (e as HTMLImageElement).naturalHeight])).toEqual([128, 128]);
 
-  test('TC-0033-01 6 体それぞれの戦闘で、名前の上に enemies/<種類>.png の絵（256px）が読み込まれ、絵の下端と名前の上端の間は 0', async ({ page }) => {
+  test('TC-0033-01 6 体それぞれの戦闘で、名前の上に enemies/<種類>.png の絵（128×128）が読み込まれ、絵の下端と名前の上端の間は 0', async ({ page }) => {
     for (const [kind] of KINDS) {
       await startAt(page, 'BATTLE', { state: { battle: battleOf(kind, 5) } });
       await expect(img(page), kind).toHaveAttribute('src', `enemies/${kind}.png`);
@@ -118,7 +118,7 @@ test.describe('戦闘の画面', () => {
     }
   });
 
-  test('TC-0033-02 どの画面の大きさでも、枠と絵は 256×256 で、image-rendering は pixelated', async ({ page }) => {
+  test('TC-0033-02 どの画面の大きさでも、枠と絵は 256×256（128×128 の絵を 2 倍）で、image-rendering は pixelated', async ({ page }) => {
     await startAt(page, 'BATTLE');
     await loaded(page);
     const size = async () => Promise.all([frame(page), img(page)].map((l) => l.evaluate((e) => {

@@ -15,6 +15,6 @@ describe('タイトル画像のファイル', () => {
     expect([b.readUInt32BE(16), b.readUInt32BE(20)]).toEqual([1080, 720]);
     expect([TITLE_IMAGE_WIDTH, TITLE_IMAGE_HEIGHT]).toEqual([1080, 720]);
     expect([b[24], b[25]]).toEqual([8, 2]);
-    expect(createHash('md5').update(b).digest('hex')).toBe('b7bdabf36d32d509c17da90df9e73120');
+    expect(createHash('md5').update(b).digest('hex')).toBe('36dd93edda255751560af6e4bcfb1aab');
   });
 });
