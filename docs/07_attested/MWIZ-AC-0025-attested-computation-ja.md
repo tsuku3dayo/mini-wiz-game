@@ -2,7 +2,7 @@
 id: MWIZ-AC-0025
 type: Attested Computation
 title: タイトル画像と名前「WIZミニ」の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-06
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0006（v1.1）
   - MWIZ-TD-0004（v1.2）
   - MWIZ-TD-0005（v1.5）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-06T09:24:04+09:00" }
 ---
 
 # AC-0025 タイトル画像と名前「WIZミニ」の実施記録
