@@ -1,4 +1,4 @@
-// EnemyImage：戦闘の敵の絵（仕様書 §13.2）。128×128 の絵を 256×256 の枠に 2 倍で出す（ぼかさない）
+// EnemyImage：戦闘の敵の絵（仕様書 §13.2）。256×256 をそのまま出す（ぼかさない）
 // 読み込めないときは枠ごと消し、敵の名前だけに戻す（エラーは出さない。同じ部品の中では読み直さない）
 import type { EnemyKind } from '../../api/types';
 import { ENEMY_IMAGE_PX, enemyImageUrl } from '../../logic/enemy-image';

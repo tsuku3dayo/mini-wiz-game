@@ -47,14 +47,14 @@ if (!exists('icons/apple-touch-icon.png')) errors.push('icons/apple-touch-icon.p
 if (exists('index.html') && !/rel="apple-touch-icon"/.test(read('index.html'))) errors.push('index.html に apple-touch-icon の link がない');
 if (!exists('sw.js')) errors.push('sw.js がない');
 
-// 敵の絵 6 枚（128×128。画面では 2 倍の 256px）が dist/ と事前キャッシュにある（仕様書 §13.1、TD-0005 §4）
+// 敵の絵 6 枚（256×256）が dist/ と事前キャッシュにある（仕様書 §13.1、TD-0005 §4）
 const ENEMY_KINDS = ['slime', 'goblin', 'skeleton', 'orc', 'darkKnight', 'necromancer'];
 const sw = exists('sw.js') ? read('sw.js') : '';
 for (const kind of ENEMY_KINDS) {
   const p = `enemies/${kind}.png`;
   if (!exists(p)) { errors.push(`${p} がない`); continue; }
   const b = fs.readFileSync(path.join(dist, p));
-  if (b.readUInt32BE(16) !== 128 || b.readUInt32BE(20) !== 128) errors.push(`${p} が 128×128 でない`);
+  if (b.readUInt32BE(16) !== 256 || b.readUInt32BE(20) !== 256) errors.push(`${p} が 256×256 でない`);
   if (!sw.includes(p)) errors.push(`${p} が Service Worker の事前キャッシュにない`);
 }
 
