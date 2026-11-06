@@ -2,13 +2,13 @@
 id: MWIZ-AC-0028
 type: Attested Computation
 title: 敵の絵の v3 への差し替えの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-06
 sources:
   - MWIZ-TASK-0028（v1.0）
   - MWIZ-TC-0033（v1.3）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-06T15:25:22+09:00" }
 ---
 
 # AC-0028 敵の絵の v3 への差し替えの実施記録

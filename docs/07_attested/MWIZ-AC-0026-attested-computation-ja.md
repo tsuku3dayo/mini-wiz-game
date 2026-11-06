@@ -2,7 +2,7 @@
 id: MWIZ-AC-0026
 type: Attested Computation
 title: タイトル画像と敵の絵の v2 への差し替えの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-06
 sources:
@@ -11,7 +11,7 @@ sources:
   - MWIZ-TC-0033（v1.3）
   - MWIZ-TD-0003（v1.4）
   - MWIZ-TD-0005（v1.7）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-06T15:25:22+09:00" }
 ---
 
 # AC-0026 タイトル画像と敵の絵の v2 への差し替えの実施記録
