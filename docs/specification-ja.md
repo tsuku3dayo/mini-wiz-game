@@ -2329,7 +2329,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | 違う曲 | 今の曲を 0.3 秒でフェードアウトし、新しい曲を頭から鳴らす（クロスフェードではなく、フェードアウトと同時に次の曲を予約する） |
 | 効果音のあと | 新しい曲の始まりを「いま鳴っている効果音の残り時間」だけ遅らせる（さらに 0.05 秒）。通常の遭遇では `encounter`（0.68 秒）のあとに戦闘の曲、オンに切り替えたときは `toggle`（0.08 秒）のあとにタイトルの曲 |
 | ボス出現 | ボス出現の演出（`bossAppear`、1.2 秒）のあいだは BGM を止める（ダンジョンの曲を 0.3 秒でフェードアウト）。演出が終わったら（またはスキップしたらすぐ）ボスの曲 |
-| ボス撃破 | ボス撃破の演出（`bossDefeat`）のあいだは BGM を止める（撃破の効果音を聞かせる）。演出が終わったら（またはスキップしたらすぐ）**宿屋に戻るまで `clear` の曲**：撃破のメッセージ（経験値・レベルアップ・ドロップ）を出しているあいだ、所持品満杯での入れ替え画面、クリア画面のあいだ、頭に戻らずに流し続ける。クリア画面の「宿屋へ」で宿屋の曲（v1.7。v1.6 までは無音） |
+| ボス撃破 | とどめの一撃のあと、撃破の行（「暗黒のネクロマンサーを たおした！」。演出 `bossDefeat`）が出るまでと、撃破の演出のあいだは BGM を止める（撃破の効果音を聞かせる。v1.6 までと同じく、とどめの一撃で止まる）。演出が終わったら（またはスキップしたらすぐ）**宿屋に戻るまで `clear` の曲**：撃破のメッセージ（経験値・レベルアップ・ドロップ）を出しているあいだ、所持品満杯での入れ替え画面、クリア画面のあいだ、頭に戻らずに流し続ける。クリア画面の「宿屋へ」で宿屋の曲（v1.7。v1.6 までは無音） |
 | ボス撃破後の判定 | ゲームの状態だけで決める（ゲーム API は変えない）：状態の場所が `CLEARED`、または場所が `SWAP` で `dungeon === null`（ゲーム API はボス撃破のときだけダンジョンを消してから入れ替え待ちにする）。再読み込みしても同じ判定になる |
 | 倒れたとき | 宿屋に戻るので宿屋の曲 |
 | オフにしたとき | 0.3 秒でフェードアウトして止める。始まりを遅らせて待っている曲も鳴らさない |
@@ -4154,12 +4154,14 @@ export const SFX: Readonly<Record<SfxName, readonly SfxEvent[]>> = {
 
 ### 26.7 場面から曲を選ぶ（`sceneBgm`）と `BgmDirector`
 
-`sceneBgm` は `src/logic/bgm-scene.ts`。`pathname` は画面のルート（ハッシュから `#` を除いたもの。`#/inn` なら `'/inn'`。§27.4）、`state` はストアの GameView（なければ null）、`active` はメッセージキューの再生中の演出。
+`sceneBgm` は `src/logic/bgm-scene.ts`。`pathname` は画面のルート（ハッシュから `#` を除いたもの。`#/inn` なら `'/inn'`。§27.4）、`state` はストアの GameView（なければ null）、`active` はメッセージキューの再生中の演出、`defeatShown` はボスを倒したあと撃破の行（演出 `bossDefeat`）をもう出したか（v1.7）。
 
 ```ts
-export function sceneBgm(pathname, state, active): BgmName | null {
+export function sceneBgm(pathname, state, active, defeatShown = true): BgmName | null {
   if (active?.effect === 'bossAppear' || active?.effect === 'bossDefeat') return null;
-  if (afterBoss(state)) return 'clear';   // state.location === 'CLEARED' || (state.location === 'SWAP' && state.dungeon === null)。v1.6 までは null（無音）
+  // afterBoss(state)：state.location === 'CLEARED' || (state.location === 'SWAP' && state.dungeon === null)（export する）
+  // とどめの一撃のあと撃破の行が出るまで（戦闘の画面）は止め、そのあとクリアの曲。v1.6 までは null（無音）
+  if (afterBoss(state)) return pathname === '/battle' && !defeatShown ? null : 'clear';
   switch (pathname) {
     case '/': case '/new': return 'title';
     case '/inn': return 'inn';
@@ -4172,7 +4174,8 @@ export function sceneBgm(pathname, state, active): BgmName | null {
 
 `BgmDirector`（`src/audio/bgm-director.ts`。画面に何も描かない）：
 
-- 画面の切替え（ルーター）・ストア・メッセージキューの演出・音の設定の変化を受けて、`want = 音がオン ? sceneBgm(pathname, state, activeEffect) : null` を計算し直す。
+- 画面の切替え（ルーター）・ストア・メッセージキューの演出・音の設定の変化を受けて、`want = 音がオン ? sceneBgm(pathname, state, activeEffect, defeatShown) : null` を計算し直す。
+- `defeatShown`（v1.7）：`afterBoss(state)` でないときは false に戻す。`afterBoss(state)` のあいだに、再生中の演出が `bossDefeat`、またはメッセージ欄の行に演出 `bossDefeat` の行があれば true にし、宿屋に戻るまで覚えておく（クリア画面へ移る前にメッセージ欄が空になっても、曲が止まって頭から鳴り直さないように）。
 - `want` が変わるたびに、`want` があれば `playBgm(want, sfxRemainingSec())`、なければ `stopBgm()`。曲を替えたら `app:bgm` イベント（§28）を出す。
 - 起動時（§27.2）に 1 つだけ作り、画面の部品とは別に動かす（エラーの画面でも止めない。v1.0 で `LocationGuard` の外に置いたのと同じ）。
 
