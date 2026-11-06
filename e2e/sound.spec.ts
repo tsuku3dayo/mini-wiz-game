@@ -294,7 +294,7 @@ test.describe('場面ごとの BGM', () => {
     await expect.poll(() => bgmNames(page), { timeout: 5000 }).toEqual(['title', 'inn', 'dungeon', 'battle', 'dungeon', null, 'boss']);
   });
 
-  test('TC-0034-06 クリア画面に入っているあいだ、最後の app:bgm は null のまま', async ({ page }, info) => {
+  test('TC-0034-06 クリア画面に入っているあいだ、最後の app:bgm はクリアの曲（clear）のまま', async ({ page }, info) => {
     await soundOnAtStart(page);
     await recordAudio(page);
     await page.clock.install();
@@ -304,7 +304,8 @@ test.describe('場面ごとの BGM', () => {
     await page.clock.runFor(9000);
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
     const before = await bgmNames(page);
-    expect(before).toEqual([null]);
+    // 撃破の演出のあいだ止め（null）、演出のあとクリアの曲
+    expect(before).toEqual([null, 'clear']);
     await page.clock.runFor(5000);
     expect(await bgmNames(page)).toEqual(before);
   });
@@ -376,7 +377,7 @@ test.describe('場面ごとの BGM', () => {
     }
   });
 
-  test('TC-0034-15 ボスを倒すと宿屋に戻るまで無音（撃破のメッセージ・クリア画面・満杯の入れ替え・入れ替えの再読み込み）。「宿屋へ」で宿屋の曲', async ({ page }, info) => {
+  test('TC-0034-15 ボスを倒すと、撃破の演出のあと宿屋に戻るまでクリアの曲（撃破のメッセージ・クリア画面・満杯の入れ替え・入れ替えの再読み込み）。「宿屋へ」で宿屋の曲', async ({ page }, info) => {
     await soundOnAtStart(page);
     await recordAudio(page);
     await page.clock.install();
@@ -385,25 +386,26 @@ test.describe('場面ごとの BGM', () => {
     await attackPaused(page, info);
     await page.clock.runFor(9000);
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
-    expect(await bgmNames(page)).toEqual([null]);
+    expect(await bgmNames(page)).toEqual([null, 'clear']);
     await page.clock.resume();
     await press(info, page.getByRole('menu', { name: 'ゲームクリア' }).getByRole('menuitem').filter({ hasText: '宿屋へ' }));
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
-    await expect.poll(() => bgmNames(page)).toEqual([null, 'inn']);
+    await expect.poll(() => bgmNames(page)).toEqual([null, 'clear', 'inn']);
 
-    // 所持品 50 個でボスを倒す → 入れ替え（ダンジョンなし）でも無音、読み込み直しても無音
+    // 所持品 50 個でボスを倒す → 入れ替え（ダンジョンなし）でもクリアの曲、読み込み直してもクリアの曲
     const full = { ...bossBattle(), inventory: storedInventory({ items: shortSwords(50, 1) }) };
     await startAt(page, 'BATTLE', { state: full, seed: SEEDS.bossWin });
     await settle(page, 'boss');
     await attackPaused(page, info);
     await page.clock.runFor(9000);
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'swap');
-    expect(await bgmNames(page)).toEqual([null]);
+    expect(await bgmNames(page)).toEqual([null, 'clear']);
     await page.clock.resume();
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'swap');
+    await expect.poll(() => bgmNames(page)).toEqual(['clear']);
     await page.waitForTimeout(500);
-    expect(await bgmNames(page)).toEqual([]);
+    expect(await bgmNames(page)).toEqual(['clear']);
   });
 
   test('TC-0034-16 通常の敵に勝つと、勝利のメッセージのあいだ（戦闘の画面）は曲が替わらず、ダンジョンに移ったときにダンジョンの曲。倒れたら宿屋の曲', async ({ page }, info) => {
