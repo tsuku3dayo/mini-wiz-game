@@ -1,6 +1,6 @@
 # WIZ 再現開発仕様書
 
-- 版：1.6（2026-11-06）
+- 版：1.7（2026-11-06）
 - 対象：「WIZ」（正式版 v1.0 ＋ Update4〜6。画面の版表示は `1.0`）を、サーバーなしの PWA として作り直すための仕様
 - 位置づけ：この 1 冊だけで作れるようにまとめた仕様書。ブラウザで遊ぶ 1 人用のダンジョン探索 RPG を、ブラウザだけで動くアプリ（インストール可・オフライン動作の PWA）として作り、GitHub Pages で公開する。スマートフォンの縦画面のタップで遊べ、PC のキーボード・マウスでも遊べる。構成は `mini-blockbreaking-game` と同じ
 
@@ -12,7 +12,7 @@
 | 第 2 部 実装仕様 | 17〜32 | **どう作るか**：開発環境、技術構成、設定、ファイル構成と層、端末内保存、ゲーム API、乱数、主なデータ型と関数、効果音の音色、BGM の曲データ、画面の骨組み、テスト用の入口、テスト、PWA・CI と公開、進め方と再現の確認 |
 | 付録 | A | 元の WIZ のコードと文書（docs/・wiki/・README）の食い違い（v1.0 の記録） |
 
-- 第 1 部の値（ルール・数値・乱数を引く順序・文言・音色・曲データ）は、元の WIZ の実装（2026-10-26 時点）から写したもの。v1.0 では「正はコード」としたが、v1.1 からは **本書を正** とする（新しく作るため）。
+- 第 1 部の値（ルール・数値・乱数を引く順序・文言・音色・曲データ）は、元の WIZ の実装（2026-10-26 時点）から写したもの（効果音の音色と BGM の曲データは、v1.7 で入れ替えた）。v1.0 では「正はコード」としたが、v1.1 からは **本書を正** とする（新しく作るため）。
 - v1.1 で、構成をサーバーなしの PWA に改めた（`docs/requests/2026-10-26-serverless-pwa.md`）。ゲームのルール・数値・文言は変えていない。元の API・DB・React に関わる書き方は、ブラウザの中の「ゲーム API」と端末内保存の書き方に置き換えた（§1.3）。
 - 第 1 部と第 2 部が食い違ったときは、第 1 部を正とする。第 2 部は、実装の選択（技術・ファイル・設定）を決める。
 - 乱数を使う処理は、**乱数を引く順序と個数** まで定める。同じシードを与えれば、同じダンジョン・同じ戦闘結果になる（テストはこれに頼っている）。
@@ -30,6 +30,7 @@
 | 1.4 | 2026-11-06 | タイトル画像と敵の絵 6 枚を、オーナーが用意した v2 の絵に差し替えた（§13）。タイトル画像は大きさ・形式が同じで、ドット絵の画風に描き直したもの（§13.6）。敵の絵は 128×128 になり、表示はいまと同じ 256px（2 倍に拡大し、ぼかさない。§13.2）。§1.2・§11.5・§12・§15.4・§15.5・§16.5・§20.1・§29.2・§32・付録 A.5 を合わせて直した。ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.4-images-v2.md`） |
 | 1.5 | 2026-11-06 | 敵の絵 6 枚を、オーナーが用意した 256×256 の v2 の絵（v1.4 と同じ絵柄を細かく描いたもの）に差し替え、表示を 256px のまま拡大しない形に戻した（§13.1・§13.2・§13.3・§13.5）。§1.2・§11.5・§12・§15.4・§15.5・§16.5・§20.1・§29.2・§32・付録 A.5 を合わせて直した。タイトル画像（v1.4）・ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.5-enemy-images-256.md`） |
 | 1.6 | 2026-11-06 | 敵の絵 6 枚を、オーナーが用意した 256×256 の v3 の絵に差し替えた（§13.1・§13.3）。v3 の 5 枚に半透明の点があるので、§13.1 の規格の「半透明の点なし」を「半透明の点があってもよい（加工しない）」に改めた。§1.2・§32・付録 A.5 を合わせて直した。表示の大きさ・タイトル画像・ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.6-enemy-images-v3.md`） |
+| 1.7 | 2026-11-06 | BGM を、著作権の切れたクラシックの名曲・民謡の編曲 6 曲に入れ替えた（タイトル＝ワーグナー『ローエングリン』第 1 幕への前奏曲、宿屋＝民謡「グリーンスリーヴス」、ダンジョン＝ラフマニノフ『死の島』、戦闘＝ホルスト「火星」、ボス戦＝ムソルグスキー「カタコンベ」、ボス撃破・クリア＝フォーレ「イン・パラディス」）。ボス撃破のあと宿屋に戻るまでの無音をやめ、`clear` の曲を流す（§12.2・§26.7）。効果音を、ビープ音風（矩形波など）から暗い FM 音源風に替えた（長さは同じ。§12.1・§25）。どれもオーナーが試聴ページで選んだ。§1.2・§15.5・§16.5・§20.1・§26.3・§26.9〜§26.11 を合わせて直した。ゲームのルール・数値・メッセージの文・画面は変えていない（`docs/requests/2026-11-06-spec-1.7-bgm.md`） |
 
 ---
 
@@ -103,7 +104,7 @@
 | Update3（正式版 v1.0） | 周回、ボス撃破の経験値 1,000 とレジェンド装備、実績、ステータス画面、演出と効果音、ダークファンタジーの配色と二重線のウィンドウ |
 | Update4（操作性の改善） | 「もどる」を一番上に、カーソルは端で止まる、装備の強い順・弱い順、ダンジョンでのヒール、遭遇の音、ソロモンのゆびわの防御 |
 | Update5（敵の絵） | 戦闘画面に敵のドット絵（6 体、64×64。v1.2 で 256×256 の絵に、v1.4 で 128×128 の絵に、v1.5 で 256×256 の v2 の絵に、v1.6 で 256×256 の v3 の絵に替えた。§13） |
-| Update6（BGM） | 場面ごとの FM 音源風 BGM（5 曲） |
+| Update6（BGM） | 場面ごとの FM 音源風 BGM（5 曲。v1.7 でクラシックの名曲などの編曲 6 曲に入れ替えた） |
 
 元の WIZ は、各フェーズの更新で保存データの形を古い版から読み込めるようにしていた（第 2 部「端末内保存」）。v1.1 は最初から最新の形で作り、古い版の読み込み（移行）の関数も同じように持つ（§21.4）。
 
@@ -2227,7 +2228,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | `src/ui/command.ts` | 通常の敵との遭遇で `encounter` を鳴らす | `useGameCommand.ts` |
 | `src/audio/bgm.ts` | BGM の再生エンジン（FM 合成・打楽器・ループ予約・フェード・音量下げ） | `bgm.ts` |
 | `src/logic/bgm-notation.ts` | 曲を書くための小さな記法 | `bgmNotation.ts` |
-| `src/logic/bgm-tracks.ts` | 音色（パッチ）17 種と 5 曲の曲データ（本書 §26.9 が正本） | `bgmTracks.ts` |
+| `src/logic/bgm-tracks.ts` | 音色（パッチ）20 種と 6 曲の曲データ（本書 §26.9 が正本。v1.7） | `bgmTracks.ts` |
 | `src/logic/bgm-scene.ts` | 場面 → 曲の対応（`sceneBgm`） | `bgmScene.ts` |
 | `src/audio/bgm-director.ts` | 画面に何も描かない。場面が変わったら曲を替える。ルーター・LocationGuard とは別に、起動時に 1 つだけ作る | `BgmDirector.tsx` |
 | `src/logic/enemy-image.ts` | 敵の絵の URL（`enemies/<種類>.png`） | `enemyImage.ts` |
@@ -2245,14 +2246,14 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 音の名前 | 出来事 | きっかけ | 長さ | 音の印象 |
 | --- | --- | --- | --- | --- |
-| `encounter` | 通常の敵との遭遇 | 移動などの応答で、場所が「戦闘以外（または状態なし）」→「戦闘（BATTLE）」に変わり、かつボス戦でないとき。メッセージ欄を消した直後、メッセージを流す前に鳴らす | 680 ms | 減七の和音を一気に駆け上がり、高い音を 3 回たたいて止める |
-| `levelUp` | レベルアップ | 「レベルが あがった！ LvN」の行（演出 `levelUp`）が表示されたとき | 510 ms | 上がっていく短いファンファーレ |
-| `rareDrop` | レア装備（UR）のドロップ | 「〜を おとした！」の行で、レア度が UR（演出 `rareDrop`）が表示されたとき | 360 ms | きらめく高い音のアルペジオ |
-| `rareDropLG` | レジェンド（LG）のドロップ | 同上でレア度が LG のとき（`rareDrop` の代わりに鳴らす） | 1,020 ms | アルペジオ 4 回と長い高音 |
-| `bossAppear` | ボス出現 | 「暗黒のネクロマンサーが あらわれた！」の行（演出 `bossAppear`）。ボスの遭遇では `encounter` は鳴らさない | 1,200 ms | 低く重い不協和音（低音 2 つを交互に） |
-| `bossDefeat` | ボス撃破 | 「暗黒のネクロマンサーを たおした！」の行（演出 `bossDefeat`） | 500 ms | 下がっていく衝撃音 |
-| `clear` | ゲームクリア | 「ダンジョンに 平和が もどった」の行（演出 `clear`）。この行はクリア画面で表示される | 2,350 ms（ただし演出 1,500 ms の終わりで止まる。§12.1（演出の長さと効果音の長さ）） | 長めのファンファーレ |
-| `toggle` | 音をオンにした確認 | タイトルまたはメニューで「おと」をオフ → オンに切り替えたとき（オンにしたときだけ。オフにしたときは鳴らさない） | 80 ms | 短い「ピッ」 |
+| `encounter` | 通常の敵との遭遇 | 移動などの応答で、場所が「戦闘以外（または状態なし）」→「戦闘（BATTLE）」に変わり、かつボス戦でないとき。メッセージ欄を消した直後、メッセージを流す前に鳴らす | 680 ms | ぶつかり合う低い和音が、少しずつ高く近づいてきて消える（v1.7） |
+| `levelUp` | レベルアップ | 「レベルが あがった！ LvN」の行（演出 `levelUp`）が表示されたとき | 510 ms | 沈んだ金管の、短調の短いファンファーレ（v1.7） |
+| `rareDrop` | レア装備（UR）のドロップ | 「〜を おとした！」の行で、レア度が UR（演出 `rareDrop`）が表示されたとき | 360 ms | 暗い鐘の低いアルペジオ（v1.7） |
+| `rareDropLG` | レジェンド（LG）のドロップ | 同上でレア度が LG のとき（`rareDrop` の代わりに鳴らす） | 1,020 ms | 暗い鐘の低いアルペジオ 4 回と、最後の長い音（v1.7） |
+| `bossAppear` | ボス出現 | 「暗黒のネクロマンサーが あらわれた！」の行（演出 `bossAppear`）。ボスの遭遇では `encounter` は鳴らさない | 1,200 ms | 地の底からうなる低い音（低音 2 つを交互に。v1.7） |
+| `bossDefeat` | ボス撃破 | 「暗黒のネクロマンサーを たおした！」の行（演出 `bossDefeat`） | 500 ms | 不安な和音が沈んで崩れ落ちる（v1.7） |
+| `clear` | ゲームクリア | 「ダンジョンに 平和が もどった」の行（演出 `clear`）。この行はクリア画面で表示される | 2,350 ms（ただし演出 1,500 ms の終わりで止まる。§12.1（演出の長さと効果音の長さ）） | 短調から長調へ移る、静かな鎮魂の和音（v1.7） |
+| `toggle` | 音をオンにした確認 | タイトルまたはメニューで「おと」をオフ → オンに切り替えたとき（オンにしたときだけ。オフにしたときは鳴らさない） | 80 ms | 低い木の音の短い「コッ」（v1.7） |
 
 - 演出の付いた行はゲーム API が返すメッセージに `effect` として入っている（`levelUp`・`rareDrop`・`bossAppear`・`bossDefeat`・`clear`）。`rareDrop` はレア度 UR と LG の行にだけ付く。
 - `encounter` と `toggle` 以外は、メッセージの逐次表示で**その行が表示された瞬間**に鳴らす（§25.4）。
@@ -2304,12 +2305,15 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 場面（画面のパス） | 曲 | 調・拍子・テンポ | 1 周 |
 | --- | --- | --- | --- |
-| タイトル（`/`）・名前入力（`/new`） | 鐘と祈り | ニ短調・4/4・66 | 16 小節（約 58.2 秒） |
-| 宿屋（`/inn`） | 灰の暖炉 | 変ホ長調・3/4・84 | 16 小節（約 34.3 秒） |
-| ダンジョン（`/dungeon`）・入れ替え（`/swap`） | 見られている迷宮 | イ短調・4/4・84 | 16 小節（約 45.7 秒） |
-| 戦闘（`/battle`、ボス以外） | 裂ける夜 | ニ短調・4/4・172 | 16 小節（約 22.3 秒） |
-| ボス戦（`/battle`、`state.battle.isBoss`） | 鉄の行進 | ホ短調・4/4・120 | 16 小節（32 秒） |
-| クリア画面（`/clear`）・それ以外のパス | なし（無音） | — | — |
+| タイトル（`/`）・名前入力（`/new`） | ワーグナー『ローエングリン』第 1 幕への前奏曲 | イ長調・4/4・52 | 16 小節（約 73.8 秒） |
+| 宿屋（`/inn`） | 民謡「グリーンスリーヴス」（このゲーム用の編曲） | イ短調・3/4・100 | 16 小節（28.8 秒） |
+| ダンジョン（`/dungeon`）・入れ替え（`/swap`） | ラフマニノフ『死の島』 | イ短調・5/8・72 | 16 小節（約 33.3 秒） |
+| 戦闘（`/battle`、ボス以外） | ホルスト『惑星』より「火星 — 戦いの神」 | ト調・5/4・168 | 16 小節（約 28.6 秒） |
+| ボス戦（`/battle`、`state.battle.isBoss`） | ムソルグスキー『展覧会の絵』より「カタコンベ（ローマ時代の墓）」 | ロ短調・3/4・60 | 16 小節（48 秒） |
+| ボス撃破のあと（撃破の演出が終わってから宿屋に戻るまで。撃破のメッセージ・入れ替え・クリア画面） | フォーレ『レクイエム』より「イン・パラディス（天国にて）」 | ニ長調・3/4・66 | 16 小節（約 43.6 秒） |
+| それ以外のパス | なし（無音） | — | — |
+
+- 曲はどれも著作権の切れたクラシックの名曲・民謡を、有名な部分を短く編曲したもの（v1.7。2026-11-06 にオーナーが試聴ページで選んだ）。宿屋の伴奏はこのゲーム用（ヴォーン・ウィリアムズの編曲は日本ではまだ保護されているので使わない）。録音は使わず、曲データから合成する（§26）。
 
 - 音がオフなら、どの場面でも鳴らさない。
 - 曲は画面のパス（ルート）で決める。メッセージの逐次表示中で画面の移動が保留されているあいだは、前の画面の曲のまま（例：通常の敵に勝ったあと、勝利のメッセージを出しているあいだは戦闘の曲。出し終わってダンジョン画面に移るとダンジョンの曲）。
@@ -2325,7 +2329,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 | 違う曲 | 今の曲を 0.3 秒でフェードアウトし、新しい曲を頭から鳴らす（クロスフェードではなく、フェードアウトと同時に次の曲を予約する） |
 | 効果音のあと | 新しい曲の始まりを「いま鳴っている効果音の残り時間」だけ遅らせる（さらに 0.05 秒）。通常の遭遇では `encounter`（0.68 秒）のあとに戦闘の曲、オンに切り替えたときは `toggle`（0.08 秒）のあとにタイトルの曲 |
 | ボス出現 | ボス出現の演出（`bossAppear`、1.2 秒）のあいだは BGM を止める（ダンジョンの曲を 0.3 秒でフェードアウト）。演出が終わったら（またはスキップしたらすぐ）ボスの曲 |
-| ボス撃破 | ボス撃破の演出（`bossDefeat`）で BGM を止める。そのあと**宿屋に戻るまで無音**：撃破のメッセージ（経験値・レベルアップ・ドロップ）を出しているあいだ、所持品満杯での入れ替え画面、クリア画面、のどれも鳴らさない。クリア画面の「宿屋へ」で宿屋の曲 |
+| ボス撃破 | ボス撃破の演出（`bossDefeat`）のあいだは BGM を止める（撃破の効果音を聞かせる）。演出が終わったら（またはスキップしたらすぐ）**宿屋に戻るまで `clear` の曲**：撃破のメッセージ（経験値・レベルアップ・ドロップ）を出しているあいだ、所持品満杯での入れ替え画面、クリア画面のあいだ、頭に戻らずに流し続ける。クリア画面の「宿屋へ」で宿屋の曲（v1.7。v1.6 までは無音） |
 | ボス撃破後の判定 | ゲームの状態だけで決める（ゲーム API は変えない）：状態の場所が `CLEARED`、または場所が `SWAP` で `dungeon === null`（ゲーム API はボス撃破のときだけダンジョンを消してから入れ替え待ちにする）。再読み込みしても同じ判定になる |
 | 倒れたとき | 宿屋に戻るので宿屋の曲 |
 | オフにしたとき | 0.3 秒でフェードアウトして止める。始まりを遅らせて待っている曲も鳴らさない |
@@ -2339,7 +2343,7 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 #### ループとフェード
 
-- イントロはなく、16 小節の 1 周をそのまま繰り返す。各曲の最後の小節は頭に自然につながる和音（属和音など）で終わる。
+- イントロはなく、16 小節の 1 周をそのまま繰り返す。各曲の最後の小節は頭に自然につながる和音（属和音など。戦闘の曲は G の持続のまま）で終わる。
 - 切り替え・停止のフェードアウトは 0.3 秒（直線）。フェードインはない（曲の頭から通常の音量）。
 - 画面が裏に回るなどでタイマーが止まり、次の周の予約に間に合わなかったときは、気付いた時点から曲の頭で鳴らし直す。
 
@@ -2555,8 +2559,10 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 
 | 名前 | 値 | 場所 |
 | --- | --- | --- |
-| 効果音の音量 `VOLUME` | 0.08 | sound.ts |
-| 効果音のフェード `FADE_S` | 0.005 秒（頭・終わり） | sound.ts |
+| 効果音の音量 | 音色ごと（`SE_PATCHES` の vol、0.11〜0.55）。和音は 1 音あたり vol ÷ √音数（v1.7） | sound.ts |
+| 効果音の立ち上がり・消え方 | 立ち上がりは音色ごと（attack、0.002〜0.15 秒）、終わりは min(0.01 秒, 長さ/3)（v1.7） | sound.ts |
+| 効果音のローパス | 音色ごと（400〜1,500 Hz）、Q 0.7（v1.7） | sound.ts |
+| 効果音のビブラート | 5.5 Hz、深さ f × 0.008、0〜min(0.4, 長さ) 秒で深くなる（v1.7） | sound.ts |
 | 音の設定のキー `SOUND_STORAGE_KEY` | `'mini-wiz-game-sound'`（値 `'on'`／`'off'`、初期オフ） | sound-setting.ts |
 | 再開を試す入力 | `window` の capture、`pointerdown`・`pointerup`・`touchend`・`click`・`keydown` | sound.ts |
 | メッセージの間隔 | 400 ms | message-plan.ts |
@@ -2729,17 +2735,17 @@ quitGame 以外の操作は `{ state: GameView, messages: Message[] }` を返す
 - [ ] 音がオフのときは、どの出来事でも鳴らない。
 - [ ] Web Audio が使えないブラウザでも、エラーなく遊べる。
 - [ ] 操作前に suspended だった場合、最初のタップ・クリック／キー（Shift だけは除く）で音が出るようになる。iPhone の Safari でも、最初のタップで音が出る。
-- [ ] 各音の波形・周波数・長さが §25.2 の表と同じ。
+- [ ] 各音の音色・周波数・長さが §25.2 と同じ（v1.7）。
 
 #### BGM
 
-- [ ] 音がオンのとき、タイトル・名前入力で「鐘と祈り」、宿屋で「灰の暖炉」、ダンジョンと（通常の）入れ替え画面で「見られている迷宮」、戦闘で「裂ける夜」、ボス戦で「鉄の行進」が流れ、16 小節ごとに頭へ戻って途切れずに繰り返す。
-- [ ] クリア画面では何も流れない。
+- [ ] 音がオンのとき、タイトル・名前入力で「ローエングリン 第 1 幕への前奏曲」、宿屋で「グリーンスリーヴス」、ダンジョンと（通常の）入れ替え画面で「死の島」、戦闘で「火星」、ボス戦で「カタコンベ」が流れ、16 小節ごとに頭へ戻って途切れずに繰り返す（v1.7）。
+- [ ] ボス撃破の演出のあとから宿屋に戻るまで（撃破のメッセージ・入れ替え画面・クリア画面）、「イン・パラディス」が流れる（v1.7）。
 - [ ] 同じ場面の中（宿屋のメニュー・ステータスの開閉など）では曲が頭に戻らない。
 - [ ] 曲が変わるとき、前の曲が 0.3 秒で消えて次の曲が頭から始まる。
 - [ ] 通常の遭遇では、遭遇音が終わってから戦闘の曲が始まる。オンに切り替えたときは確認音のあとにタイトルの曲。
 - [ ] ボス出現の演出のあいだは無音で、演出が終わる（または飛ばす）とボスの曲が始まる。
-- [ ] ボスを倒すと曲が止まり、撃破のメッセージ・入れ替え画面・クリア画面のあいだ無音。「宿屋へ」で宿屋の曲。入れ替え画面で開き直しても無音。
+- [ ] ボスを倒すと、撃破の演出のあいだ曲が止まり、演出が終わる（または飛ばす）と「イン・パラディス」が始まる。撃破のメッセージ・入れ替え画面・クリア画面のあいだ頭に戻らずに続き、「宿屋へ」で宿屋の曲。入れ替え画面・クリア画面で開き直しても「イン・パラディス」（v1.7）。
 - [ ] 通常の敵に勝つと、メッセージのあいだは戦闘の曲、ダンジョン画面に戻るとダンジョンの曲。倒れると宿屋の曲。
 - [ ] 効果音が鳴っているあいだ BGM が 3 割の音量に下がり、終わると戻る。
 - [ ] オフにすると BGM が 0.3 秒で消える。
@@ -3860,58 +3866,161 @@ interface GameErrorBody { status: 400 | 404 | 409 | 500; error: string; message:
 
 ## 25. 効果音の音色
 
-### 25.1 音の作り（`src/audio/sound.ts`）
+### 25.1 音の作り（`src/audio/sound.ts`。v1.7 で FM 音源風に）
 
-- 1 音 = `OscillatorNode` 1 つ + `GainNode` 1 つ。`osc → gain → ac.destination` に直接つなぐ（BGM の音量バスは通らない。マスターゲインはない）。
-- 音量 `VOLUME = 0.08`。エンベロープは台形：
+- 1 つの効果音は、出来事（`SfxEvent`：音の高さ `f`（Hz。2 つ以上なら和音）・頭 `at`（ms）・長さ `len`（ms）・音色 `patch`・高さの動き `glide`・ビブラート `vib`）の並び。
+- 出来事ごとに `BiquadFilterNode`（`lowpass`、周波数 = `patch.lowpass`、Q 0.7）を作り、`→ ac.destination` につなぐ（BGM の音量バスは通らない。マスターゲインはない）。
+- 効果音の長さは `SFX_MS`（v1.6 までと同じ。ゲームの間（BGM の音量下げ・効果音のあとに曲を始める遅れ・演出の長さ）が効果音の長さで決まっているため）。出来事の終わり（`at + len`）のいちばん遅いものが、ちょうど `SFX_MS` になる。
+- 効果音の頭の時刻 `start = ac.currentTime`、終わり `end = start + SFX_MS / 1000`。出来事の頭 `t = start + at / 1000`、止める時刻 `stop = min(end, t + len / 1000)`。
+- 和音の 1 音の音量は `patch.vol / √(和音の音数)`。
 
-| 時刻 | 音量 |
+1 音（周波数 `f`、頭 `t`、止める時刻 `stop`、音量 `vol`、音色 `p`）は次のように作る（`fmTone`。BGM の §26.2 と同じ 2 オペレーターの FM）。
+
+| 手順 | 内容 |
 | --- | --- |
-| t（音の頭） | `setValueAtTime(0, t)` |
-| t + 0.005 秒 | `linearRampToValueAtTime(0.08, …)`（5 ms で立ち上げ） |
-| t + 長さ − 0.005 秒 | `setValueAtTime(0.08, …)`（そのまま保つ） |
-| t + 長さ | `linearRampToValueAtTime(0, …)`（5 ms で下げる） |
-
-- 周波数は一定（音の途中で変えない）。`osc.start(t)`、`osc.stop(t + 長さ)`。
-- 周波数 0 の音は休符：ノードを作らず、時刻だけ進める。
-- 音は並びの順に、すき間なく続けて予約する（最初の音の頭は `ac.currentTime`）。
+| 搬送波・変調波 | `OscillatorNode`（サイン波）2 つ。周波数 `f`・`f × p.ratio` を `setValueAtTime(…, t)` |
+| 高さの動き（`glide` が 1 でないとき） | 搬送波・変調波の周波数を `exponentialRampToValueAtTime(… × glide, stop)`（沈む・迫る） |
+| 変調の深さ | 変調波 → `GainNode mg` → 搬送波の `frequency`。`dev = p.index × f × p.ratio`。`setValueAtTime(dev, t)`、`setTargetAtTime(dev × p.sustain, t + 0.002, p.idecay)` |
+| 音量 | `a = min(p.attack, (stop − t) / 3)`、`fade = min(0.01, (stop − t) / 3)`。`setValueAtTime(0, t)` → `linearRampToValueAtTime(vol, t + a)` → `setTargetAtTime(vol × p.asus, t + a, p.adecay)` → `setTargetAtTime(0, stop − 2 × fade, fade / 2)` |
+| ビブラート（`vib` が true） | LFO（サイン波 5.5 Hz）→ `GainNode` → 搬送波の `frequency`。深さ `setValueAtTime(0, t)` → `linearRampToValueAtTime(f × 0.008, t + min(0.4, stop − t))` |
+| 開始・停止 | 搬送波・変調波（・LFO）を `start(t)`・`stop(stop)`。鳴り終わったら止める一覧から外す |
 
 ### 25.2 音の一覧（`SFX`）
 
-音名の周波数（Hz）：C5 = 523、E5 = 659、G5 = 784、C6 = 1047、E6 = 1319、G6 = 1568、C7 = 2093。
+2026-11-06 にオーナーが試聴ページ（`docs/requests/se-listen/`）で選んだもの。
 
-| 音 | 波形 | 音の並び（周波数 Hz・長さ ms。0 は休符） | 合計 |
+| 音 | 試聴ページでの名前 | 中身 | 長さ |
 | --- | --- | --- | --- |
-| `levelUp` | square | 523・90 → 659・90 → 784・90 → 1047・240 | 510 ms |
-| `rareDrop` | triangle | (1319・60 → 1568・60 → 2093・60) × 2 回 | 360 ms |
-| `rareDropLG` | triangle | (1319・60 → 1568・60 → 2093・60) × 4 回 → 2093・300 | 1,020 ms |
-| `bossAppear` | sawtooth | 98・300 → 104・300 → 98・300 → 92・300 | 1,200 ms |
-| `bossDefeat` | square | 1600 → 1400 → 1200 → 1000 → 850 → 700 → 550 → 420 → 300 → 200、各 50 | 500 ms |
-| `clear` | square | 784・150 → 784・150 → 784・150 → 659・450 → 休符・100 → 1047・300 → 784・150 → 1047・900 | 2,350 ms |
-| `toggle` | square | 1047・80 | 80 ms |
-| `encounter` | square | 220 → 262 → 311 → 370 → 440 → 523 → 622 → 740（各 30）→ 880・60 → 休符・40 → 880・60 → 休符・40 → 880・240（13 個） | 680 ms |
+| `encounter` | 新しい音 3b（闇から迫る） | ぶつかり合う低い和音（A2・B♭2）が、0.68 秒かけて 1.14 倍に上がっていき、消える。音色「うなる低い金管」 | 680 ms |
+| `levelUp` | 暗い案（短調・低め） | 262・90 → 311・90 → 392・90 → 523・240（ド・ミ♭・ソ・ド）。各音を 60 ms 重ねて響かせ、最後の音にビブラート。音色「沈んだ金管」 | 510 ms |
+| `rareDrop` | 低い音 2 | (E♭3・G3・C4) × 2 回の分散和音（1 音 60 ms、180 ms まで響かせる）。音色「暗い鐘」 | 360 ms |
+| `rareDropLG` | 低い音 2 | (E♭3・G3・C4) × 4 回 → C4・300 ms。音色「暗い鐘」 | 1,020 ms |
+| `bossAppear` | 暗い案 | 98・300 → 104・300 → 98・300 → 92・300（v1.6 までと同じ並び）。最後の音にビブラート。音色「地の底のうなり」 | 1,200 ms |
+| `bossDefeat` | 新しい音 1（崩れ落ちる） | 不安な和音（G3・C#4）が 0.5 秒で半分の高さまで沈む。下でこもった太鼓（A1、0.3 秒で半分の高さへ） | 500 ms |
+| `clear` | 新しい音 1（鎮魂の和音） | ハ短調の和音（オルガン・低い声）0.8 秒 → ハ長調の和音 1.55 秒。下で C2 の低い声がずっと続く。ゲームでは演出の 1.5 秒で止まる（§12.1） | 2,350 ms |
+| `toggle` | 暗い案 | 523・80（v1.6 までより 1 オクターブ下）。音色「低い木の音」 | 80 ms |
 
 コード（そのまま）：
 
 ```ts
-export const SFX: Readonly<Record<SfxName, readonly Note[]>> = {
-  levelUp: [sq(C5, 90), sq(E5, 90), sq(G5, 90), sq(C6, 240)],
-  rareDrop: [tri(E6, 60), tri(G6, 60), tri(C7, 60), tri(E6, 60), tri(G6, 60), tri(C7, 60)],
-  rareDropLG: [
-    tri(E6, 60), tri(G6, 60), tri(C7, 60), tri(E6, 60), tri(G6, 60), tri(C7, 60),
-    tri(E6, 60), tri(G6, 60), tri(C7, 60), tri(E6, 60), tri(G6, 60), tri(C7, 60),
-    tri(C7, 300),
-  ],
-  bossAppear: [saw(98, 300), saw(104, 300), saw(98, 300), saw(92, 300)],
-  bossDefeat: [1600, 1400, 1200, 1000, 850, 700, 550, 420, 300, 200].map((f) => sq(f, 50)),
-  clear: [sq(G5, 150), sq(G5, 150), sq(G5, 150), sq(E5, 450), sq(0, 100), sq(C6, 300), sq(G5, 150), sq(C6, 900)],
-  toggle: [sq(C6, 80)],
-  encounter: [
-    ...[220, 262, 311, 370, 440, 523, 622, 740].map((f) => sq(f, 30)),
-    sq(880, 60), sq(0, 40), sq(880, 60), sq(0, 40), sq(880, 240),
-  ],
+/** 効果音の FM の音色（2 オペレーター。BGM の FmPatch と同じ考え方で、ローパスと音量を持つ） */
+export interface SePatch {
+  name: string;
+  /** 変調波の周波数 ÷ 搬送波 */
+  ratio: number;
+  /** 変調の深さ（はじめ） */
+  index: number;
+  /** index の行き先（はじめの何倍か） */
+  sustain: number;
+  /** index が落ちる時定数（秒） */
+  idecay: number;
+  /** 音量の立ち上がり（秒） */
+  attack: number;
+  /** 音量が落ちる時定数（秒） */
+  adecay: number;
+  /** 音量の行き先（何倍か） */
+  asus: number;
+  /** 高い音を削る（ローパス）周波数（Hz） */
+  lowpass: number;
+  /** 音量（1 音） */
+  vol: number;
+}
+
+/** 効果音の 1 つの音（f が 2 つ以上なら和音）。at・len は ms */
+export interface SfxEvent {
+  f: readonly number[];
+  at: number;
+  len: number;
+  patch: SePatch;
+  /** 音の長さのあいだに、高さを何倍まで動かすか（なければ動かさない） */
+  glide?: number;
+  /** ゆれ（ビブラート）を付ける */
+  vib?: boolean;
+}
+
+const se = (name: string, p: Omit<SePatch, 'name'>): SePatch => ({ name, ...p });
+
+/** 音色の一覧（8 種） */
+export const SE_PATCHES = {
+  沈んだ金管: se('沈んだ金管', { ratio: 1, index: 0.9, sustain: 0.5, idecay: 0.08, attack: 0.02, adecay: 0.5, asus: 0.75, lowpass: 1300, vol: 0.24 }),
+  地の底のうなり: se('地の底のうなり', { ratio: 1, index: 1.8, sustain: 0.7, idecay: 0.5, attack: 0.06, adecay: 1.5, asus: 0.9, lowpass: 600, vol: 0.34 }),
+  低い木の音: se('低い木の音', { ratio: 1, index: 0.8, sustain: 0, idecay: 0.02, attack: 0.004, adecay: 0.035, asus: 0, lowpass: 1000, vol: 0.28 }),
+  うなる低い金管: se('うなる低い金管', { ratio: 1, index: 1.8, sustain: 0.7, idecay: 0.4, attack: 0.03, adecay: 0.8, asus: 0.8, lowpass: 700, vol: 0.22 }),
+  暗い鐘: se('暗い鐘', { ratio: 3, index: 0.8, sustain: 0, idecay: 0.15, attack: 0.003, adecay: 0.45, asus: 0, lowpass: 1500, vol: 0.22 }),
+  こもった太鼓: se('こもった太鼓', { ratio: 1, index: 2, sustain: 0, idecay: 0.02, attack: 0.002, adecay: 0.08, asus: 0, lowpass: 400, vol: 0.55 }),
+  暗いオルガン: se('暗いオルガン', { ratio: 2, index: 0.5, sustain: 0.9, idecay: 1, attack: 0.15, adecay: 2, asus: 0.9, lowpass: 1100, vol: 0.11 }),
+  低い声: se('低い声', { ratio: 1, index: 0.6, sustain: 0.8, idecay: 0.6, attack: 0.08, adecay: 1.2, asus: 0.85, lowpass: 900, vol: 0.12 }),
+} satisfies Record<string, SePatch>;
+const S = SE_PATCHES;
+
+const ev = (f: number | readonly number[], at: number, len: number, patch: SePatch, opts: { glide?: number; vib?: boolean } = {}): SfxEvent =>
+  ({ f: typeof f === 'number' ? [f] : f, at, len, patch, ...opts });
+
+/** 音を順に続けて並べる（[周波数, 長さ ms]。0 は休符）。tail ms だけ次の音に重ねて響かせる（並びの終わりは越えない） */
+function seq(notes: readonly (readonly [number, number])[], patch: SePatch, tail: number, vibLast: boolean): SfxEvent[] {
+  const total = notes.reduce((s, [, ms]) => s + ms, 0);
+  const out: SfxEvent[] = [];
+  let at = 0;
+  notes.forEach(([f, ms], i) => {
+    const last = i === notes.length - 1;
+    if (f > 0) out.push(ev(f, at, Math.min(ms + tail, total - at), patch, last && vibLast ? { vib: true } : {}));
+    at += ms;
+  });
+  return out;
+}
+
+/** ドロップの分散和音：3 音 × times 回（1 音 60ms、180ms まで響かせる）。lastMs があれば最後に 3 音目を長く */
+function sparkle(notes: readonly number[], times: number, lastMs: number): SfxEvent[] {
+  const total = times * notes.length * 60 + lastMs;
+  const out: SfxEvent[] = [];
+  for (let k = 0; k < times * notes.length; k++) out.push(ev(notes[k % notes.length], k * 60, Math.min(180, total - k * 60), S.暗い鐘));
+  if (lastMs > 0) out.push(ev(notes[notes.length - 1], total - lastMs, lastMs, S.暗い鐘));
+  return out;
+}
+
+// 音の高さ（Hz）
+const A1 = 55, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, C4 = 261.6, Eb4 = 311.1, E4 = 329.6;
+const C2 = 65.4;
+
+/** 効果音の長さ（ms）。v1.6 までと同じ（ゲームの間を変えないため） */
+export const SFX_MS: Readonly<Record<SfxName, number>> = {
+  levelUp: 510,
+  rareDrop: 360,
+  rareDropLG: 1020,
+  bossAppear: 1200,
+  bossDefeat: 500,
+  clear: 2350,
+  toggle: 80,
+  encounter: 680,
 };
-// sq = square, tri = triangle, saw = sawtooth。Note = { freq, ms, wave }
+
+/** 8 種類の音（仕様書 §25.2 のコードのとおり。2026-11-06 にオーナーが試聴ページで選んだもの） */
+export const SFX: Readonly<Record<SfxName, readonly SfxEvent[]>> = {
+  // 暗い案：ド・ミ♭・ソ・ド（短調・1 オクターブ下）
+  levelUp: seq([[262, 90], [311, 90], [392, 90], [523, 240]], S.沈んだ金管, 60, true),
+  // 低い音 2：ミ♭・ソ・ドの分散和音（3 オクターブ下）
+  rareDrop: sparkle([Eb3, G3, C4], 2, 0),
+  rareDropLG: sparkle([Eb3, G3, C4], 4, 300),
+  // 暗い案：いまと同じ低い 2 音を交互に
+  bossAppear: seq([[98, 300], [104, 300], [98, 300], [92, 300]], S.地の底のうなり, 0, true),
+  // 新しい音 1：崩れ落ちる
+  bossDefeat: [
+    ev(A1, 0, 300, S.こもった太鼓, { glide: 0.5 }),
+    ev([G3, 277.2], 0, 500, S.うなる低い金管, { glide: 0.5 }),
+  ],
+  // 新しい音 1：鎮魂の和音（ハ短調 → ハ長調）
+  clear: [
+    ev([C3, G3, C4, Eb4], 0, 800, S.暗いオルガン),
+    ev([C3, G3], 0, 800, S.低い声),
+    ev([C3, G3, C4, E4], 800, 1550, S.暗いオルガン),
+    ev([C3, E3, G3], 800, 1550, S.低い声),
+    ev(C2, 0, 2350, S.低い声),
+  ],
+  // 暗い案：1 オクターブ下
+  toggle: seq([[523, 80]], S.低い木の音, 0, false),
+  // 新しい音 3b：闇から迫る（ぶつかり合う低い和音が、少しずつ高く近づいてきて消える）
+  encounter: [ev([A2, Bb2], 0, 680, S.うなる低い金管, { glide: 1.14 })],
+};
 ```
 
 ### 25.3 公開する関数
@@ -3919,10 +4028,10 @@ export const SFX: Readonly<Record<SfxName, readonly Note[]>> = {
 | 関数 | 動き |
 | --- | --- |
 | `audioContext()` | 共用の `AudioContext` を返す（初回に `globalThis.AudioContext`、なければ `globalThis.webkitAudioContext` で作る。使えなければ `null`）。suspended なら §12.1（ブラウザの自動再生制限への対処） の再開待ちを付ける。単体テストでは `globalThis` に偽物を入れる（§26.11） |
-| `playSfx(name)` | 鳴っている効果音のノードをすべて `stop()` してから、`name` の並びを予約する。効果音の終わる時刻 `sfxEnd = currentTime + 合計秒` を記録し、登録された受け手（BGM の音量下げ）に合計秒を知らせる。例外は握りつぶす |
+| `playSfx(name)` | 鳴っている効果音のノードをすべて `stop()` してから、`name` の出来事をすべて予約する（§25.1）。効果音の終わる時刻 `sfxEnd = currentTime + 合計秒` を記録し、登録された受け手（BGM の音量下げ）に合計秒を知らせる。例外は握りつぶす |
 | `stopSfx()` | 鳴っている効果音を止め、`sfxEnd = 0`、受け手に 0 を知らせる |
 | `sfxRemainingSec()` | いま鳴っている効果音の残り秒（`max(0, sfxEnd − currentTime)`）。`AudioContext` がなければ 0 |
-| `sfxDuration(name)` | 並びの長さの合計（ms） |
+| `sfxDuration(name)` | 効果音の長さ `SFX_MS[name]`（ms。v1.7） |
 | `onSfx(listener)` | 効果音を鳴らした（秒）・止めた（0）ことを知らせる先を 1 つ登録する（`bgm.ts` が読み込み時に `duckBgm` を登録。循環 import を避けるため） |
 
 ### 25.4 鳴らすタイミング（メッセージとの同期）
@@ -3976,7 +4085,7 @@ export const SFX: Readonly<Record<SfxName, readonly Note[]>> = {
 | ring | 鳴らす長さの倍率（余韻） |
 | vib | ビブラートの有無 |
 
-`FM_PATCHES`（17 種。キー名と `name` が違うものがある：キー「柔らかいベース」の `name` は「ベース」）：
+`FM_PATCHES`（20 種。v1.7 で高い弦・オルガン・低い弦を足した。キー名と `name` が違うものがある：キー「柔らかいベース」の `name` は「ベース」）：
 
 | キー | name | ratio | index | sustain | idecay | attack | adecay | asus | ring | vib |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -3997,6 +4106,9 @@ export const SFX: Readonly<Record<SfxName, readonly Note[]>> = {
 | ひずみ | ひずみ | 1 | 5 | 0.8 | 0.3 | 0.003 | 1 | 0.9 | 1 | false |
 | 弦のきざみ | 弦のきざみ | 1 | 2 | 0.4 | 0.08 | 0.008 | 0.3 | 0.7 | 1 | false |
 | ホルン | ホルン | 1 | 2.2 | 0.6 | 0.25 | 0.06 | 1.5 | 0.85 | 1 | true |
+| 高い弦 | 高い弦 | 1 | 0.7 | 0.85 | 0.8 | 0.35 | 3 | 0.95 | 1 | true |
+| オルガン | オルガン | 2 | 0.5 | 0.95 | 1 | 0.02 | 4 | 0.95 | 1 | false |
+| 低い弦 | 低い弦 | 1 | 1.4 | 0.7 | 0.3 | 0.04 | 1.5 | 0.85 | 1 | false |
 
 ### 26.4 打楽器（`drum`）
 
@@ -4047,7 +4159,7 @@ export const SFX: Readonly<Record<SfxName, readonly Note[]>> = {
 ```ts
 export function sceneBgm(pathname, state, active): BgmName | null {
   if (active?.effect === 'bossAppear' || active?.effect === 'bossDefeat') return null;
-  if (afterBoss(state)) return null;   // state.location === 'CLEARED' || (state.location === 'SWAP' && state.dungeon === null)
+  if (afterBoss(state)) return 'clear';   // state.location === 'CLEARED' || (state.location === 'SWAP' && state.dungeon === null)。v1.6 までは null（無音）
   switch (pathname) {
     case '/': case '/new': return 'title';
     case '/inn': return 'inn';
@@ -4080,18 +4192,20 @@ export function sceneBgm(pathname, state, active): BgmName | null {
 
 ### 26.9 曲データ
 
-- 5 曲とも 16 小節。曲の諸元：
+- 6 曲とも 16 小節（v1.7）。曲の諸元：
 
 | 名前（`BgmName`） | 曲名 | bpm | bpb | bars | 1 周（秒） | パート（label・音色・vol） | 打楽器 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `title` | 鐘と祈り | 66 | 4 | 16 | 58.18 | メロディ・クワイア・0.65／和音・パッド・0.17／鐘・チューブラーベル・0.26／ベース・柔らかいベース・0.8 | なし |
-| `inn` | 灰の暖炉 | 84 | 3 | 16 | 34.29 | メロディ・木管・0.75／竪琴・ハープ・0.3／ベース・ベース・0.7 | なし |
-| `dungeon` | 見られている迷宮 | 84 | 4 | 16 | 45.71 | ベース・ウッドベース・0.85／メロディ・笛・0.6／しずく・しずく・0.2／濁り・金属のうなり・0.09 | なし |
-| `battle` | 裂ける夜 | 172 | 4 | 16 | 22.33 | メロディ・シンセリード・0.75／5 度の和音・ブラス・0.24／ベース・スラップベース・0.85／ベースの重ね・ひずみ・0.1 | kick・snare・hat |
-| `boss` | 鉄の行進 | 120 | 4 | 16 | 32.00 | 震える和音・弦のきざみ・0.4／角笛・ホルン・0.55／和音・ブラス・0.18／ベース・柔らかいベース・0.85 | boom・snare |
+| `title` | ローエングリン 第 1 幕への前奏曲（ワーグナー） | 52 | 4 | 16 | 73.85 | 旋律・高い弦・0.6／高い和音・高い弦・0.16／和音・パッド・0.12／ベース・柔らかいベース・0.45 | なし |
+| `inn` | グリーンスリーヴス（イングランド民謡） | 100 | 3 | 16 | 28.80 | 旋律・笛・0.7／竪琴・ハープ・0.28／ベース・ベース・0.55 | なし |
+| `dungeon` | 死の島（ラフマニノフ） | 72 | 2.5 | 16 | 33.33 | 揺れる低い弦・低い弦・0.7／低い和音・パッド・0.13／怒りの日・ホルン・0.45／しずく・しずく・0.12 | なし |
+| `battle` | 火星 — 戦いの神（ホルスト『惑星』） | 168 | 5 | 16 | 28.57 | くり返し・弦のきざみ・0.5／くり返しの重ね・ひずみ・0.08／金管の主題・ブラス・0.45／和音・ホルン・0.2 | snare・boom |
+| `boss` | カタコンベ（ローマ時代の墓）（ムソルグスキー『展覧会の絵』） | 60 | 3 | 16 | 48.00 | 強い和音・ブラス・0.4／弱い和音・パッド・0.2／上の声・ホルン・0.4／ベース・柔らかいベース・0.85 | boom・snare |
+| `clear` | イン・パラディス（フォーレ『レクイエム』） | 66 | 3 | 16 | 43.64 | オルガンの分散和音・オルガン・0.22／ソプラノ・クワイア・0.5／ペダル・柔らかいベース・0.5 | なし |
 
 - パートの並び順は上の表のとおり。
-- `motif`（呪いの動機が鳴る小節の記録。再生には使わない）：title `[1, 9]`、inn `[]`、dungeon `[9, 10, 11, 12]`、battle `[1, 5]`、boss `[1, 2, 3, 4, 9, 10, 11, 12]`。
+- `bpb` は 1 小節の拍数（4 分音符 = 1）。`dungeon` は 5/8 拍子なので 2.5、`battle` は 5/4 拍子なので 5。
+- v1.6 までの `motif`（呪いの動機が鳴る小節の記録）は、自作の曲の記録だったのでなくした（v1.7）。
 
 以下の 2 ファイルを**そのまま**作る（記法と曲データの全文）。v1.1 ではファイル名をケバブケースにし、`bgm-tracks.ts` の import 先を `'./bgm-notation'` にする。コメントの中の `docs/bgm-listening-src/tracks.js`・`bgmTracks.test.ts` は元の WIZ の記録で、v1.1 にはない（§26.10）。
 
@@ -4211,31 +4325,21 @@ export const arp = (
   });
 ```
 
-`src/logic/bgm-tracks.ts`（v1.0 の `frontend/src/game/bgmTracks.ts`）：
+`src/logic/bgm-tracks.ts`（v1.7 で 6 曲に入れ替えた）：
 
 ```ts
 /**
- * BGM の曲データ（WIZ-DES-0045 §3、WIZ-AD-0019）。2026-10-15 にユーザーが試聴ページで選んだ 5 曲（FM 音源風）。
- * 正は試聴ページ（docs/bgm-listening-src/tracks.js）で、値はそれと同じにする（bgmTracks.test.ts で突き合わせる）。
- * 曲の考え方は docs/bgm-design-ja.md と各場面の文書。
+ * BGM の曲データ（仕様書 §26.9。v1.7）。2026-11-06 にオーナーが試聴ページで選んだ 6 曲（FM 音源風）。
+ * 原曲はどれも著作権の切れたクラシック・民謡で、有名な部分を短く編曲した（宿屋の伴奏はこのゲーム用の自前の編曲）。
+ * 試聴ページの元は docs/requests/bgm-listen/（この値と同じ）。
  */
-import {
-  BgmNote,
-  Chord,
-  N,
-  R,
-  arp,
-  at,
-  mel,
-  perBar,
-  voicing,
-} from './bgm-notation';
+import { type BgmNote, type Chord, N, R, at, mel, perBar, voicing } from './bgm-notation';
 
 export type { BgmNote } from './bgm-notation';
 
-export type BgmName = 'title' | 'inn' | 'dungeon' | 'battle' | 'boss';
+export type BgmName = 'title' | 'inn' | 'dungeon' | 'battle' | 'boss' | 'clear';
 
-/** 2 オペレーターの FM の音色（設計書 §3） */
+/** 2 オペレーターの FM の音色（仕様書 §26.2） */
 export interface FmPatch {
   name: string;
   /** 変調波の周波数 ÷ 搬送波 */
@@ -4273,16 +4377,14 @@ export interface DrumHit {
 }
 
 export interface BgmTrack {
-  /** 曲名 */
+  /** 曲名（原曲） */
   name: string;
   bpm: number;
-  /** 1 小節の拍数 */
+  /** 1 小節の拍数（4 分音符 = 1。5/8 拍子は 2.5） */
   bpb: number;
   bars: number;
   parts: readonly BgmPart[];
   drums: readonly DrumHit[];
-  /** 呪いの動機が鳴る小節（記録用） */
-  motif: readonly number[];
 }
 
 export const loopBeats = (t: BgmTrack) => t.bars * t.bpb;
@@ -4312,7 +4414,7 @@ const patch = (
   vib,
 });
 
-/** 音色の一覧（設計書 §3.2 の 17 種） */
+/** 音色の一覧（20 種。v1.6 までの 17 種に、高い弦・オルガン・低い弦を足した） */
 export const FM_PATCHES = {
   クワイア: patch('クワイア', 1, 1.2, 0.7, 0.4, 0.09, 2.0, 0.85, 1, true),
   パッド: patch('パッド', 1, 0.8, 0.8, 0.6, 0.25, 2.5, 0.9, 1, false),
@@ -4331,147 +4433,152 @@ export const FM_PATCHES = {
   ひずみ: patch('ひずみ', 1, 5, 0.8, 0.3, 0.003, 1, 0.9, 1, false),
   弦のきざみ: patch('弦のきざみ', 1, 2, 0.4, 0.08, 0.008, 0.3, 0.7, 1, false),
   ホルン: patch('ホルン', 1, 2.2, 0.6, 0.25, 0.06, 1.5, 0.85, 1, true),
+  高い弦: patch('高い弦', 1, 0.7, 0.85, 0.8, 0.35, 3, 0.95, 1, true),
+  オルガン: patch('オルガン', 2, 0.5, 0.95, 1, 0.02, 4, 0.95, 1, false),
+  低い弦: patch('低い弦', 1, 1.4, 0.7, 0.3, 0.04, 1.5, 0.85, 1, false),
 } satisfies Record<string, FmPatch>;
 
 const P = FM_PATCHES;
-const part = (
-  label: string,
-  fm: FmPatch,
-  vol: number,
-  notes: BgmNote[],
-): BgmPart => ({ label, vol, fm, notes });
+const part = (label: string, fm: FmPatch, vol: number, notes: BgmNote[]): BgmPart => ({ label, vol, fm, notes });
 
-// ===================== タイトル「鐘と祈り」（docs/bgm-design-title-ja.md）=====================
+// ===================== タイトル：ワーグナー『ローエングリン』第 1 幕への前奏曲（イ長調・4/4）=====================
+// 高い弦の和音が静かに続き、その上で旋律がゆっくり上っていく（冒頭の雰囲気に寄せた）
 const title = (): BgmTrack => {
-  const prog = ['Dm', 'Dm', 'Bb', 'Bb', 'Gm', 'Gm', 'A', 'A', 'Dm', 'F', 'C', 'Bb', 'Gm', 'Eb', 'A', 'A'];
+  const prog = ['A', 'A', 'D', 'A', 'F#m', 'C#m', 'D', 'E', 'A', 'D', 'E', 'C#m', 'D', 'A', 'E', 'E'];
   return {
-    name: '鐘と祈り',
-    bpm: 66,
+    name: 'ローエングリン 第 1 幕への前奏曲（ワーグナー）',
+    bpm: 52,
     bpb: 4,
     bars: 16,
-    motif: [1, 9],
     drums: [],
     parts: [
-      part('メロディ', P.クワイア, 0.65, mel('D4:2 F4:1 E4:1 | A3:4 | F4:2 G4:1 A4:1 | Bb4:4 | G4:2 A4:1 Bb4:1 | D5:3 C5:1 | C#5:4 | E4:4 | D4:2 F4:1 E4:1 | A4:4 | G4:2 E4:2 | F4:4 | D5:2 Bb4:2 | G4:2 Eb4:2 | E4:2 C#4:2 | A3:4')),
-      part('和音', P.パッド, 0.17, perBar(prog, 4, (c, beats) => [N(voicing(c, 50), beats)])),
-      part('鐘', P.チューブラーベル, 0.26, perBar(prog, 4, (c, beats, i) => (i % 2 === 0 ? [N(at(c.pcs[0], 72), 0.25), R(beats - 0.25)] : [R(beats)]))),
-      part('ベース', P.柔らかいベース, 0.8, perBar(prog, 4, (c, beats) => [N(at(c.bass, 36), beats)])),
+      part('旋律', P.高い弦, 0.6, mel('E5:4 | A5:3 G#5:1 | F#5:2 A5:2 | E5:4 | C#5:2 F#5:2 | E5:2 G#5:2 | F#5:2 A5:2 | B5:4 | C#6:4 | A5:2 F#5:2 | G#5:2 B5:2 | E6:4 | D6:2 B5:2 | A5:2 C#6:2 | B5:3 A5:1 | G#5:4')),
+      part('高い和音', P.高い弦, 0.16, perBar(prog, 4, (c, beats) => [N(voicing(c, 69), beats)])),
+      part('和音', P.パッド, 0.12, perBar(prog, 4, (c, beats) => [N(voicing(c, 57), beats)])),
+      part('ベース', P.柔らかいベース, 0.45, perBar(prog, 4, (c, beats, i) => (i < 4 ? [R(beats)] : [N(at(c.bass, 33), beats)]))),
     ],
   };
 };
 
-// ===================== 宿屋「灰の暖炉」（docs/bgm-design-inn-ja.md）=====================
+// ===================== 宿屋：民謡「グリーンスリーヴス」（イ短調・3/4）=====================
+// 旋律は 16 世紀のイングランド民謡。和音・伴奏はこのゲーム用（ヴォーン・ウィリアムズの編曲は使わない）
 const inn = (): BgmTrack => {
-  const prog = ['Eb', 'Bb/D', 'Cm', 'Ab', 'Eb', 'Fm', 'Bb', 'Eb', 'Cm', 'Gm', 'Ab', 'Eb', 'Fm', 'Bb', 'Eb', 'Bb'];
+  const prog = ['Am', 'G', 'G', 'Em', 'Am', 'Am', 'E', 'Am', 'Am', 'G', 'G', 'Em', 'Am', 'E', 'Am', 'E'];
   return {
-    name: '灰の暖炉',
-    bpm: 84,
+    name: 'グリーンスリーヴス（イングランド民謡）',
+    bpm: 100,
     bpb: 3,
     bars: 16,
-    motif: [],
     drums: [],
     parts: [
-      part('メロディ', P.木管, 0.75, mel('G5:2 F5:1 | Eb5:2 Bb4:1 | C5:2 Eb5:1 | Ab4:3 | G4:1 Bb4:1 Eb5:1 | F5:2 Ab4:1 | D5:2 F5:1 | Eb5:3 | C5:2 Eb5:1 | D5:2 Bb4:1 | C5:1 Eb5:1 Ab5:1 | G5:3 | Ab5:2 F5:1 | D5:2 Bb4:1 | G4:2 Bb4:1 | Bb4:3')),
-      part('竪琴', P.ハープ, 0.3, arp(prog, 3, 55, [0, 1, 2, 1, 2, 1])),
-      part('ベース', P.ベース, 0.7, perBar(prog, 3, (c, beats) => [N(at(c.bass, 36), beats)])),
+      part('旋律', P.笛, 0.7, mel('C5:2 D5:1 | E5:1.5 F#5:0.5 E5:1 | D5:2 B4:1 | G4:1.5 A4:0.5 B4:1 | C5:2 A4:1 | A4:1.5 G#4:0.5 A4:1 | B4:2 G#4:1 | E4:2 A4:1 | C5:2 D5:1 | E5:1.5 F#5:0.5 E5:1 | D5:2 B4:1 | G4:1.5 A4:0.5 B4:1 | C5:1.5 B4:0.5 A4:1 | G#4:1.5 F#4:0.5 G#4:1 | A4:3 | A4:2 A4:1')),
+      part('竪琴', P.ハープ, 0.28, perBar(prog, 3, (c) => {
+        const [a, b, d] = voicing(c, 52);
+        return [N(a, 0.5), N(b, 0.5), N(d, 0.5), N(b + 12, 0.5), N(d, 0.5), N(b, 0.5)];
+      })),
+      part('ベース', P.ベース, 0.55, perBar(prog, 3, (c) => [N(at(c.bass, 40), 2), N(at(c.pcs[2], 40), 1)])),
     ],
   };
 };
 
-// ===================== ダンジョン「見られている迷宮」（docs/bgm-design-dungeon-ja.md）=====================
+// ===================== ダンジョン：ラフマニノフ『死の島』（イ短調・5/8）=====================
+// 低い弦が舟をこぐように 5 拍子で揺れる。後半に「怒りの日」（ディエス・イレ）の旋律
 const dungeon = (): BgmTrack => {
-  const prog = ['Am', 'Am', 'Bb', 'Am', 'F', 'E', 'Am', 'Am', 'Dm', 'Bb', 'E', 'E', 'Am', 'Bb', 'E', 'E'];
-  const motif = [45, 48, 47, 40]; // A2 C3 B2 E2（呪いの動機）
+  const prog = ['Am', 'Am', 'Am', 'Am', 'F', 'F', 'E', 'E', 'Am', 'Am', 'Dm', 'Dm', 'Bb', 'Bb', 'E', 'E'];
+  const bpb = 2.5;
   return {
-    name: '見られている迷宮',
-    bpm: 84,
-    bpb: 4,
+    name: '死の島（ラフマニノフ）',
+    bpm: 72,
+    bpb,
     bars: 16,
-    motif: [9, 10, 11, 12],
     drums: [],
     parts: [
-      part('ベース', P.ウッドベース, 0.85, perBar(prog, 4, (c, beats, i) => {
-        if (i >= 8 && i <= 11) return [N(motif[i - 8], beats)];
+      part('揺れる低い弦', P.低い弦, 0.7, perBar(prog, bpb, (c: Chord) => {
         const r = at(c.pcs[0], 40);
-        return [N(r, 1), R(0.5), N(r, 0.5), N(at(c.pcs[2], r), 1), N(r, 1)];
+        const third = at(c.pcs[1], r);
+        return [N(r, 0.5), N(r + 2, 0.5), N(third, 0.5), N(r + 2, 0.5), N(r, 0.5)];
       })),
-      part('メロディ', P.笛, 0.6, mel('r:4 | r:4 | F5:4 | E5:2 r:2 | r:2 A5:2 | G#5:4 | r:4 | r:4 | r:4 | r:4 | r:4 | r:4 | C5:1 B4:1 A4:1 G#4:1 | r:4 | E5:4 | r:4')),
-      part('しずく', P.しずく, 0.2, mel('r:4 | r:3 A6:0.25 r:0.75 | r:4 | r:4 | r:4 | r:3 E6:0.25 r:0.75 | r:4 | r:4 | r:4 | r:4 | r:4 | r:2.5 A6:0.25 r:1.25 | r:4 | r:4 | r:4 | r:4')),
-      part('濁り', P.金属のうなり, 0.09, perBar(prog, 4, (c, beats, i) => ([2, 9, 13].includes(i) ? [N([46, 52], 2), R(2)] : [R(beats)]))),
+      part('低い和音', P.パッド, 0.13, perBar(prog, bpb, (c, beats) => [N(voicing(c, 52), beats)])),
+      part('怒りの日', P.ホルン, 0.45, mel('r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | C4:1 B3:0.5 C4:1 | A3:1 B3:0.5 G3:1 | A3:1.5 A3:1 | r:2.5 | C4:1 D4:0.5 C4:1 | B3:1 A3:0.5 B3:1 | G#3:2.5 | r:2.5')),
+      part('しずく', P.しずく, 0.12, mel('r:2.5 | r:2 E6:0.25 r:0.25 | r:2.5 | r:2.5 | r:2.5 | r:1.5 A5:0.25 r:0.75 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2.5 | r:2 D6:0.25 r:0.25 | r:2.5 | r:2.5 | r:2.5 | r:2.5')),
     ],
   };
 };
 
-// ===================== バトル「裂ける夜」（docs/bgm-design-battle-ja.md）=====================
+// ===================== 戦闘：ホルスト『惑星』より「火星」（ト調・5/4）=====================
+// 5 拍子のくり返し（タタタ・ターン・ターン・タタ・ターン）がずっと続き、上で金管が主題を吹く
 const battle = (): BgmTrack => {
-  const prog = ['Dm', 'Dm', 'Bb', 'A', 'Dm', 'Dm', 'Eb', 'A', 'Gm', 'Gm', 'Dm', 'Dm', 'Bb', 'C', 'A', 'A'];
+  const bpb = 5;
+  const t3 = 1 / 3;
+  const rhythm = [t3, t3, t3, 1, 1, 0.5, 0.5, 1];
   const drums: DrumHit[] = [];
   for (let b = 0; b < 16; b++) {
-    if (b === 15) {
-      for (let k = 0; k < 8; k++) drums.push({ beat: b * 4 + k * 0.5, kind: 'snare', vel: 0.3 + k * 0.02 });
-      continue;
-    }
-    for (let k = 0; k < 4; k++) {
-      drums.push({ beat: b * 4 + k, kind: 'kick', vel: 0.38 });
-      if (k % 2) drums.push({ beat: b * 4 + k, kind: 'snare', vel: 0.3 });
-      drums.push({ beat: b * 4 + k + 0.5, kind: 'hat', vel: 0.1 });
+    let beat = b * bpb;
+    for (const [k, len] of rhythm.entries()) {
+      drums.push({ beat, kind: k < 3 || k === 5 || k === 6 ? 'snare' : 'boom', vel: k < 3 ? 0.18 : 0.4 });
+      beat += len;
     }
   }
-  // 「タッ・タタ」のベース
-  const gallop = (c: Chord) => {
-    const r = at(c.pcs[0], 38);
-    return [0, 1, 2, 3].flatMap(() => [N(r, 0.5), N(r, 0.25), N(r, 0.25)]);
-  };
+  const ostinato = (p: number) => rhythm.map((len) => N(p, len));
+  const prog = Array.from({ length: 16 }, () => 'G');
+  // G の上で、ずれた和音が少しずつ動く（G・D の 5 度に、Eb・Db などがぶつかる）
+  const tops: readonly (readonly number[])[] = [[55, 62], [55, 62], [55, 63], [55, 63], [55, 62, 66], [55, 62, 66], [56, 61, 65], [56, 62, 65], [55, 62, 67], [56, 63, 67], [55, 62, 65], [54, 62, 66], [55, 62, 67], [54, 62, 66], [55, 62, 67], [54, 62, 66]];
   return {
-    name: '裂ける夜',
-    bpm: 172,
-    bpb: 4,
+    name: '火星 — 戦いの神（ホルスト『惑星』）',
+    bpm: 168,
+    bpb,
     bars: 16,
-    motif: [1, 5],
     drums,
     parts: [
-      part('メロディ', P.シンセリード, 0.75, mel('D5:1 F5:1 E5:1 A4:1 | D5:0.5 E5:0.5 F5:1 A5:2 | Bb5:1 A5:1 F5:1 D5:1 | C#5:2 E5:2 | D5:1 F5:1 E5:1 A5:1 | G5:1 F5:1 E5:1 D5:1 | Eb5:2 G5:1 F5:1 | E5:2 C#5:2 | G4:1 Bb4:1 D5:1 G5:1 | F5:1 E5:1 D5:2 | A4:1 D5:1 F5:1 A5:1 | G5:2 F5:2 | F5:1 D5:1 Bb4:1 D5:1 | E5:1 G5:1 C5:2 | C#5:1 E5:1 A5:2 | A4:0.5 A4:0.5 C#5:0.5 C#5:0.5 E5:0.5 E5:0.5 A5:1')),
-      part('5 度の和音', P.ブラス, 0.24, perBar(prog, 4, (c) => {
-        const r = at(c.pcs[0], 50);
-        return [N([r, r + 7], 2), N([r, r + 7], 2)];
-      })),
-      part('ベース', P.スラップベース, 0.85, perBar(prog, 4, gallop)),
-      part('ベースの重ね', P.ひずみ, 0.1, perBar(prog, 4, (c) => gallop(c).map((n) => N((n.p as number) + 12, n.len)))),
+      part('くり返し', P.弦のきざみ, 0.5, prog.flatMap(() => ostinato(43))),
+      part('くり返しの重ね', P.ひずみ, 0.08, prog.flatMap(() => ostinato(31))),
+      part('金管の主題', P.ブラス, 0.45, mel('r:5 | r:5 | r:5 | r:5 | D4:3 Eb4:2 | D4:5 | Db4:3 C4:2 | D4:5 | G4:3 Ab4:2 | G4:2 F4:1 Eb4:2 | D4:5 | D4:5 | Bb4:2 A4:1 G4:2 | F#4:5 | G4:2.5 D4:2.5 | D4:5')),
+      part('和音', P.ホルン, 0.2, perBar(prog, bpb, (_c, beats, i) => [N(tops[i], beats)])),
     ],
   };
 };
 
-// ===================== ボス「鉄の行進」（docs/bgm-design-boss-ja.md）=====================
+// ===================== ボス戦：ムソルグスキー『展覧会の絵』より「カタコンベ」（ロ短調・3/4）=====================
+// 重い金管の和音が、強い音と弱い音を交互にくり返す。緊張を保つため、低い太鼓を足した
 const boss = (): BgmTrack => {
-  const prog = ['Em', 'Em', 'C', 'C', 'Am', 'Am', 'B', 'B', 'Em', 'Em', 'F', 'F', 'Am', 'B', 'Em', 'B'];
-  // 呪いの動機 E2 G2 F#2 B1 ／ E2 G2 F#2 B2
-  const motifBass: Readonly<Record<number, number>> = { 0: 40, 1: 43, 2: 42, 3: 35, 8: 40, 9: 43, 10: 42, 11: 47 };
+  const prog = ['Bm', 'Bm', 'G', 'G', 'Em', 'F#', 'Bm', 'Bm', 'D', 'D', 'G', 'C', 'F#', 'F#', 'Bm', 'F#'];
   const drums: DrumHit[] = [];
   for (let b = 0; b < 16; b++) {
-    drums.push(
-      { beat: b * 4, kind: 'boom', vel: 0.6 },
-      { beat: b * 4 + 2, kind: 'boom', vel: 0.45 },
-      { beat: b * 4 + 3, kind: 'snare', vel: 0.16 },
-    );
-    if (b === 7 || b === 15) drums.push({ beat: b * 4 + 3.5, kind: 'snare', vel: 0.38 });
+    drums.push({ beat: b * 3, kind: 'boom', vel: b % 2 === 0 ? 0.6 : 0.3 });
+    if (b % 4 === 3) drums.push({ beat: b * 3 + 2.5, kind: 'snare', vel: 0.2 });
   }
   return {
-    name: '鉄の行進',
-    bpm: 120,
-    bpb: 4,
+    name: 'カタコンベ（ローマ時代の墓）（ムソルグスキー『展覧会の絵』）',
+    bpm: 60,
+    bpb: 3,
     bars: 16,
-    motif: [1, 2, 3, 4, 9, 10, 11, 12],
     drums,
     parts: [
-      part('震える和音', P.弦のきざみ, 0.4, perBar(prog, 4, (c) => {
-        const tones: number[] = [];
-        for (let p = 62; p <= 81; p++) if (c.pcs.includes(p % 12)) tones.push(p);
-        const [lo, mid, hi] = tones.slice(-3);
-        return [hi, hi, mid, mid, lo, lo, mid, mid].map((p) => N(p, 0.5));
+      part('強い和音', P.ブラス, 0.4, perBar(prog, 3, (c, beats, i) => (i % 2 === 0 ? [N(voicing(c, 54), beats)] : [R(beats)]))),
+      part('弱い和音', P.パッド, 0.2, perBar(prog, 3, (c, beats, i) => (i % 2 === 1 ? [N(voicing(c, 59), beats)] : [R(beats)]))),
+      part('上の声', P.ホルン, 0.4, mel('B4:3 | D5:3 | D5:3 | B4:3 | G4:3 | A#4:3 | B4:3 | F#4:3 | A4:3 | F#4:3 | B4:3 | C5:3 | C#5:3 | A#4:3 | B4:3 | A#4:3')),
+      part('ベース', P.柔らかいベース, 0.85, perBar(prog, 3, (c, beats) => [N(at(c.bass, 35), beats)])),
+    ],
+  };
+};
+
+// ===================== ボス撃破・クリア：フォーレ『レクイエム』より「イン・パラディス」（ニ長調・3/4）=====================
+// オルガンの細かい分散和音がずっと流れ、その上でソプラノが静かに歌う
+const clear = (): BgmTrack => {
+  const prog = ['D', 'D', 'G/D', 'D', 'Bm', 'G', 'A', 'A', 'D', 'F#m', 'G', 'D', 'Em', 'A', 'D', 'A'];
+  return {
+    name: 'イン・パラディス（フォーレ『レクイエム』）',
+    bpm: 66,
+    bpb: 3,
+    bars: 16,
+    drums: [],
+    parts: [
+      part('オルガンの分散和音', P.オルガン, 0.22, perBar(prog, 3, (c) => {
+        const [a, b, d] = voicing(c, 62);
+        return [a, b, d, b + 12, d, b, a, b, d, b + 12, d, b].map((p) => N(p, 0.25));
       })),
-      part('角笛', P.ホルン, 0.55, mel('r:16 | B4:2 E5:2 | D5:2 C5:2 | B4:4 | B4:4 | r:16 | E5:2 G5:2 | F#5:2 E5:2 | D#5:4 | B4:4')),
-      part('和音', P.ブラス, 0.18, perBar(prog, 4, (c) => [N(voicing(c, 50), 4)])),
-      part('ベース', P.柔らかいベース, 0.85, perBar(prog, 4, (c, beats, i) => [N(motifBass[i] ?? at(c.pcs[0], 40), beats)])),
+      part('ソプラノ', P.クワイア, 0.5, mel('A5:3 | F#5:2 G5:1 | A5:2 B5:1 | A5:3 | F#5:2 D5:1 | E5:2 D5:1 | C#5:3 | E5:3 | F#5:2 A5:1 | A5:2 G#5:1 | B5:2 A5:1 | F#5:3 | G5:2 E5:1 | E5:2 C#5:1 | D5:3 | E5:3')),
+      part('ペダル', P.柔らかいベース, 0.5, perBar(prog, 3, (c, beats) => [N(at(c.bass, 38), beats)])),
     ],
   };
 };
@@ -4482,6 +4589,7 @@ export const BGM: Readonly<Record<BgmName, BgmTrack>> = {
   dungeon: dungeon(),
   battle: battle(),
   boss: boss(),
+  clear: clear(),
 };
 ```
 
@@ -4489,7 +4597,8 @@ export const BGM: Readonly<Record<BgmName, BgmTrack>> = {
 
 - v1.1 では、**本書の §26.8・§26.9 のコード（`bgm-notation.ts`・`bgm-tracks.ts`）を曲データの正本** とする。FM の鳴らし方の正本は §26.2〜§26.6。
 - 元の WIZ では、試聴ページの元 `docs/bgm-listening-src/tracks.js`（採用しなかった候補曲も含む全曲）を正本とし、テスト（WIZ-TC-0131）が採用曲と突き合わせていた。このファイルは v1.1 のリポジトリにないので、突き合わせのテストは作らない（v1.0 §26.10 の「持ち込めない場合」の扱い）。
-- 元の試聴ページの曲 ID との対応（記録）：title = `title-b-fm`、inn = `inn-c-fm`、dungeon = `dungeon-a-fm`、battle = `boss-c-fm`（「裂ける夜」。ボス用に作った曲をユーザーの選択でバトルに使う）、boss = `battle-c-fm`（「鉄の行進」。バトル用に作った曲をボスに使う）。
+- v1.7 の 6 曲の試聴ページの元は `docs/requests/bgm-listen/`（`tracks-v17.ts` の値は §26.9 と同じ）。v1.6 までの 5 曲は、v1.6 の本書（git の履歴）を見る。
+- 元の試聴ページの曲 ID との対応（v1.6 までの記録）：title = `title-b-fm`、inn = `inn-c-fm`、dungeon = `dungeon-a-fm`、battle = `boss-c-fm`（「裂ける夜」。ボス用に作った曲をユーザーの選択でバトルに使う）、boss = `battle-c-fm`（「鉄の行進」。バトル用に作った曲をボスに使う）。
 - 書き写しの誤りは、`tests/logic/bgm-tracks.test.ts` で諸元（bpm・bpb・bars・パートの label・vol・音色の全パラメータ）と、各パートの拍数・音域・音の数を確かめ、実機で聴いて確かめる。
 
 ### 26.11 テスト（偽の AudioContext）
@@ -4500,11 +4609,11 @@ export const BGM: Readonly<Record<BgmName, BgmTrack>> = {
 
 | テスト | 主に確かめること | v1.0 |
 | --- | --- | --- |
-| `tests/audio/sound.test.ts` | 8 種類、各 3 秒以内・0〜4,000 Hz・有効な波形、Web Audio がなくても例外なし、encounter は合計 680 ms・頭は休符でない・13 個・矩形波だけ | `sound.test.tsx`・`encounter.test.tsx` の一部 |
+| `tests/audio/sound.test.ts` | 8 種類、長さが `SFX_MS`（v1.6 までと同じ）で出来事の終わりのいちばん遅いものと一致、各 3 秒以内・20〜2,000 Hz、音色の値の範囲、§25.2 の中身（周波数・頭・長さ・音色）、FM の予約（搬送波・変調波・ローパス・glide・ビブラート）、Web Audio がなくても例外なし（v1.7） | `sound.test.tsx`・`encounter.test.tsx` の一部 |
 | `tests/audio/sound-timing.test.ts` | 残り時間（encounter 直後 0.68、0.3 秒後 0.38、終われば 0）、stopSfx で 0、受け手に 0.51（levelUp）／0、suspended のときの再開（1 回で running なら以後呼ばない、だめなら次の操作で再試行、キーでも再開、running なら呼ばない） | `soundTiming.test.ts` |
 | `tests/audio/sound-setting.test.ts` | 初期オフ、`'on'` のときだけオン、保存、保存に失敗しても切り替わる | `sound.test.tsx` の一部 |
 | `tests/audio/bgm.test.ts` | 1 周分の予約（vib は LFO も）、打楽器、同じ曲は頭に戻らない、違う曲は 0.3 秒で消して頭から、停止、1 秒前の予約、間に合わなければ今から頭、suspended では予約しない、遅らせた始まりは停止で鳴らない、ダッキング（3 割・戻す・重なり・0 で即戻す）、Web Audio なし、鳴り終わったノードの除去 | `bgm.test.ts` |
-| `tests/logic/bgm-tracks.test.ts` | 5 曲、全パートの拍数が 1 周と同じ、打楽器が 1 周の中、音色 17 種と値の範囲、音域 24〜96・メロディは 82（B♭5）まで、テンポ等の諸元 | `bgmTracks.test.ts`（試聴ページとの突き合わせを除く） |
+| `tests/logic/bgm-tracks.test.ts` | 6 曲、全パートの拍数が 1 周と同じ、打楽器が 1 周の中、音色 20 種と値の範囲、音域 24〜96、テンポ・拍子・パートの label・音色・vol の諸元（v1.7） | `bgmTracks.test.ts`（試聴ページとの突き合わせを除く） |
 | `tests/logic/bgm-scene.test.ts` | §26.7 の対応表すべて（ボス撃破後の判定を含む） | `bgmScene.test.ts` |
 | `tests/logic/message-plan.test.ts` | 演出の長さ、遷移の保留の件数、動きを減らす設定のときのまとめ方 | `effects.test.tsx` の一部 |
 | E2E（`e2e/sound.spec.ts`・`e2e/bgm.spec.ts`） | 遭遇でメッセージ欄を消して encounter、ボスでは鳴らさず bossAppear だけ、オンのときだけ演出で鳴る（LG は rareDropLG）、スキップで停止、オフで鳴らさない、戦闘中のターンでは鳴らさない、メニューは閉じない、画面を通した曲の切り替え（§12.2（切り替えの規則）の各規則、エラーの画面でも止めない、開き直し） | `sound.test.tsx`・`encounter.test.tsx`・`effects.test.tsx`・`BgmDirector.test.tsx` |
