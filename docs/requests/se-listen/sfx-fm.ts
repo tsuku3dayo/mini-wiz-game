@@ -211,7 +211,7 @@ const DARK = {
 const ev = (f: number | readonly number[], at: number, len: number, patch: SePatch, glide?: number): SeEvent => ({ f: typeof f === 'number' ? [f] : f, at, len, patch, glide });
 
 // 音の高さ（Hz）
-const A1 = 55, C2 = 65.4, G2 = 98, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, C4 = 261.6, Eb4 = 311.1, E4 = 329.6, Ab4 = 415.3, A4 = 440;
+const A1 = 55, C2 = 65.4, G2 = 98, A2 = 110, Bb2 = 116.5, C3 = 130.8, Eb3 = 155.6, E3 = 164.8, G3 = 196, Gs3 = 207.7, A3 = 220, B3 = 246.9, C4 = 261.6, Eb4 = 311.1, E4 = 329.6, Ab4 = 415.3, A4 = 440;
 
 export const FRESH: Readonly<Partial<Record<SfxName, readonly FreshSe[]>>> = {
   // 680 ms
@@ -233,6 +233,34 @@ export const FRESH: Readonly<Partial<Record<SfxName, readonly FreshSe[]>>> = {
         ev(A1, 0, 150, DARK.thump, 0.7),
         ev(A1, 180, 150, DARK.thump, 0.7),
         ev([A2, Eb3], 380, 300, DARK.growl, 0.94),
+      ],
+    },
+    {
+      title: '新しい音 3：闇から迫る',
+      desc: 'ぶつかり合う低い和音が、少しずつ高く・近づいてきて、最後に太鼓と鐘で断ち切られる',
+      events: [
+        ev([A2, Bb2], 0, 560, DARK.growl, 1.12),
+        ev(A1, 560, 120, DARK.thump, 0.7),
+        ev([A3, Eb4], 560, 120, DARK.bell),
+      ],
+    },
+    {
+      title: '新しい音 4：鐘の三連打',
+      desc: '暗い鐘を 3 回すばやく打ち、だんだん低くなる（短調）。最後の一打に太鼓が重なる',
+      events: [
+        ev([A3, C4], 0, 200, DARK.bell),
+        ev([Gs3, B3], 200, 200, DARK.bell),
+        ev([A2, E3], 400, 280, DARK.bell),
+        ev(A1, 400, 200, DARK.thump, 0.7),
+      ],
+    },
+    {
+      title: '新しい音 5：息をのむ',
+      desc: '低い声の不安な和音が、ため息のように下がっていき、底で太鼓と低い鐘が鳴る',
+      events: [
+        ev([A3, Eb4], 0, 420, DARK.choir, 0.6),
+        ev(A1, 420, 160, DARK.thump, 0.7),
+        ev([A2, E3], 420, 260, DARK.bell),
       ],
     },
   ],

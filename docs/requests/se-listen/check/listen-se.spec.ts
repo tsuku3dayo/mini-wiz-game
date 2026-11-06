@@ -48,7 +48,7 @@ test('効果音の試聴ページ：エラーなし・8 種・どのボタンの
       expect(last - first).toBeLessThanOrEqual(sec + 0.001);
     }
   }
-  expect(fresh).toBe(6);
+  expect(fresh).toBe(9);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
   if (out) {
     await page.evaluate(() => window.scrollTo(0, 0));
