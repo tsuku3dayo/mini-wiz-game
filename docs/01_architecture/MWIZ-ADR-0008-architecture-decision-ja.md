@@ -3,19 +3,19 @@ id: MWIZ-ADR-0008
 type: Architecture Decision
 title: 効果音と BGM を Web Audio で合成し、曲データは仕様書を正本にする
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-11-06
 sources:
-  - MWIZ-PB-0001（v1.5）§5、§9
-  - docs/specification-ja.md (v1.6) §12、§25、§26
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
+  - MWIZ-PB-0001（v1.6）§5、§9
+  - docs/specification-ja.md (v1.7) §12、§25、§26
+verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---
 
 # ADR-0008 効果音と BGM を Web Audio で合成し、曲データは仕様書を正本にする
 
 ## 状況
 
-仕様書は、効果音 8 種の音色（波形・周波数・長さ）と、BGM 5 曲の FM 合成のパラメータ・曲データの全文を定めている（§25・§26）。元の WIZ も、音声ファイル・音のライブラリを使わず Web Audio で合成していた（WIZ-AD-0014・0019）。元の WIZ では曲データの正本が試聴ページのファイル（`docs/bgm-listening-src/tracks.js`）だったが、このリポジトリにはない。通信なしで鳴らす必要がある（ADR-0001）。スマートフォンでは、利用者の操作の前に音を出せない。
+仕様書は、効果音 8 種の音色（v1.7 から FM の音色・周波数・長さ。v1.6 までは波形・周波数・長さ）と、BGM の FM 合成のパラメータ・曲データの全文（v1.7 から 6 曲。v1.6 までは 5 曲）を定めている（§25・§26）。元の WIZ も、音声ファイル・音のライブラリを使わず Web Audio で合成していた（WIZ-AD-0014・0019）。元の WIZ では曲データの正本が試聴ページのファイル（`docs/bgm-listening-src/tracks.js`）だったが、このリポジトリにはない。通信なしで鳴らす必要がある（ADR-0001）。スマートフォンでは、利用者の操作の前に音を出せない。
 
 ## 決定
 

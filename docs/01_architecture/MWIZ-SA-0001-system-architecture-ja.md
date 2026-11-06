@@ -3,13 +3,13 @@ id: MWIZ-SA-0001
 type: System Architecture
 title: WIZ システム構成
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-11-06
 sources:
-  - MWIZ-PB-0001（v1.5）
-  - docs/specification-ja.md (v1.6) §1.3、§1.4、§11、§14、§17〜§22、§27〜§30
+  - MWIZ-PB-0001（v1.6）
+  - docs/specification-ja.md (v1.7) §1.3、§1.4、§11、§14、§17〜§22、§27〜§30
   - mini-blockbreaking-game doc/01_architecture/MBRK-SA-0001（v1.0）
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---
 
 # システム構成（system-architecture）
@@ -133,7 +133,7 @@ api.battle({ command: 'attack' })
   └─ resolveTurn → 勝利 → onBossDefeated（実績 → 経験値・成長 → ボスのドロップ）
        ├─ 空きあり：場所 CLEARED → プレイ中状態とセーブを writeAll でまとめて書く（失敗したら両方戻す）
        └─ 満杯：場所 SWAP（thenClear）→ 拾う／あきらめるの操作で CLEARED → そこでまとめて書く
-  └─ 画面：撃破のメッセージ（演出・効果音）を読み終えてからクリア画面へ。BGM は宿屋へ戻るまで無音
+  └─ 画面：撃破のメッセージ（演出・効果音）を読み終えてからクリア画面へ。BGM は撃破の演出のあと、宿屋へ戻るまでクリアの曲（v1.7。v1.6 までは無音）
 ```
 
 ### 3.3 起動

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WIZミニ 効果音の試聴（FM 音源風の案）</title>
+<style>
+  :root { color-scheme: dark; --bg: #0b0b10; --fg: #f1ead8; --sub: #b9b0a0; --gold: #e8b64c; --line: #3a3646; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; line-height: 1.6; }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 80px; }
+  h1 { font-size: 1.25rem; margin: 8px 0 4px; color: var(--gold); }
+  .lead { color: var(--sub); font-size: 0.9rem; margin: 0 0 12px; }
+  .lead li { margin: 2px 0; }
+  ul#list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .scene { margin: 0; font-size: 0.8rem; color: var(--gold); }
+  h2 { margin: 2px 0 4px; font-size: 1.05rem; }
+  .meta { margin: 0 0 4px; font-size: 0.85rem; color: var(--sub); }
+  .row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  button { min-height: 48px; padding: 0 18px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--line); background: #1b1925; color: var(--fg); cursor: pointer; }
+  button.main { border-color: var(--gold); color: var(--gold); flex: 1 1 100%; }
+  button.sub { flex: 1 1 28%; padding: 0 10px; font-size: 0.95rem; }
+  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: #12111a; border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+  .bar-in { max-width: 640px; margin: 0 auto; }
+  #status { font-size: 0.85rem; color: var(--sub); }
+</style>
+</head>
+<body>
+<main>
+  <h1>WIZミニ 効果音の試聴（FM 音源風の案）</h1>
+  <ul class="lead">
+    <li>いまの効果音（ビープ音風）と同じ音の並び・同じ長さで、音色だけを FM 音源風にした案です。</li>
+    <li>「暗い案（短調・低め）」は、音色を暗くし（高い音を大きく削る・ゆっくり沈む）、明るい和音を短調にして、高い音を 1 オクターブ下げたものです。</li>
+    <li>遭遇・ボス撃破・ゲームクリアには、暗い音色で音の並びから作り直した「新しい音 1・2」があります（長さはいまと同じ。ゲームクリアは、ゲームでは 1.5 秒で止まるので、1.5 秒で聞き終わるように作りました）。レアなドロップ・レジェンドのドロップには「低い音 1・2」があります。</li>
+    <li>「音色だけ」は、音の並びはいまのまま、音色だけを暗くしたものです。「湿った案」「いまの音」とも聴き比べられます。</li>
+    <li>長さを変えていないのは、ゲームの間（BGM の音量を下げる長さ、効果音のあとに曲が始まるまで、演出の長さ）が効果音の長さで決まっているためです。</li>
+    <li>端末の音量を上げてください。iPhone は、消音スイッチ（マナーモード）がオンだと鳴らないことがあります。</li>
+  </ul>
+  <ul id="list"></ul>
+</main>
+<div class="bar"><div class="bar-in"><span id="status" aria-live="polite"></span></div></div>
+<script type="module" src="./main.ts"></script>
+</body>
+</html>

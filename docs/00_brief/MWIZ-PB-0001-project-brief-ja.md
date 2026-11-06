@@ -3,12 +3,12 @@ id: MWIZ-PB-0001
 type: Project Brief
 title: WIZ ～死霊術師の迷宮～ プロジェクト概要
 status: stable
-version: 1.5
+version: 1.6
 updated: 2026-11-06
 sources:
-  - docs/specification-ja.md (v1.6)
+  - docs/specification-ja.md (v1.7)
   - docs/requests/2026-10-26-serverless-pwa.md
-verified: { by: "tsuku3dayo", at: "2026-11-06T13:53:29+09:00" }
+verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---
 
 # プロジェクト概要（project-brief）
@@ -78,7 +78,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T13:53:29+09:00" }
 | 公開 | GitHub Pages（GitHub アカウント `tsuku3dayo`）。公開 URL は https://tsuku3dayo.github.io/mini-wiz-game/ 。リポジトリは https://github.com/tsuku3dayo/mini-wiz-game （公開）。同じサイト（`tsuku3dayo.github.io`）に `mini-blockbreaking-game` などほかのアプリも載るので、保存のキー・キャッシュをアプリ識別子で分ける |
 | 通信・個人情報 | 外部へデータを送らない。名前は端末の中にだけ保存する |
 | 素材 | 画像は敵の絵 6 枚（オーナーが用意した 256×256 の PNG）とタイトル画像 1 枚（オーナーが用意した 1080 × 720 の PNG）。タイトル画像は v1.4 で v2 の絵に、敵の絵は v1.6 で v3 の絵に差し替えた。公開してよいことはオーナーが確かめた（仕様書 v1.6 §13）。アイコンはスクリプトで作る。音はコードで合成する。フォントは端末のもの。外部のフォント・スクリプト・CDN に頼らない |
-| 変えないもの | ゲームのルール・数値・乱数を引く順序・画面の文言・効果音の音色・BGM の曲データ（仕様書 v1.0 から変えていない） |
+| 変えないもの | ゲームのルール・数値・乱数を引く順序・画面の文言（仕様書 v1.0 から変えていない）。効果音の音色と BGM の曲データは、仕様書 v1.7 で入れ替えた（効果音は暗い FM 音源風、BGM は著作権の切れたクラシックの名曲・民謡の編曲。オーナーが試聴して選んだ） |
 | 環境 | Node.js v24.0.0・npm 11.3.0・Git 2.51.0・GitHub CLI はインストール済み。リポジトリは Git 管理済みで、GitHub に push 済み |
 
 ## 6. 成功の基準
