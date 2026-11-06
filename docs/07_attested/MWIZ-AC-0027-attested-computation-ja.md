@@ -2,7 +2,7 @@
 id: MWIZ-AC-0027
 type: Attested Computation
 title: 敵の絵の 256×256 の v2 への差し替えの実施記録
-status: draft
+status: review
 version: 1.0
 updated: 2026-11-06
 sources:
