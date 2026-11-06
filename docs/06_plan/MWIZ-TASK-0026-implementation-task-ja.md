@@ -6,9 +6,9 @@ status: stable
 version: 1.0
 updated: 2026-11-06
 sources:
-  - MWIZ-WS-0012（v1.1）
+  - MWIZ-WS-0012（v1.2）
   - MWIZ-TC-0006（v1.2）
-  - MWIZ-TC-0033（v1.2）
+  - MWIZ-TC-0033（v1.3）
   - MWIZ-TD-0003（v1.4）
   - MWIZ-TD-0005（v1.7）
 verified: null
