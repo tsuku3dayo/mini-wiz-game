@@ -323,7 +323,7 @@ body {
 
 /* 戦闘（仕様書 §11.5「戦闘」）。敵の絵は WS-0008 で足す */
 .battle-enemy { display: grid; justify-items: center; }
-/* 敵の絵（仕様書 §13.2）：どの画面も 256×256。名前との間 0、拡大するときもぼかさない */
+/* 敵の絵（仕様書 §13.2）：どの画面も 256×256（128×128 の絵を 2 倍）。名前との間 0、拡大してもぼかさない */
 .wiz-enemy-image { width: 256px; height: 256px; }
 .wiz-enemy-img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 .battle-enemy-name { margin: 0; font-size: 24px; line-height: 1.1; color: var(--wiz-color-primary); text-align: center; }

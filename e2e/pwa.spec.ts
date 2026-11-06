@@ -92,7 +92,7 @@ async function waitForServiceWorker(page: Page) {
 
 const slimeBattle = () => storedInn({ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('slime', 12) });
 const enemyImg = (page: Page) => page.getByTestId('enemy-image-frame').locator('img');
-const imgLoaded = (page: Page) => expect.poll(() => enemyImg(page).evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth)).toBe(256);
+const imgLoaded = (page: Page) => expect.poll(() => enemyImg(page).evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth)).toBe(128);
 const menuItem = (page: Page, menu: string, text: string) => page.getByRole('menu', { name: menu }).getByRole('menuitem').filter({ hasText: text });
 
 /** タイトル →「はじめから」→ 名前「ゆうしゃ」で決定 → 宿屋 */
