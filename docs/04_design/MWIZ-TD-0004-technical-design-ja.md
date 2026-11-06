@@ -11,10 +11,10 @@ sources:
   - MWIZ-GUI-0002（v1.1）
   - MWIZ-GUI-0003（v1.0）
   - MWIZ-GUI-0004（v1.0）
-  - MWIZ-GUI-0005（v1.2）
+  - MWIZ-GUI-0005（v1.3）
   - MWIZ-GUI-0006（v1.0）
   - MWIZ-GUI-0007（v1.1）
-  - docs/specification-ja.md (v1.4) §11.2、§11.4〜§11.9、§11.12、§13.2
+  - docs/specification-ja.md (v1.5) §11.2、§11.4〜§11.9、§11.12、§13.2
 verified: null
 ---
 
