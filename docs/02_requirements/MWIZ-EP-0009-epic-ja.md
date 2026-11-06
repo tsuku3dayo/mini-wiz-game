@@ -2,13 +2,13 @@
 id: MWIZ-EP-0009
 type: Epic
 title: 場面ごとの BGM を流す
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-06
 sources:
   - MWIZ-PB-0001（v1.6）
   - docs/specification-ja.md (v1.7) §12.2、§16.5、§26
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---
 
 # EP-0009 場面ごとの BGM を流す
