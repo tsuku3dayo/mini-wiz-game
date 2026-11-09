@@ -7,7 +7,7 @@ version: 1.3
 updated: 2026-11-06
 sources:
   - MWIZ-US-0033（v1.3）
-  - MWIZ-TST-0001（v1.0）
+  - MWIZ-TST-0001（v1.1）
   - MWIZ-TD-0003（v1.4）
   - MWIZ-TD-0004（v1.2）
   - MWIZ-GUI-0005（v1.3）

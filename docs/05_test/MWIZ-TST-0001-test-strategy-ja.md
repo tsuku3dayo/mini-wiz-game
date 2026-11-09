@@ -3,14 +3,14 @@ id: MWIZ-TST-0001
 type: Test Strategy
 title: テストの戦略
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-09
 sources:
   - MWIZ-EP-0001（v1.0）
   - MWIZ-ADR-0011（v1.0）
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0005（v1.8）
+  - MWIZ-TD-0005（v1.9）
   - MWIZ-GUI-0001（v1.1）
   - docs/specification-ja.md (v1.8) §14、§16、§29
 verified: null
@@ -28,6 +28,7 @@ verified: null
 | --- | --- |
 | テストケースの番号 | **ユーザーストーリーと同じ**（US-0014 → TC-0014）。1 つの US に 1 つの TC |
 | 非機能のテストケース | 非機能の要件も US（US-0035〜0038：スマートフォンの画面・キーボードと読み上げ・すばやさ・テスト用の入口）になっているので、同じ決まりで TC-0035〜0038。別の番号の付け方は持たない。あとで US を足しても番号はずれない。保存・オフライン・更新は US-0001〜0005・US-0012（TC-0001〜0005・TC-0012）で確かめる |
+| 開発の道具のテストケース | US に結びつかない開発の道具（CI など）の確認は、US の最後の番号の次から TC を振る（v1.1：TC-0039＝CI の文書だけの判定。仕様書 §30.6）。あとで US を足すときは、その US の TC にそのとき空いている番号を使い、US と TC の番号が違うことを US と TC に書く |
 | 確認 ID | `TC-<4 桁>-<2 桁>`（例：`TC-0014-03`）。US の受け入れ条件 1 つに 1 つ以上。上から順に 01・02… と振る。1 つの条件を自動と手動に分けるときは、確認 ID を分ける |
 | 書く場所 | テストの名前の先頭（`test('TC-0014-03 矢印キーが…')`）。手動は TC の「手動の手順」と AC（attested-computation）の結果の表 |
 | 欠番 | 確認 ID を消したら、その番号を使い直さない |
@@ -36,9 +37,9 @@ verified: null
 
 | 方法 | 道具 | 置き場所 | 何を確かめるか |
 | --- | --- | --- | --- |
-| 単体 | Vitest（node） | `tests/domain/`・`tests/logic/`・`tests/api/`・`tests/audio/`・`tests/assets/` | ルール・表示の計算・ゲーム API・保存・音の予約・敵の絵のファイル（DOM を使わない。ADR-0011） |
+| 単体 | Vitest（node） | `tests/domain/`・`tests/logic/`・`tests/api/`・`tests/audio/`・`tests/assets/`・`tests/scripts/` | ルール・表示の計算・ゲーム API・保存・音の予約・敵の絵のファイル・開発の道具の判定（DOM を使わない。ADR-0011） |
 | E2E | Playwright（本番のビルドを `vite preview` で） | `e2e/*.spec.ts` | 画面・部品の振る舞い、画面の切り替え、大きさ、PWA、起動の復旧、アクセシビリティ（axe-core） |
-| 手動 | 実機 | TC の手順、結果は AC | 実機のタッチ・指で隠れないか・音を聴く・ホーム画面のアプリ・通信なし・更新・読み上げ |
+| 手動 | 実機、GitHub の画面（CI） | TC の手順、結果は AC | 実機のタッチ・指で隠れないか・音を聴く・ホーム画面のアプリ・通信なし・更新・読み上げ。CI でどのジョブが動いたか（v1.1） |
 
 - **できるだけ自動にする**。手動にするのは、実機でしか分からないもの（§6）だけ。
 - 1 つの条件に、自動（形の確認）と手動（実機での見え方）の両方が要るときは、確認 ID を 2 つに分ける。
@@ -52,6 +53,7 @@ verified: null
 | `tests/api/` | `game-api.test.ts`（操作・エラー・楽観ロック・自動セーブ・移行）、`playthrough.test.ts`（自動プレイヤーの通しプレイ） |
 | `tests/audio/` | `sound.test.ts`・`bgm.test.ts`・`sound-setting.test.ts` |
 | `tests/assets/` | `enemy-images.test.ts` |
+| `tests/scripts/` | `docs-only.test.ts`（CI の文書だけの判定。v1.1） |
 | `e2e/` | `title`・`name-entry`・`inn`・`dungeon`・`battle`・`clear`・`swap`・`equipment`・`inventory`・`status`・`menu`・`message`・`effects`・`error`・`layout`・`a11y`・`pwa`・`boot`・`sound`・`debug` の `.spec.ts`（BGM の E2E も `sound`）、共通の操作は `e2e/helpers.ts` |
 
 - TC には「置き場所」の列に、確認 ID ごとのファイルを書く。新しいファイルが要るときは、この表に足す（TST の版を上げる）。
@@ -101,5 +103,5 @@ verified: null
 ## 8. CI と手元
 
 - PR の前に、手元で `npm run verify`（lint・check:docs・単体・build・check:dist）と `npm run test:e2e` を通す。
-- CI（`.github/workflows/test.yml`）は PR と main への push で同じものを動かす。
+- CI（`.github/workflows/test.yml`）は PR と main への push で同じものを動かす。ただし変わったファイルが文書（`docs/` の中と、いちばん上の `.md`）だけのときは、`check:docs` だけを動かし、lint・単体・build・check:dist・E2E を飛ばす（仕様書 §30.6、v1.8。TC-0039）。文書だけの PR でも、手元で `check:docs` は通す（SDD-PROCESS v3 §4.1・§4.2）。
 - `check:docs` で、テストの名前の確認 ID が TC にあること、TC の確認 ID がテストのコード（自動）か AC（手動）にあることを確かめる（SDD-PROCESS v3 §7.2）。
