@@ -3,8 +3,8 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.8
-updated: 2026-11-06
+version: 1.9
+updated: 2026-11-09
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TS-0001（v1.4）
@@ -82,7 +82,27 @@ verified: null
 | `scripts/check-dist.mjs` | 仕様書 §29.4。`enemies/` の 6 枚（256×256。v1.7）と `title/title.png`（1080 × 720）が `dist/` と事前キャッシュにあること、manifest の `name` が「WIZミニ」であることも確かめる |
 | `scripts/check-docs.mjs` | 仕様書 §29.5。`mini-blockbreaking-game` のものを接頭辞 `MWIZ`・置き場所 `docs/` に合わせる。SDD-PROCESS_v3 §7.2 のエラーを出す |
 | `scripts/make-icons.mjs` | 仕様書 §30.5 |
-| `.github/workflows/test.yml` | PR と main への push で `npm run verify` と E2E（仕様書 §30.6） |
+| `.github/workflows/test.yml` | PR と main への push で `npm run verify` と E2E（仕様書 §30.6）。v1.9：先に `changes` ジョブで「文書だけ」かを決め、文書だけのときは `check` が `node scripts/check-docs.mjs` だけ、`e2e` はスキップ（下の「文書だけの判定」） |
+| `scripts/docs-only.mjs` | v1.9。変わったファイルが文書だけかを決める（下の「文書だけの判定」）。型は `scripts/docs-only.d.mts` に書く（`tsconfig` は `scripts/` を含まず `allowJs` もないので、テストから読むために要る） |
 | `.github/workflows/pages.yml` | 今の仮のもの（`prototype/` を公開）を、07 の土台の WS で `dist/` を公開する本物に置き換える（仕様書 §30.7）。試作は公開しなくなる |
+
+### 文書だけの判定（v1.9、仕様書 §30.6）
+
+`scripts/docs-only.mjs` は Node の標準だけで書く（`npm ci` なしで動かすため）。
+
+| 名前 | 中身 |
+| --- | --- |
+| `isDocFile(file)` | `docs/` で始まる、または `/` を含まず `.md` で終わる（いちばん上の `.md`）なら `true`。区切りは `/`（`git diff --name-only` の出力） |
+| `isDocsOnly(files)` | `files` が 1 つ以上あり、すべて `isDocFile` なら `true`。空なら `false` |
+| `diffArgs(env)` | `env.event`（`pull_request` か `push`）ごとに `git diff --name-only` の引数を返す。PR：`[`${base}...${head}`]`（共通の祖先から）。push：`[before, sha]`。`before` が空・すべて `0`、または必要な値がないときは `null` |
+| `decide(env, listFiles)` | `diffArgs` が `null` なら `false`。`listFiles(args)` でファイルの一覧を取り、`isDocsOnly` を返す。`listFiles` が例外を投げたら `false`（安全なほうに倒す） |
+| コマンドとして動かしたとき | 環境変数 `EVENT`・`BASE`・`HEAD`・`BEFORE`・`SHA` から `env` を作り、`listFiles` は `git diff --name-only <args>`（`execFileSync`）。結果を `docs_only=true` / `false` として `GITHUB_OUTPUT` のファイルに足し、標準出力にも、判定と変わったファイルの数を書く。終了コードはいつも 0 |
+
+`test.yml` の形：
+
+- `changes`：`actions/checkout`（`fetch-depth: 0`。共通の祖先と `before` を読むため）→ `actions/setup-node`（Node 24。キャッシュなし）→ `node scripts/docs-only.mjs`（環境変数に `github.event_name`・`github.event.pull_request.base.sha`・`github.event.pull_request.head.sha`・`github.event.before`・`github.sha`）。出力 `docs_only`。5 分で打ち切り。
+- `check`：`needs: changes`。`docs_only == 'true'` なら checkout → setup-node（キャッシュなし）→ `node scripts/check-docs.mjs`。それ以外はいまと同じ（npm のキャッシュ → `npm ci` → `npm run verify`）。ステップごとの `if` で分ける（ジョブは 1 つのまま。GitHub の画面の名前 `check` を変えない）。
+- `e2e`：`needs: changes`、`if: needs.changes.outputs.docs_only != 'true'`。中身はいまと同じ。
+- `changes` が失敗したら、`check`・`e2e` は動かず、実行全体が失敗になる（気づける）。
 
 - `prototype/` は 07 では使わない（見た目の見本）。土台の WS で `pages.yml` を置き換えるときに、試作の公開をやめる。試作のファイルはリポジトリに残す（GUI-0001 の記録のため）。
