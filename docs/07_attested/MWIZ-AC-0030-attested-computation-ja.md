@@ -37,7 +37,7 @@ verified: null
 | --- | --- | --- |
 | TC-0039-01 | 単体（`tests/scripts/docs-only.test.ts`） | OK。`docs/` の中（`.md`・`.ts`・`.png`）と `README.md`・`CLAUDE.md` は文書、`src/main.ts`・`.github/workflows/test.yml`・`package.json`・`e2e/notes.md`・`docs.md.ts`・`documents/a.md` は文書でない。混ざると・空だと文書だけにならない |
 | TC-0039-02 | 単体（同上） | OK。PR は `base...head`、push は `before`・`sha`。`before` が空・すべて 0、値が足りない、`workflow_dispatch` は `null`。`null` のときは一覧を取らずに `false`、一覧を取る関数が例外なら `false` |
-| TC-0039-03 | 手動（GitHub の画面、この PR） | PR を出したあとに書く |
+| TC-0039-03 | 手動（GitHub の画面、PR #94） | OK。実行 42546999249：`changes` のログに `docs_only=false（イベント pull_request、変わったファイル 6）`。`check` は `npm ci`・`npm run verify` が動いて成功（文書だけのときのステップは飛ばした）、`e2e` が動いて成功。時間：changes 7 秒・check 29 秒・e2e 4 分 48 秒 |
 | TC-0039-04 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
 | TC-0039-05 | 手動（GitHub の画面、`main` の実行） | WS の終わりに確かめる |
 | TC-0039-06 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
@@ -68,5 +68,5 @@ verified: null
 - [x] 画面の変更は、PC と一番小さいスマートフォンの幅でスクリーンショットを見た（画面は変えていない）
 - [x] 設計と違う作りにしたら、TD を直した（設計どおりに作った）
 - [x] AC-0030（draft）に自動テストの結果を書き、同じ PR に入れた
-- [ ] PR の CI が緑
+- [x] PR の CI が緑（PR #94）
 - [ ] マージされた（マージ = 公開。ゲームの中身は変わらない）
