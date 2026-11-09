@@ -2,14 +2,14 @@
 id: MWIZ-AC-0030
 type: Attested Computation
 title: 文書だけの判定と CI の設定の実施記録
-status: draft
+status: stable
 version: 1.0
 updated: 2026-11-09
 sources:
   - MWIZ-TASK-0030（v1.0）
   - MWIZ-TC-0039（v1.0）
   - MWIZ-TD-0005（v1.9）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-09T11:07:13+09:00" }
 ---
 
 # AC-0030 文書だけの判定と CI の設定の実施記録
@@ -39,7 +39,7 @@ verified: null
 | TC-0039-02 | 単体（同上） | OK。PR は `base...head`、push は `before`・`sha`。`before` が空・すべて 0、値が足りない、`workflow_dispatch` は `null`。`null` のときは一覧を取らずに `false`、一覧を取る関数が例外なら `false` |
 | TC-0039-03 | 手動（GitHub の画面、PR #94） | OK。実行 42546999249：`changes` のログに `docs_only=false（イベント pull_request、変わったファイル 6）`。`check` は `npm ci`・`npm run verify` が動いて成功（文書だけのときのステップは飛ばした）、`e2e` が動いて成功。時間：changes 7 秒・check 29 秒・e2e 4 分 48 秒 |
 | TC-0039-04 | 手動（GitHub の画面、文書だけの PR #95） | OK。実行 42548439662：`changes` のログに `docs_only=true（イベント pull_request、変わったファイル 1）`。`check` は `check-docs.mjs` のステップだけが動いて成功（2 つ目の setup-node・`npm ci`・`npm run verify` は skipped）、`e2e` は skipped。PR のチェックは緑。時間：changes 5 秒・check 5 秒（いままでの文書の PR は check 17〜28 秒・e2e 4〜5 分） |
-| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | TASK-0030 のマージ（f39c67c）：OK。test の実行 42547945652 で `docs_only=false（イベント push、変わったファイル 7）`、changes・check・e2e が動いて成功。pages の実行 42547945629 も成功。文書だけのマージ：WS の終わりに確かめる |
+| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | TASK-0030 のマージ（f39c67c）：OK。test の実行 42547945652 で `docs_only=false（イベント push、変わったファイル 7）`、changes・check・e2e が動いて成功。pages の実行 42547945629 も成功。文書だけの PR #95 のマージ（5e79147）：OK。test の実行 42548848121 で `docs_only=true（イベント push、変わったファイル 1）`、changes・check が成功、e2e は skipped。pages の実行 42548848092 も成功 |
 | TC-0039-06 | 手動（GitHub の画面、文書だけの PR #95） | OK。WS-0014 の sources の TC-0039 の版を v0.9 にした一時的なコミット（8e25b17）で、実行 42548551520 の `check` が失敗（赤）、ログに「sources の MWIZ-TC-0039 は v0.9 と書いたが、今は v1.0」。`e2e` は skipped のまま。戻すコミット（10e9848。8e25b17 の前と中身が同じことを `git diff` で確かめた）で、実行 42548672352 が緑（check 7 秒） |
 
 あわせて確かめたこと：
@@ -54,12 +54,15 @@ verified: null
 
 ## 3. 確認できなかったこと
 
-- TC-0039-04〜06（文書だけの PR と `main` の実行で、スキップと失敗が思ったとおりになるか）は、この PR のマージのあとでないと確かめられない。WS-0014 の終わりに確かめる。
+- 実機の確認はない（CI の設定だけで、ゲームの中身は変えていない）。
 - ブランチを新しく作った最初の push（`before` がすべて 0）は、いまの CI では `main` への push だけが対象なので、GitHub の上では起きない。判定は単体テストと手元で確かめた。
 
 ## 4. 後片付け
 
 - `dist/`・`playwright-report/`・`test-results/` は `.gitignore` に入っている。判定を動かしたときの `GITHUB_OUTPUT` のファイルは、作業用の一時フォルダに置いた。
+- TC-0039-06 のわざと誤りを入れたコミット（8e25b17）と戻すコミット（10e9848）は、PR #95 の履歴に残した（打ち消し合って中身は変わらない）。
+- 作業ブランチ `feat/TASK-0030-ci-skip-docs`・`docs/ws-14-check` は、マージのあと手元と GitHub から消した。
+- 戻すときに、`git revert` に使えない `-q` を付けて失敗し、続けて動いた `git commit --amend` が手元の誤りのコミットの説明文を書き換えた。GitHub への送信は拒否されて何も届かず、手元を GitHub と同じ状態に戻してから戻すコミットを作り直した（ふりかえり ws-14 の W）。
 
 ## 5. 完了の定義
 
@@ -69,4 +72,5 @@ verified: null
 - [x] 設計と違う作りにしたら、TD を直した（設計どおりに作った）
 - [x] AC-0030（draft）に自動テストの結果を書き、同じ PR に入れた
 - [x] PR の CI が緑（PR #94）
-- [ ] マージされた（マージ = 公開。ゲームの中身は変わらない）
+- [x] マージされた（マージ = 公開。ゲームの中身は変わらない。PR #94、2026-11-09）
+- [x] WS の終わりの手動の確認（TC-0039-04〜06）を行い、結果を書いた（PR #95）
