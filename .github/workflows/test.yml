@@ -1,4 +1,5 @@
 # PR と main への push で、検査（lint・成果物の整合性・単体・build・成果物の検査）と E2E を動かす（仕様書 §30.6）
+# 変わったファイルが文書だけのときは、成果物の整合性の検査だけを動かし、ほかは飛ばす（v1.8）
 name: test
 
 on:
@@ -15,19 +16,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 変わったファイルが文書（docs/ の中と、いちばん上の .md）だけかを決める（仕様書 §30.6、v1.8）
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docs_only: ${{ steps.decide.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - id: decide
+        run: node scripts/docs-only.mjs
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+
+  # 文書だけのときは、成果物の整合性の検査だけ（npm ci もしない）
   check:
+    needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - if: needs.changes.outputs.docs_only == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - if: needs.changes.outputs.docs_only == 'true'
+        run: node scripts/check-docs.mjs
+      - if: needs.changes.outputs.docs_only != 'true'
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run verify
+      - if: needs.changes.outputs.docs_only != 'true'
+        run: npm ci
+      - if: needs.changes.outputs.docs_only != 'true'
+        run: npm run verify
 
+  # 文書だけのときはスキップ
   e2e:
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
