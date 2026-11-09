@@ -2,15 +2,15 @@
 id: MWIZ-TS-0001
 type: Technology Stack
 title: WIZ 技術スタック
-status: stable
-version: 1.3
-updated: 2026-11-06
+status: review
+version: 1.4
+updated: 2026-11-09
 sources:
   - MWIZ-PB-0001（v1.6）
   - MWIZ-SA-0001（v1.1）
-  - docs/specification-ja.md (v1.7) §18、§19、§29、§30
+  - docs/specification-ja.md (v1.8) §18、§19、§29、§30
   - mini-blockbreaking-game package.json (v1.0.0)、doc/01_architecture/MBRK-TS-0001（v1.0）
-verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
+verified: null
 ---
 
 # 技術スタック（technology-stack）
@@ -54,7 +54,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 | --- | --- | --- |
 | ソースコードの管理 | Git + GitHub（`tsuku3dayo/mini-wiz-game`、公開） | 手元の Git は 2.51.0、GitHub CLI あり。作業ブランチ → PR → main（マージはオーナー） |
 | 公開 | GitHub Pages | https://tsuku3dayo.github.io/mini-wiz-game/ 。最初の公開の前に Settings → Pages の Source を「GitHub Actions」にする |
-| CI | GitHub Actions `test.yml` | main への push と全 PR で `verify`（lint → check:docs → 単体テスト → build → check:dist）と E2E |
+| CI | GitHub Actions `test.yml` | main への push と全 PR で `verify`（lint → check:docs → 単体テスト → build → check:dist）と E2E。変わったファイルが文書（`docs/` の中と、いちばん上の `.md`）だけのときは check:docs だけを動かし、ほかは飛ばす（仕様書 §30.6、v1.8） |
 | 公開の自動化 | GitHub Actions `pages.yml` | main への push で build・check:dist をし、通ったときだけ `dist/` を公開 |
 | 依存の更新 | Dependabot | npm と github-actions を週 1 回。開発用の依存は 1 つの PR にまとめる |
 | 開発支援 | Claude Code | ルールは `CLAUDE.md` |

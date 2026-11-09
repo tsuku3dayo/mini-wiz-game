@@ -6,7 +6,7 @@ status: stable
 version: 1.6
 updated: 2026-11-06
 sources:
-  - docs/specification-ja.md (v1.7)
+  - docs/specification-ja.md (v1.8)
   - docs/requests/2026-10-26-serverless-pwa.md
 verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---
