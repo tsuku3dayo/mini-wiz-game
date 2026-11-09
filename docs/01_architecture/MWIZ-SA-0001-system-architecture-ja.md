@@ -7,7 +7,7 @@ version: 1.1
 updated: 2026-11-06
 sources:
   - MWIZ-PB-0001（v1.6）
-  - docs/specification-ja.md (v1.8) §1.3、§1.4、§11、§14、§17〜§22、§27〜§30
+  - docs/specification-ja.md (v1.9) §1.3、§1.4、§11、§14、§17〜§22、§27〜§30
   - mini-blockbreaking-game doc/01_architecture/MBRK-SA-0001（v1.0）
 verified: { by: "tsuku3dayo", at: "2026-11-06T17:25:19+09:00" }
 ---

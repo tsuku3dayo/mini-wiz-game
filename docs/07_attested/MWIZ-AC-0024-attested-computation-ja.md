@@ -6,7 +6,7 @@ status: stable
 version: 1.0
 updated: 2026-11-05
 sources:
-  - docs/specification-ja.md (v1.8) §16、§31.3
+  - docs/specification-ja.md (v1.9) §16、§31.3
   - MWIZ-TST-0001（v1.1）
   - MWIZ-EP-0010（v1.0）
   - docs/SDD-PROCESS_v3.md §4.5
