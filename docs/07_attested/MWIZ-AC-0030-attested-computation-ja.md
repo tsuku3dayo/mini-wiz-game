@@ -39,7 +39,7 @@ verified: null
 | TC-0039-02 | 単体（同上） | OK。PR は `base...head`、push は `before`・`sha`。`before` が空・すべて 0、値が足りない、`workflow_dispatch` は `null`。`null` のときは一覧を取らずに `false`、一覧を取る関数が例外なら `false` |
 | TC-0039-03 | 手動（GitHub の画面、PR #94） | OK。実行 42546999249：`changes` のログに `docs_only=false（イベント pull_request、変わったファイル 6）`。`check` は `npm ci`・`npm run verify` が動いて成功（文書だけのときのステップは飛ばした）、`e2e` が動いて成功。時間：changes 7 秒・check 29 秒・e2e 4 分 48 秒 |
 | TC-0039-04 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
-| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | WS の終わりに確かめる |
+| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | TASK-0030 のマージ（f39c67c）：OK。test の実行 42547945652 で `docs_only=false（イベント push、変わったファイル 7）`、changes・check・e2e が動いて成功。pages の実行 42547945629 も成功。文書だけのマージ：WS の終わりに確かめる |
 | TC-0039-06 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
 
 あわせて確かめたこと：
