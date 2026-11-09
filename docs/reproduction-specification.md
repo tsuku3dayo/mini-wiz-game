@@ -1,6 +1,6 @@
 # WIZ 再現開発仕様書
 
-- 版：アプリ 1.0.0 の再現開発仕様書（2026-11-06）。第 1 部は仕様書 `docs/specification-ja.md` v1.7 と同じ。第 2 部は v1.2 を元に、main の実装に合わせて直した（v1.7 の BGM と効果音の入れ替えまで）
+- 版：アプリ 1.0.0 の再現開発仕様書（2026-11-09）。第 1 部は仕様書 `docs/specification-ja.md` v1.8 と同じ。第 2 部は v1.2 を元に、main の実装に合わせて直した（v1.8 の CI の文書だけの判定まで）
 - 対象：「WIZ」（正式版 v1.0 ＋ Update4〜6。画面の版表示は `1.0`）を、サーバーなしの PWA として作り直すための仕様
 - 位置づけ：この 1 冊だけで作れるようにまとめた仕様書。ブラウザで遊ぶ 1 人用のダンジョン探索 RPG を、ブラウザだけで動くアプリ（インストール可・オフライン動作の PWA）として作り、GitHub Pages で公開する。スマートフォンの縦画面のタップで遊べ、PC のキーボード・マウスでも遊べる。構成は `mini-blockbreaking-game` と同じ
 
@@ -36,6 +36,7 @@
 | 1.6 | 2026-11-06 | 敵の絵 6 枚を、オーナーが用意した 256×256 の v3 の絵に差し替えた（§13.1・§13.3）。v3 の 5 枚に半透明の点があるので、§13.1 の規格の「半透明の点なし」を「半透明の点があってもよい（加工しない）」に改めた。§1.2・§32・付録 A.5 を合わせて直した。表示の大きさ・タイトル画像・ゲームのルール・数値・メッセージの文・画面の形は変えていない（`docs/requests/2026-11-06-spec-1.6-enemy-images-v3.md`） |
 | 再現 1.0.0 → v1.6 | 2026-11-06 | 第 1 部を仕様書 v1.6 に合わせた（敵の絵の v3 への差し替え、半透明の点を認めた）。第 2 部の §32・付録 A.5 の 9 を仕様書に合わせた |
 | 1.7 | 2026-11-06 | BGM を、著作権の切れたクラシックの名曲・民謡の編曲 6 曲に入れ替えた（タイトル＝ワーグナー『ローエングリン』第 1 幕への前奏曲、宿屋＝民謡「グリーンスリーヴス」、ダンジョン＝ラフマニノフ『死の島』、戦闘＝ホルスト「火星」、ボス戦＝ムソルグスキー「カタコンベ」、ボス撃破・クリア＝フォーレ「イン・パラディス」）。ボス撃破のあと宿屋に戻るまでの無音をやめ、`clear` の曲を流す（§12.2・§26.7）。効果音を、ビープ音風（矩形波など）から暗い FM 音源風に替えた（長さは同じ。§12.1・§25）。どれもオーナーが試聴ページで選んだ。§1.2・§15.5・§16.5・§20.1・§26.3・§26.9〜§26.11 を合わせて直した。ゲームのルール・数値・メッセージの文・画面は変えていない（`docs/requests/2026-11-06-spec-1.7-bgm.md`） |
+| 1.8 | 2026-11-09 | CI（§30.6）で、変わったファイルが文書（`docs/` の中と、いちばん上の `.md`）だけのときは、成果物の整合性の検査（check:docs）だけを動かし、lint・単体テスト・build・成果物の検査・E2E を飛ばすようにした（`changes` ジョブを足した）。公開（§30.7）・ゲームの中身は変えていない（`docs/requests/2026-11-09-spec-1.8-ci-skip-docs.md`） |
 | 再現 1.0.0 → v1.7 | 2026-11-06 | 第 1 部を仕様書 v1.7 に合わせた（BGM の 6 曲・効果音の FM 音源風）。第 2 部の §20.1・§25・§26.3・§26.7・§26.9〜§26.11 を仕様書 v1.7 と実装に合わせた |
 
 ---
@@ -2968,7 +2969,7 @@ mini-wiz-game/
 │  └─ vite-env.d.ts
 ├─ tests/                  単体テスト（Vitest）：domain/・logic/・api/・audio/・platform/・assets/、helpers/
 ├─ e2e/                    E2E（Playwright）、helpers.ts（共通の操作）・scenes.ts（全画面・全状態の一覧）
-├─ scripts/                make-icons.mjs・check-dist.mjs・check-docs.mjs
+├─ scripts/                make-icons.mjs・check-dist.mjs・check-docs.mjs・docs-only.mjs（＋ docs-only.d.mts。CI の文書だけの判定）
 ├─ docs/                   仕様書・SDD-PROCESS_v3.md・workflow.txt・開発の成果物（00_brief〜07_attested）・requests/・retrospectives/・reproduction-specification.md
 ├─ prototype/              03 画面設計の試作（記録として残す。検査・公開の対象外）
 └─ .github/                workflows/test.yml・pages.yml、dependabot.yml
@@ -4879,10 +4880,24 @@ iPhone の Safari、Android の Chrome、PC の Chrome / Edge の実機で、タ
 
 | ジョブ | 内容 |
 | --- | --- |
-| `check` | Node 24（npm のキャッシュ）→ `npm ci` → `npm run verify`。10 分で打ち切り |
-| `e2e` | `npm ci` → `npx playwright install chromium`（4 分で打ち切り、3 回まで試す。`--with-deps` は使わない）→ `npm run test:e2e`。失敗したら `playwright-report/` を 7 日保存。20 分で打ち切り |
+| `changes` | 変わったファイルを調べ、「文書だけ」か（`docs_only`）を出す（下の表）。5 分で打ち切り |
+| `check` | `changes` のあと。Node 24（npm のキャッシュ）→ `npm ci` → `npm run verify`。文書だけのときは、Node 24 → `node scripts/check-docs.mjs` だけ（`npm ci` もしない）。10 分で打ち切り |
+| `e2e` | `changes` のあと。文書だけのときは動かさない（スキップ）。`npm ci` → `npx playwright install chromium`（4 分で打ち切り、3 回まで試す。`--with-deps` は使わない）→ `npm run test:e2e`。失敗したら `playwright-report/` を 7 日保存。20 分で打ち切り |
 
 `permissions: contents: read`。同じブランチの古い実行は取り消す。
+
+**「文書だけ」の決め方**（v1.8）
+
+| 項目 | 決まり |
+| --- | --- |
+| 文書とみなすファイル | `docs/` の中のすべてのファイルと、いちばん上のフォルダの `.md`（`README.md`・`CLAUDE.md` など） |
+| 比べる相手 | PR：PR の基準（`pull_request.base.sha`）と PR の先頭（`pull_request.head.sha`）の共通の祖先から、先頭までの差分（`git diff base...head`。PR を出したあとに `main` が進んでも、PR で変えたファイルだけを見る）。`main` への push：push の前（`before`）と後（`sha`）の差分 |
+| 文書だけ | 変わったファイルが 1 つ以上あり、すべてが文書のとき |
+| それ以外 | 文書でないファイルが 1 つでもある、差分が取れない（`before` がすべて 0 など）、変わったファイルがない、のどれかなら、全部を動かす（安全なほうに倒す） |
+
+- ゲームのコード・テスト・道具は `docs/` を読まない（読むのは `scripts/check-docs.mjs` だけ）。`docs/` の中の試聴ページのコードは、もとから lint・テストの対象外。
+- GitHub はスキップしたジョブを「通った」と扱うので、あとでブランチの保護（必須のチェック）を設定しても、文書だけの PR がマージできなくなることはない。
+- 実装（v1.8）：判定は `scripts/docs-only.mjs`（Node の標準だけ。`isDocFile`・`isDocsOnly`・`diffArgs`・`decide`。コマンドとして動かすと、環境変数 `EVENT`・`BASE`・`HEAD`・`BEFORE`・`SHA` から決めて `GITHUB_OUTPUT` に `docs_only=true/false` を書く）。`changes` は `fetch-depth: 0` で checkout する。`check` はステップごとの `if` で分け、`e2e` はジョブの `if` でスキップする。テストは `tests/scripts/docs-only.test.ts`（TC-0039-01・02）。
 
 ### 30.7 公開（`.github/workflows/pages.yml`、`main` への push と手動）
 
