@@ -7,8 +7,8 @@ version: 1.0
 updated: 2026-11-04
 sources:
   - MWIZ-TASK-0019（v1.0）
-  - MWIZ-TC-0034（v1.1）
-  - MWIZ-TD-0005（v1.9）
+  - MWIZ-TC-0034（v1.2）
+  - MWIZ-TD-0005（v1.10）
 verified: { by: "tsuku3dayo", at: "2026-11-04T18:03:59+09:00" }
 ---
 
