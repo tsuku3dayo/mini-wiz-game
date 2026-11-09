@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.9
+version: 1.10
 updated: 2026-11-09
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -31,6 +31,8 @@ verified: null
 - 曲の選び方は `logic/bgm-scene.ts`、記譜と曲データは `logic/bgm-notation.ts`・`logic/bgm-tracks.ts`（純粋関数とデータ）。
 - どの関数も例外を外に出さない（Web Audio がなくても遊べる）。
 - テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の周波数・頭・止める時刻・音色（変調の深さ・ローパス）を確かめる（仕様書 §26.11。v1.8）。曲は 6 曲（v1.8）で、5/8 拍子（1 小節 2.5 拍）・5/4 拍子も同じ仕組みで鳴らす（1 周の秒 = 小節数 × 1 小節の拍数 × 60 ÷ bpm）。実際の聞こえ方は手動テスト。
+- 仕様書 v1.9 の曲の入れ替え（タイトル←カタコンベ、宿屋←ローエングリン、ボス戦←モーツァルト「怒りの日」）は、`logic/bgm-tracks.ts` の曲データだけを替える。曲の名前（`BgmName`）・場面の選び方（`bgm-scene.ts`）・再生の仕組み（`bgm.ts`・`bgm-director.ts`）は変えない（v1.10）。
+- ボス戦の曲は 1 周で予約する音が多い（16 分音符の刻みと 3 声の合唱。試聴ページで約 1,300 のオシレーター。カタコンベは約 190）。1 周分をまとめて予約する仕組み（仕様書 §26.5）は変えず、古い端末で音が途切れないかを実機で確かめる。途切れるときは、曲データ（刻みを 8 分音符にするなど）で減らす（変更の依頼を通す。v1.10）。
 
 ## 2. PWA（`src/platform/pwa.ts`・`install.ts`・`public/boot.js`）
 
