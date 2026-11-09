@@ -2,14 +2,14 @@
 id: MWIZ-AC-0030
 type: Attested Computation
 title: 文書だけの判定と CI の設定の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-09
 sources:
   - MWIZ-TASK-0030（v1.0）
   - MWIZ-TC-0039（v1.0）
   - MWIZ-TD-0005（v1.9）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-09T11:07:13+09:00" }
 ---
 
 # AC-0030 文書だけの判定と CI の設定の実施記録
