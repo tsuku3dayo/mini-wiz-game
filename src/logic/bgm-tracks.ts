@@ -1,7 +1,8 @@
 /**
- * BGM の曲データ（仕様書 §26.9。v1.7）。2026-11-06 にオーナーが試聴ページで選んだ 6 曲（FM 音源風）。
- * 原曲はどれも著作権の切れたクラシック・民謡で、有名な部分を短く編曲した（宿屋の伴奏はこのゲーム用の自前の編曲）。
- * 試聴ページの元は docs/requests/bgm-listen/（この値と同じ）。
+ * BGM の曲データ（仕様書 §26.9。v1.9）。2026-11-06 にオーナーが試聴ページで選んだ 6 曲（FM 音源風）を、
+ * 2026-11-09 にオーナーが試聴ページで選んだとおり入れ替えた（タイトル←カタコンベ、宿屋←ローエングリン、ボス戦←怒りの日）。
+ * 原曲はどれも著作権の切れたクラシックで、有名な部分を短く編曲した。
+ * 試聴ページの元は docs/requests/bgm-listen/（v1.7）・docs/requests/bgm-listen-v19/（v1.9。この値と同じ）。
  */
 import { type BgmNote, type Chord, N, R, at, mel, perBar, voicing } from './bgm-notation';
 
@@ -111,9 +112,33 @@ export const FM_PATCHES = {
 const P = FM_PATCHES;
 const part = (label: string, fm: FmPatch, vol: number, notes: BgmNote[]): BgmPart => ({ label, vol, fm, notes });
 
-// ===================== タイトル：ワーグナー『ローエングリン』第 1 幕への前奏曲（イ長調・4/4）=====================
-// 高い弦の和音が静かに続き、その上で旋律がゆっくり上っていく（冒頭の雰囲気に寄せた）
+// ===================== タイトル：ムソルグスキー『展覧会の絵』より「カタコンベ」（ロ短調・3/4）=====================
+// 重い金管の和音が、強い音と弱い音を交互にくり返す。低い太鼓は v1.7 でボス戦用に足したもの（v1.9 でタイトルに移しても残す）
 const title = (): BgmTrack => {
+  const prog = ['Bm', 'Bm', 'G', 'G', 'Em', 'F#', 'Bm', 'Bm', 'D', 'D', 'G', 'C', 'F#', 'F#', 'Bm', 'F#'];
+  const drums: DrumHit[] = [];
+  for (let b = 0; b < 16; b++) {
+    drums.push({ beat: b * 3, kind: 'boom', vel: b % 2 === 0 ? 0.6 : 0.3 });
+    if (b % 4 === 3) drums.push({ beat: b * 3 + 2.5, kind: 'snare', vel: 0.2 });
+  }
+  return {
+    name: 'カタコンベ（ローマ時代の墓）（ムソルグスキー『展覧会の絵』）',
+    bpm: 60,
+    bpb: 3,
+    bars: 16,
+    drums,
+    parts: [
+      part('強い和音', P.ブラス, 0.4, perBar(prog, 3, (c, beats, i) => (i % 2 === 0 ? [N(voicing(c, 54), beats)] : [R(beats)]))),
+      part('弱い和音', P.パッド, 0.2, perBar(prog, 3, (c, beats, i) => (i % 2 === 1 ? [N(voicing(c, 59), beats)] : [R(beats)]))),
+      part('上の声', P.ホルン, 0.4, mel('B4:3 | D5:3 | D5:3 | B4:3 | G4:3 | A#4:3 | B4:3 | F#4:3 | A4:3 | F#4:3 | B4:3 | C5:3 | C#5:3 | A#4:3 | B4:3 | A#4:3')),
+      part('ベース', P.柔らかいベース, 0.85, perBar(prog, 3, (c, beats) => [N(at(c.bass, 35), beats)])),
+    ],
+  };
+};
+
+// ===================== 宿屋：ワーグナー『ローエングリン』第 1 幕への前奏曲（イ長調・4/4）=====================
+// 高い弦の和音が静かに続き、その上で旋律がゆっくり上っていく（冒頭の雰囲気に寄せた）
+const inn = (): BgmTrack => {
   const prog = ['A', 'A', 'D', 'A', 'F#m', 'C#m', 'D', 'E', 'A', 'D', 'E', 'C#m', 'D', 'A', 'E', 'E'];
   return {
     name: 'ローエングリン 第 1 幕への前奏曲（ワーグナー）',
@@ -126,27 +151,6 @@ const title = (): BgmTrack => {
       part('高い和音', P.高い弦, 0.16, perBar(prog, 4, (c, beats) => [N(voicing(c, 69), beats)])),
       part('和音', P.パッド, 0.12, perBar(prog, 4, (c, beats) => [N(voicing(c, 57), beats)])),
       part('ベース', P.柔らかいベース, 0.45, perBar(prog, 4, (c, beats, i) => (i < 4 ? [R(beats)] : [N(at(c.bass, 33), beats)]))),
-    ],
-  };
-};
-
-// ===================== 宿屋：民謡「グリーンスリーヴス」（イ短調・3/4）=====================
-// 旋律は 16 世紀のイングランド民謡。和音・伴奏はこのゲーム用（ヴォーン・ウィリアムズの編曲は使わない）
-const inn = (): BgmTrack => {
-  const prog = ['Am', 'G', 'G', 'Em', 'Am', 'Am', 'E', 'Am', 'Am', 'G', 'G', 'Em', 'Am', 'E', 'Am', 'E'];
-  return {
-    name: 'グリーンスリーヴス（イングランド民謡）',
-    bpm: 100,
-    bpb: 3,
-    bars: 16,
-    drums: [],
-    parts: [
-      part('旋律', P.笛, 0.7, mel('C5:2 D5:1 | E5:1.5 F#5:0.5 E5:1 | D5:2 B4:1 | G4:1.5 A4:0.5 B4:1 | C5:2 A4:1 | A4:1.5 G#4:0.5 A4:1 | B4:2 G#4:1 | E4:2 A4:1 | C5:2 D5:1 | E5:1.5 F#5:0.5 E5:1 | D5:2 B4:1 | G4:1.5 A4:0.5 B4:1 | C5:1.5 B4:0.5 A4:1 | G#4:1.5 F#4:0.5 G#4:1 | A4:3 | A4:2 A4:1')),
-      part('竪琴', P.ハープ, 0.28, perBar(prog, 3, (c) => {
-        const [a, b, d] = voicing(c, 52);
-        return [N(a, 0.5), N(b, 0.5), N(d, 0.5), N(b + 12, 0.5), N(d, 0.5), N(b, 0.5)];
-      })),
-      part('ベース', P.ベース, 0.55, perBar(prog, 3, (c) => [N(at(c.bass, 40), 2), N(at(c.pcs[2], 40), 1)])),
     ],
   };
 };
@@ -208,26 +212,39 @@ const battle = (): BgmTrack => {
   };
 };
 
-// ===================== ボス戦：ムソルグスキー『展覧会の絵』より「カタコンベ」（ロ短調・3/4）=====================
-// 重い金管の和音が、強い音と弱い音を交互にくり返す。緊張を保つため、低い太鼓を足した
+// ===================== ボス戦：モーツァルト『レクイエム』より「怒りの日」（ニ短調・4/4）=====================
+// 弦が 16 分音符で細かく刻み続ける上で、合唱が和音をそろえて 4 分音符で打ち込む（v1.9）
 const boss = (): BgmTrack => {
-  const prog = ['Bm', 'Bm', 'G', 'G', 'Em', 'F#', 'Bm', 'Bm', 'D', 'D', 'G', 'C', 'F#', 'F#', 'Bm', 'F#'];
+  const bpb = 4;
+  const prog = ['Dm', 'Dm A/C#', 'Dm', 'A', 'Dm', 'Gm', 'A', 'Dm', 'F', 'C', 'Dm A', 'Dm', 'Gm', 'Dm', 'A', 'A'];
   const drums: DrumHit[] = [];
   for (let b = 0; b < 16; b++) {
-    drums.push({ beat: b * 3, kind: 'boom', vel: b % 2 === 0 ? 0.6 : 0.3 });
-    if (b % 4 === 3) drums.push({ beat: b * 3 + 2.5, kind: 'snare', vel: 0.2 });
+    drums.push({ beat: b * bpb, kind: 'boom', vel: 0.5 }, { beat: b * bpb + 2, kind: 'boom', vel: 0.35 });
   }
   return {
-    name: 'カタコンベ（ローマ時代の墓）（ムソルグスキー『展覧会の絵』）',
-    bpm: 60,
-    bpb: 3,
+    name: '怒りの日（モーツァルト『レクイエム』）',
+    bpm: 144,
+    bpb,
     bars: 16,
     drums,
     parts: [
-      part('強い和音', P.ブラス, 0.4, perBar(prog, 3, (c, beats, i) => (i % 2 === 0 ? [N(voicing(c, 54), beats)] : [R(beats)]))),
-      part('弱い和音', P.パッド, 0.2, perBar(prog, 3, (c, beats, i) => (i % 2 === 1 ? [N(voicing(c, 59), beats)] : [R(beats)]))),
-      part('上の声', P.ホルン, 0.4, mel('B4:3 | D5:3 | D5:3 | B4:3 | G4:3 | A#4:3 | B4:3 | F#4:3 | A4:3 | F#4:3 | B4:3 | C5:3 | C#5:3 | A#4:3 | B4:3 | A#4:3')),
-      part('ベース', P.柔らかいベース, 0.85, perBar(prog, 3, (c, beats) => [N(at(c.bass, 35), beats)])),
+      part('合唱', P.クワイア, 0.42, perBar(prog, bpb, (c, beats, i) => {
+        const v = voicing(c, 62);
+        if (i % 4 === 3) return [N(v, beats)];
+        return Array.from({ length: Math.round(beats) }, () => N(v, 1));
+      })),
+      part('刻む弦', P.弦のきざみ, 0.3, perBar(prog, bpb, (c, beats) => {
+        const r = at(c.pcs[0], 62);
+        const t = at(c.pcs[1], r + 1);
+        const fig = [r, r + 12, t + 12, r + 12];
+        return Array.from({ length: Math.round(beats / 0.25) }, (_, j) => N(fig[j % 4], 0.25));
+      })),
+      part('金管', P.ブラス, 0.28, perBar(prog, bpb, (c, beats, i) => {
+        if (i % 2 === 1) return [R(beats)];
+        const r = at(c.pcs[0], 50);
+        return [N([r, at(c.pcs[2], r + 1)], 1), R(beats - 1)];
+      })),
+      part('ベース', P.低い弦, 0.5, perBar(prog, bpb, (c, beats) => Array.from({ length: Math.round(beats / 0.5) }, () => N(at(c.bass, 38), 0.5)))),
     ],
   };
 };
