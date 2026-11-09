@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.6）§2、§5
-  - docs/specification-ja.md (v1.7) §1.1、§1.3、§14
+  - docs/specification-ja.md (v1.8) §1.1、§1.3、§14
   - docs/requests/2026-10-26-serverless-pwa.md
 verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
