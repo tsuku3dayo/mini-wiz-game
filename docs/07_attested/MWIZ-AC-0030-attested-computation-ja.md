@@ -38,9 +38,9 @@ verified: null
 | TC-0039-01 | 単体（`tests/scripts/docs-only.test.ts`） | OK。`docs/` の中（`.md`・`.ts`・`.png`）と `README.md`・`CLAUDE.md` は文書、`src/main.ts`・`.github/workflows/test.yml`・`package.json`・`e2e/notes.md`・`docs.md.ts`・`documents/a.md` は文書でない。混ざると・空だと文書だけにならない |
 | TC-0039-02 | 単体（同上） | OK。PR は `base...head`、push は `before`・`sha`。`before` が空・すべて 0、値が足りない、`workflow_dispatch` は `null`。`null` のときは一覧を取らずに `false`、一覧を取る関数が例外なら `false` |
 | TC-0039-03 | 手動（GitHub の画面、PR #94） | OK。実行 42546999249：`changes` のログに `docs_only=false（イベント pull_request、変わったファイル 6）`。`check` は `npm ci`・`npm run verify` が動いて成功（文書だけのときのステップは飛ばした）、`e2e` が動いて成功。時間：changes 7 秒・check 29 秒・e2e 4 分 48 秒 |
-| TC-0039-04 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
-| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | WS の終わりに確かめる |
-| TC-0039-06 | 手動（GitHub の画面、文書だけの PR） | WS の終わりに確かめる |
+| TC-0039-04 | 手動（GitHub の画面、文書だけの PR #95） | OK。実行 42548439662：`changes` のログに `docs_only=true（イベント pull_request、変わったファイル 1）`。`check` は `check-docs.mjs` のステップだけが動いて成功（2 つ目の setup-node・`npm ci`・`npm run verify` は skipped）、`e2e` は skipped。PR のチェックは緑。時間：changes 5 秒・check 5 秒（いままでの文書の PR は check 17〜28 秒・e2e 4〜5 分） |
+| TC-0039-05 | 手動（GitHub の画面、`main` の実行） | TASK-0030 のマージ（f39c67c）：OK。test の実行 42547945652 で `docs_only=false（イベント push、変わったファイル 7）`、changes・check・e2e が動いて成功。pages の実行 42547945629 も成功。文書だけのマージ：WS の終わりに確かめる |
+| TC-0039-06 | 手動（GitHub の画面、文書だけの PR #95） | OK。WS-0014 の sources の TC-0039 の版を v0.9 にした一時的なコミット（8e25b17）で、実行 42548551520 の `check` が失敗（赤）、ログに「sources の MWIZ-TC-0039 は v0.9 と書いたが、今は v1.0」。`e2e` は skipped のまま。戻すコミット（10e9848。8e25b17 の前と中身が同じことを `git diff` で確かめた）で、実行 42548672352 が緑（check 7 秒） |
 
 あわせて確かめたこと：
 
