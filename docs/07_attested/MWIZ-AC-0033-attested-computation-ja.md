@@ -2,13 +2,13 @@
 id: MWIZ-AC-0033
 type: Attested Computation
 title: 敵の絵の v4 への差し替えの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:
   - MWIZ-TASK-0033（v1.0）
   - MWIZ-TC-0033（v1.4）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-10T16:10:14+09:00" }
 ---
 
 # AC-0033 敵の絵の v4 への差し替えの実施記録
