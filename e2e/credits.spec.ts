@@ -163,7 +163,7 @@ test.describe('クレジット', () => {
     await screen(page, 'inn');
   });
 
-  test('TC-0040-09 4 行のメニューと ErrorPanel があっても、タイトルが縦に収まる（375×667・414×715・1366×657）', async ({ page }, info) => {
+  test('TC-0040-09 4 行のメニューと ErrorPanel があっても、タイトルが縦に収まる（375×667・414×715・1366×657）。高さ 680 以下は上下の余白 16px', async ({ page }, info) => {
     const sizes = desktop(info) ? [{ width: 1366, height: 657 }] : [{ width: 375, height: 667 }, { width: 414, height: 715 }];
     for (const size of sizes) {
       await page.setViewportSize(size);
@@ -178,6 +178,10 @@ test.describe('クレジット', () => {
       await expect.poll(() => page.locator('h1 img').evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(1080);
       const y = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
       expect(y, `${size.width}×${size.height}`).toBeLessThanOrEqual(0);
+      // 高さ 680 以下では上下 16px、それより高ければ 32px（仕様書 v1.13 §11.3。Chromium では安全領域が 0）
+      const pad = await page.locator('.title-main').evaluate((e) => [getComputedStyle(e).paddingTop, getComputedStyle(e).paddingBottom]);
+      const want = size.height <= 680 ? '16px' : '32px';
+      expect(pad, `${size.width}×${size.height}`).toEqual([want, want]);
     }
   });
 });

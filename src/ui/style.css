@@ -48,6 +48,10 @@ body {
   gap: 16px;
   align-content: center;
 }
+/* 画面の高さが 680px 以下では上下の余白を詰める（仕様書 v1.13 §11.3。メニュー 4 行とエラーの枠が出ても縦に収める） */
+@media (max-height: 680px) {
+  .title-main { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
 /* タイトル画像（仕様書 §11.5・§13.6）：横幅いっぱい・最大 450px、3：2。width・height の属性で読み込みの前から場所を確保する */
 .title-logo { margin: 0; }
 .title-image { display: block; width: 100%; max-width: 450px; height: auto; aspect-ratio: 3 / 2; margin: 0 auto; }
