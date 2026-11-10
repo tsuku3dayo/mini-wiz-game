@@ -2,13 +2,13 @@
 id: MWIZ-PB-0001
 type: Project Brief
 title: WIZ ～死霊術師の迷宮～ プロジェクト概要
-status: review
+status: stable
 version: 1.7
 updated: 2026-11-10
 sources:
   - docs/specification-ja.md (v1.11)
   - docs/requests/2026-10-26-serverless-pwa.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-10T15:23:49+09:00" }
 ---
 
 # プロジェクト概要（project-brief）
