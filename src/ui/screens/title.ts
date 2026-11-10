@@ -67,6 +67,8 @@ export function mountTitle(root: HTMLElement, ctx: ScreenContext): { destroy(): 
       // セーブがないときは無効。理由を渡さないので、選んでも何も出さない（メッセージ欄がない。仕様書 §11.5）
       { label: continueLabel(), disabled: !s, onSelect: () => void command.run(() => api.load(), { refetchSave: true }) },
       { label: soundLabel(sound.on), onSelect: () => { sound.toggle(); menu?.update({ items: items() }); } },
+      // v1.12：「おと」の下。初めのカーソルは変えない（TD-0004 §1）
+      { label: 'クレジット', onSelect: () => router.navigate('credits') },
     ];
   }
 

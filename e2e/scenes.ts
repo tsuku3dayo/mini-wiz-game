@@ -27,7 +27,7 @@ export const heavy = {
 
 export type Scene = { name: string; open: () => Promise<void>; narrowOnly?: boolean };
 
-/** どの画面も（TC-0035 の前書き）：10 画面と、メニュー・確認・ErrorPanel を出した状態 */
+/** どの画面も（TC-0035 の前書き）：11 画面（v1.12 でクレジット）と、メニュー・確認・ErrorPanel を出した状態 */
 export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[] {
   const screen = (name: string) => expect(page.locator('body')).toHaveAttribute('data-screen', name);
   const innMenu = async () => {
@@ -48,6 +48,30 @@ export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[
         await openDebug(page);
         await writeScene(page, { save: storedSave({ level: 15 }) });
         await expect(item(page, 'タイトル', 'つづきから')).toBeVisible();
+      },
+    },
+    {
+      // v1.12：メニューが 4 行になり、エラーの枠が出たときがタイトルでいちばん高い（TC-0035 の前書き）
+      name: 'タイトル・エラー',
+      open: async () => {
+        await openDebug(page);
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('about:blank');
+        await openDebug(page);
+        await writeScene(page, { save: storedSave({ level: 15 }) });
+        await failWrites(page);
+        await press(item(page, 'タイトル', 'つづきから'));
+        await expect(page.getByTestId('error-panel')).toBeVisible();
+      },
+    },
+    {
+      name: 'クレジット',
+      open: async () => {
+        await openDebug(page);
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('about:blank');
+        await page.goto('./?debug=1#/credits');
+        await screen('credits');
       },
     },
     {

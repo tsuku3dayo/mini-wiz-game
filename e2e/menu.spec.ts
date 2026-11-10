@@ -45,8 +45,9 @@ test.describe('メニューとコマンド', () => {
     await expectAt('タイトル', 'はじめから');
     await page.keyboard.press('ArrowUp');
     await expectAt('タイトル', 'はじめから');
-    for (let i = 0; i < 4; i += 1) await page.keyboard.press('ArrowDown');
-    await expectAt('タイトル', 'おと：オフ');
+    // v1.12 で「おと」の下に「クレジット」を足したので、下の端は「クレジット」
+    for (let i = 0; i < 5; i += 1) await page.keyboard.press('ArrowDown');
+    await expectAt('タイトル', 'クレジット');
     await startAt(page, 'BATTLE');
     await expectAt('戦闘', 'たたかう');
     for (let i = 0; i < 4; i += 1) await page.keyboard.press('ArrowDown');

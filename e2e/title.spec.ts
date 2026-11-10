@@ -5,11 +5,11 @@ const title = (page: Page) => page.getByRole('menu', { name: 'タイトル' });
 const item = (page: Page, text: string) => title(page).getByRole('menuitem').filter({ hasText: text });
 
 test.describe('タイトル', () => {
-  test('TC-0006-01 見出しの中のタイトル画像・メニュー（はじめから・つづきから・おと：オフ）・インストール・版。メッセージ欄はない', async ({ page }) => {
+  test('TC-0006-01 見出しの中のタイトル画像・メニュー（はじめから・つづきから・おと：オフ・クレジット）・インストール・版。メッセージ欄はない', async ({ page }) => {
     await page.goto('./');
     await expect(page.locator('h1 img')).toHaveAttribute('src', 'title/title.png');
     await expect(title(page)).toHaveAttribute('role', 'menu');
-    expect((await title(page).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''))).toEqual(['はじめから', 'つづきから', 'おと：オフ']);
+    expect((await title(page).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''))).toEqual(['はじめから', 'つづきから', 'おと：オフ', 'クレジット']);
     await expect(page.getByRole('button', { name: 'インストール', exact: true })).toBeVisible();
     await expect(page.getByText('v1.0')).toBeVisible();
     await expect(page.getByRole('log')).toHaveCount(0);
@@ -126,7 +126,7 @@ test.describe('タイトル', () => {
     expect(new URL(page.url()).hash).toBe('#/new');
   });
 
-  test('TC-0006-06 プレイ中のゲームがないとき、ほかの画面のハッシュはタイトルに置き換わる。#/new は名前入力のまま', async ({ context }) => {
+  test('TC-0006-06 プレイ中のゲームがないとき、ほかの画面のハッシュはタイトルに置き換わる。#/new は名前入力、#/credits はクレジットのまま', async ({ context }) => {
     const base = await historyLengthOf(context, '#/');
     for (const hash of ['#/inn', '#/dungeon', '#/battle', '#/clear', '#/swap', '#/nothing', '']) {
       const page = await context.newPage();
@@ -137,18 +137,20 @@ test.describe('タイトル', () => {
       expect(await page.evaluate(() => history.length), hash).toBe(base);
       await page.close();
     }
-    const page = await context.newPage();
-    await page.goto('./?debug=1#/new');
-    await expect(page.locator('body')).toHaveAttribute('data-screen', 'new');
-    expect(new URL(page.url()).hash).toBe('#/new');
-    await page.close();
+    for (const [hash, screen] of [['#/new', 'new'], ['#/credits', 'credits']]) {
+      const page = await context.newPage();
+      await page.goto(`./?debug=1${hash}`);
+      await expect(page.locator('body')).toHaveAttribute('data-screen', screen);
+      expect(new URL(page.url()).hash).toBe(hash);
+      await page.close();
+    }
   });
 
   test('TC-0006-07 プレイ中のゲームの場所が INN・DUNGEON・BATTLE・CLEARED・SWAP のとき、どのハッシュを開いても、その場所の画面のハッシュになる', async ({ page }) => {
     const places = [['INN', 'inn', '#/inn'], ['DUNGEON', 'dungeon', '#/dungeon'], ['BATTLE', 'battle', '#/battle'], ['CLEARED', 'clear', '#/clear'], ['SWAP', 'swap', '#/swap']] as const;
     for (const [location, screen, expected] of places) {
       await startAt(page, location);
-      for (const hash of ['#/', '#/new', '#/inn', '#/dungeon', '#/battle', '#/clear', '#/swap', '#/nothing']) {
+      for (const hash of ['#/', '#/new', '#/credits', '#/inn', '#/dungeon', '#/battle', '#/clear', '#/swap', '#/nothing']) {
         await page.goto(`./?debug=1${hash}`);
         await page.waitForURL((url) => url.hash === expected);
         await expect(page.locator('body'), `${location} ${hash}`).toHaveAttribute('data-screen', screen);
