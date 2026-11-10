@@ -3,8 +3,8 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.10
-updated: 2026-11-09
+version: 1.11
+updated: 2026-11-10
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TS-0001（v1.4）
@@ -24,7 +24,7 @@ verified: null
 | モジュール | 受け持ち | つなぎ方 |
 | --- | --- | --- |
 | `sound-setting.ts` | オン／オフ（`mini-wiz-game-sound`、初期オフ）、`toggle()`、`subscribe`、`soundLabel`。保存には文字列 `'on'`／`'off'` をそのまま書く（Web Storage の `getItem`・`setItem` を受け取る。ゲームの保存の `KeyValueStore` は JSON にするので使わない。v1.4） | タイトルのメニュー・GameMenu の「おと」が呼ぶ（画面には `ScreenContext.sound` で渡す）。オンにした瞬間に `toggle` の音（`main.ts` が `onTurnOn` でつなぐ） |
-| `sound.ts` | 効果音 8 種の合成（仕様書 §25。v1.8 から FM 音源風：出来事（音・和音、頭・長さ、音色、高さの動き）の並びを、音色ごとのローパスを通して鳴らす。長さは `SFX_MS`）、`playSfx(name)`・`stopSfx()`・`sfxRemainingSec()`・`onSfx`（仕様書 §25.3 の名前。v1.3 は `play`・`stop` と書いていた）、自動再生の制限への対処（入力のたびに `resume`）。`sfx(name, { muted })` が `app:sound` イベントを出し、muted でなければ `playSfx` を呼ぶ（v1.4） | `main.ts` が、`ui/command.ts` の `onEncounter`（遭遇）と `ui/message-queue.ts` の `onEffectStart`・`onEffectEnd`（演出の開始・終了）に `sfx`・`stopSfx` をつなぐ |
+| `sound.ts` | 効果音 8 種の合成（仕様書 §25。v1.8 から FM 音源風：出来事（音・和音、頭・長さ、音色、高さの動き、v1.11 から音量の倍率）の並びを、音色ごとのローパスと、v1.11 から効果音の出口のコンプレッサーを通して鳴らす。長さは `SFX_MS`）、`playSfx(name)`・`stopSfx()`・`sfxRemainingSec()`・`onSfx`（仕様書 §25.3 の名前。v1.3 は `play`・`stop` と書いていた）、自動再生の制限への対処（入力のたびに `resume`）。`sfx(name, { muted })` が `app:sound` イベントを出し、muted でなければ `playSfx` を呼ぶ（v1.4） | `main.ts` が、`ui/command.ts` の `onEncounter`（遭遇）と `ui/message-queue.ts` の `onEffectStart`・`onEffectEnd`（演出の開始・終了）に `sfx`・`stopSfx` をつなぐ |
 | `bgm.ts` | FM 合成の再生エンジン（仕様書 §26.2〜§26.6）、ダッキング・フェード | `bgm-director.ts` だけが呼ぶ |
 | `bgm-director.ts` | 場面（パス・状態・演出）から曲を決め、変わったときだけ替える（仕様書 §26.7）。替えたら `app:bgm` イベント | ストア・ルーター・キュー・音の設定を購読する。LocationGuard の外に置き、エラーの画面でも止めない |
 
@@ -33,6 +33,15 @@ verified: null
 - テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の周波数・頭・止める時刻・音色（変調の深さ・ローパス）を確かめる（仕様書 §26.11。v1.8）。曲は 6 曲（v1.8）で、5/8 拍子（1 小節 2.5 拍）・5/4 拍子も同じ仕組みで鳴らす（1 周の秒 = 小節数 × 1 小節の拍数 × 60 ÷ bpm）。実際の聞こえ方は手動テスト。
 - 仕様書 v1.9 の曲の入れ替え（タイトル←カタコンベ、宿屋←ローエングリン、ボス戦←モーツァルト「怒りの日」）は、`logic/bgm-tracks.ts` の曲データだけを替える。曲の名前（`BgmName`）・場面の選び方（`bgm-scene.ts`）・再生の仕組み（`bgm.ts`・`bgm-director.ts`）は変えない（v1.10）。
 - ボス戦の曲は 1 周で予約する音が多い（16 分音符の刻みと 3 声の合唱。試聴ページで約 1,300 のオシレーター。カタコンベは約 190）。1 周分をまとめて予約する仕組み（仕様書 §26.5）は変えず、古い端末で音が途切れないかを実機で確かめる。途切れるときは、曲データ（刻みを 8 分音符にするなど）で減らす（変更の依頼を通す。v1.10）。
+
+### 効果音のジングル化（v1.11、仕様書 v1.10）
+
+- `sound.ts` の `SFX`・`SFX_MS`・`SE_PATCHES` を、仕様書 §25.2 のコードのとおりに書き替える（遭遇・レベルアップ・ボス出現・ボス撃破・クリアの 5 つ、音色「ひびくオルガン」を足して 9 種）。`SfxEvent` に `gain?`（音量の倍率）を足し、1 音の音量を `patch.vol × (gain ?? 1) / √音数` にする。音の終わりのフェードを `min(0.03, 長さ / 3)` にする。
+- 効果音の出口：`sound.ts` の中に、`AudioContext` ごとに 1 つのコンプレッサーを持つ（最初に鳴らすときに作り、`WeakMap<AudioContext, AudioNode>` または「作った ctx と組」で覚える。`audioContext()` は 1 つしか作らないので、実際は 1 つ）。`createDynamicsCompressor` がない・例外のときは `ac.destination` を出口にする。出来事ごとのローパスは出口につなぐ。BGM（`bgm.ts`）の音のつながりは変えない（効果音だけがコンプレッサーを通る）。
+- 演出の長さ：`logic/message-plan.ts` の `EFFECT_MS` を levelUp 1071・bossAppear 2906・bossDefeat 1000・clear 5833 にする（rareDrop 800・`RARE_DROP_LG_MS` 1200 はそのまま）。`message-queue.ts`・`effects.ts`・`style.css` のアニメーション・`main.ts` の `onEffectEnd` での `stopSfx` は変えない（演出の長さ＝音の長さなので、時間どおりの終わりで止めても音は鳴り切っている）。
+- 演出の長さと音の長さの関係は、テストで縛る（`SFX_MS` の 4 つ ＝ `EFFECT_MS`。TC-0032-21）。`sound.ts`（音）から `logic/message-plan.ts` を import はしない（層の向きを変えない）。テストの中で両方を読んで比べる。
+- BGM：`bgm-director.ts` は、演出（`activeEffect`）がある間ボスの曲・クリアの曲を待つので、演出が延びれば自動で遅れる（コードは変えない）。遭遇の音が 510 ms になるので、戦闘の曲は `sfxRemainingSec()` のぶん早く始まる（コードは変えない）。
+- E2E で、行の出る時刻・`app:bgm` の時刻を決め打ちしているところ（`e2e/sound.spec.ts`・`e2e/effects.spec.ts`・`e2e/message.spec.ts`）は、新しい演出の長さで直す。直す前に、`1000`・`1200`・`600`・`1500` などの値をテストの中で探し、演出の長さに関係するものを全部挙げる。
 
 ## 2. PWA（`src/platform/pwa.ts`・`install.ts`・`public/boot.js`）
 
