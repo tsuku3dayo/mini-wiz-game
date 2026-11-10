@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-09
 sources:
   - MWIZ-TS-0001（v1.4）
-  - MWIZ-TST-0001（v1.1）
+  - MWIZ-TST-0001（v1.2）
   - MWIZ-TC-0039（v1.0）
   - docs/specification-ja.md (v1.12) §30.6
 verified: null

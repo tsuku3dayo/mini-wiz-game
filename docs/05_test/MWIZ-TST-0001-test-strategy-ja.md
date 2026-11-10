@@ -3,14 +3,14 @@ id: MWIZ-TST-0001
 type: Test Strategy
 title: テストの戦略
 status: stable
-version: 1.1
-updated: 2026-11-09
+version: 1.2
+updated: 2026-11-10
 sources:
   - MWIZ-EP-0001（v1.0）
   - MWIZ-ADR-0011（v1.0）
   - MWIZ-TD-0001（v1.1）
   - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0005（v1.11）
+  - MWIZ-TD-0005（v1.12）
   - MWIZ-GUI-0001（v1.1）
   - docs/specification-ja.md (v1.12) §14、§16、§29
 verified: null
@@ -49,12 +49,12 @@ verified: null
 | 区分 | ファイル（例） |
 | --- | --- |
 | `tests/domain/` | `rng`・`constants`・`errors`・`character`・`game-state`・`floors`・`explore`・`view`・`battle`・`items`・`loot`・`equipment`・`records`・`heal`・`balance` の `.test.ts`（仕様書 §29.2） |
-| `tests/logic/` | `name`・`version`・`describe-view`・`view-to-segments`・`map-to-shapes`・`arrival`・`low-hp`・`item-text`・`sort-items`・`stat-diff`・`menu-model`・`message-plan`・`bgm-scene`・`bgm-tracks` の `.test.ts` |
+| `tests/logic/` | `name`・`version`・`describe-view`・`view-to-segments`・`map-to-shapes`・`arrival`・`low-hp`・`item-text`・`sort-items`・`stat-diff`・`menu-model`・`message-plan`・`bgm-scene`・`bgm-tracks`・`credits`（v1.2） の `.test.ts` |
 | `tests/api/` | `game-api.test.ts`（操作・エラー・楽観ロック・自動セーブ・移行）、`playthrough.test.ts`（自動プレイヤーの通しプレイ） |
 | `tests/audio/` | `sound.test.ts`・`bgm.test.ts`・`sound-setting.test.ts` |
 | `tests/assets/` | `enemy-images.test.ts` |
 | `tests/scripts/` | `docs-only.test.ts`（CI の文書だけの判定。v1.1） |
-| `e2e/` | `title`・`name-entry`・`inn`・`dungeon`・`battle`・`clear`・`swap`・`equipment`・`inventory`・`status`・`menu`・`message`・`effects`・`error`・`layout`・`a11y`・`pwa`・`boot`・`sound`・`debug` の `.spec.ts`（BGM の E2E も `sound`）、共通の操作は `e2e/helpers.ts` |
+| `e2e/` | `title`・`name-entry`・`credits`（v1.2）・`inn`・`dungeon`・`battle`・`clear`・`swap`・`equipment`・`inventory`・`status`・`menu`・`message`・`effects`・`error`・`layout`・`a11y`・`pwa`・`boot`・`sound`・`debug` の `.spec.ts`（BGM の E2E も `sound`）、共通の操作は `e2e/helpers.ts` |
 
 - TC には「置き場所」の列に、確認 ID ごとのファイルを書く。新しいファイルが要るときは、この表に足す（TST の版を上げる）。
 

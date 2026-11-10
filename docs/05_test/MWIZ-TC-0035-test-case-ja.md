@@ -3,13 +3,13 @@ id: MWIZ-TC-0035
 type: Test Case
 title: スマートフォンの画面で快適に遊ぶ
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-10
 sources:
   - MWIZ-US-0035（v1.1）
-  - MWIZ-TST-0001（v1.1）
+  - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.2）
+  - MWIZ-TD-0004（v1.3）
   - MWIZ-GUI-0001（v1.1）
   - docs/specification-ja.md (v1.12) §1.3、§11.1、§11.3、§11.11、§11.12、§14、§15.4、§16.4、§16.6
 verified: null
@@ -19,7 +19,7 @@ verified: null
 
 - 対象：[US-0035](../02_requirements/MWIZ-US-0035-user-story-ja.md)（受け入れ条件 6 つ）
 - 方法の分け方・置き場所の決まりは [TST-0001](MWIZ-TST-0001-test-strategy-ja.md)。
-- 「どの画面も」は、タイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え・そうび・もちもの・ステータスの 10 画面と、宿屋・ダンジョンのメニュー（GameMenu）・確認（ConfirmMenu）・ErrorPanel を出した状態をいう。
+- 「どの画面も」は、タイトル・名前入力・クレジット・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え・そうび・もちもの・ステータスの 11 画面と、宿屋・ダンジョンのメニュー（GameMenu）・確認（ConfirmMenu）・ErrorPanel（タイトル・宿屋・ダンジョン・戦闘）を出した状態をいう（`e2e/scenes.ts`）。v1.1（仕様書 v1.12）でクレジットと、タイトルの ErrorPanel を足した（タイトルのメニューが 4 行になり、エラーの枠が出たときの高さがいちばん厳しいため）。
 
 ## 1. 確認の一覧
 
