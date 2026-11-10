@@ -210,8 +210,8 @@ test.describe('メッセージ欄', () => {
       await pauseClock(page);
       await choose(page, info, attackItem(page));
       await expect.poll(() => logLines(page)).toHaveLength(1);
-      // 7 行目がドロップ（400 × 4 ＋ レベルアップ 1000 ＋ 400）
-      await page.clock.runFor(3000);
+      // 7 行目がドロップ（400 × 4 ＋ レベルアップ 1071 ＋ 400。v1.10）
+      await page.clock.runFor(3071);
       await expect(dropLine()).toBeVisible();
       await expect(dropLine()).toHaveCSS('color', s.color);
       expect(await blink()).toEqual({ duration: '0.4s', timing: 'steps(1)', count: s.count, running: 1 });

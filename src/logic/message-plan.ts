@@ -8,13 +8,16 @@ export const LINE_INTERVAL_MS = 400;
 /** 応答待ちの ▼ を出すまでの時間 */
 export const WAITING_MARK_MS = 300;
 
-/** 演出の長さ（仕様書 §11.8）。rareDrop の LG だけは RARE_DROP_LG_MS */
+/**
+ * 演出の長さ（仕様書 §11.8）。rareDrop の LG だけは RARE_DROP_LG_MS。
+ * v1.10 で levelUp・bossAppear・bossDefeat・clear を効果音の長さ（audio/sound.ts の SFX_MS）に合わせた（効果音が鳴り切るように）
+ */
 export const EFFECT_MS: Readonly<Record<MessageEffect, number>> = {
-  levelUp: 1000,
+  levelUp: 1071,
   rareDrop: 800,
-  bossAppear: 1200,
-  bossDefeat: 600,
-  clear: 1500,
+  bossAppear: 2906,
+  bossDefeat: 1000,
+  clear: 5833,
 };
 export const RARE_DROP_LG_MS = 1200;
 

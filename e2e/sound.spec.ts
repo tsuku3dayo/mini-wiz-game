@@ -132,10 +132,10 @@ test.describe('効果音と音の設定', () => {
     await recordSounds(page);
     await page.clock.install();
     const scenes: { state: Record<string, unknown>; seed: number; expected: [string, number][] }[] = [
-      // 1 行目のあと 400ms ごと。演出の行のあとはその長さ
-      { state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['levelUp', 1600], ['rareDrop', 3000]] },
-      { state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['levelUp', 1600], ['rareDropLG', 3000]] },
-      { state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['levelUp', 1400], ['levelUp', 2800], ['levelUp', 4200], ['rareDropLG', 5600], ['clear', 6800]] },
+      // 1 行目のあと 400ms ごと。演出の行のあとはその長さ（v1.10：levelUp 1071・bossDefeat 1000）
+      { state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['levelUp', 1600], ['rareDrop', 3071]] },
+      { state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['levelUp', 1600], ['rareDropLG', 3071]] },
+      { state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['levelUp', 1800], ['levelUp', 3271], ['levelUp', 4742], ['rareDropLG', 6213], ['clear', 7413]] },
     ];
     for (const s of scenes) {
       await startAt(page, 'BATTLE', { state: s.state, seed: s.seed });
@@ -174,7 +174,7 @@ test.describe('効果音と音の設定', () => {
       await attackPaused(page, info);
       await page.clock.runFor(1600);
       await expect(page.getByTestId('status-panel')).toHaveClass(/level-up/);
-      // levelUp の 4 音を予約したとき、それぞれの終わりの stop を 1 回ずつ呼んでいる
+      // levelUp の音を予約したとき（v1.10 は 6 つの出来事）、それぞれの終わりの stop を 1 回ずつ呼んでいる
       const before = await stops();
       expect(before, way).toBeGreaterThanOrEqual(4);
       if (way === 'click' || way === 'tap') await press(info, page.getByTestId('message-window'));
@@ -291,7 +291,7 @@ test.describe('場面ごとの BGM', () => {
     }, bossFrontState.dungeon);
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
     await forward(page).click();
-    await expect.poll(() => bgmNames(page), { timeout: 5000 }).toEqual(['title', 'inn', 'dungeon', 'battle', 'dungeon', null, 'boss']);
+    await expect.poll(() => bgmNames(page), { timeout: 8000 }).toEqual(['title', 'inn', 'dungeon', 'battle', 'dungeon', null, 'boss']); // ボスの曲は演出 2906ms のあと
   });
 
   test('TC-0034-06 クリア画面に入っているあいだ、最後の app:bgm はクリアの曲（clear）のまま', async ({ page }, info) => {
@@ -355,7 +355,7 @@ test.describe('場面ごとの BGM', () => {
     await expect.poll(async () => (await audioEvents(fresh)).map((e) => `${e.type}:${e.name}`)).toEqual(['sound:toggle', 'bgm:title']);
   });
 
-  test('TC-0034-13 ボスのマスに入ると、bossAppear の演出のあいだ曲を止め（null）、1200ms でボスの曲。演出を飛ばせばすぐボスの曲', async ({ page }) => {
+  test('TC-0034-13 ボスのマスに入ると、bossAppear の演出のあいだ曲を止め（null）、2906ms でボスの曲（v1.10）。演出を飛ばせばすぐボスの曲', async ({ page }) => {
     await soundOnAtStart(page);
     await recordAudio(page);
     await page.clock.install();
@@ -369,7 +369,7 @@ test.describe('場面ごとの BGM', () => {
       if (skip) {
         await page.getByTestId('message-window').click();
       } else {
-        await page.clock.runFor(1199);
+        await page.clock.runFor(2905);
         expect(await bgmNames(page)).toEqual([null]);
         await page.clock.runFor(1);
       }

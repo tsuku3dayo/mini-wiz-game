@@ -138,7 +138,8 @@ test.describe('キーボードと読み上げ', () => {
     await key('Enter');
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear', { timeout: 20_000 });
     await expect(item(page, 'ゲームクリア', '宿屋へ')).not.toHaveAttribute('aria-disabled', 'true', { timeout: 15_000 });
-    await expect.poll(() => focused(page)).toBe('宿屋へ');
+    // クリアの演出（5833ms、v1.10）が終わるとフォーカスが「宿屋へ」に来る
+    await expect.poll(() => focused(page), { timeout: 15_000 }).toBe('宿屋へ');
     await key('Enter');
     await screen(page, 'inn');
     for (let i = 0; i < 4; i += 1) await key('ArrowDown');

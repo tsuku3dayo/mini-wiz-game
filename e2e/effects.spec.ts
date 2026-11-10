@@ -89,8 +89,10 @@ test.describe('演出', () => {
     expect(await cssAnimation(levelLine)).toMatchObject({ duration: '0.6s', count: '1', timing: 'ease-out', running: 1 });
     expect(await keyframes(levelLine, 'transform')).toContainEqual([0.5, 'scale(1.2)']);
     expect((await levelLine.evaluate((e) => getComputedStyle(e).transformOrigin)).startsWith('0px')).toBe(true);
-    // 1000ms たつと光りが消える
-    await page.clock.runFor(1000);
+    // アニメーション（1000ms）のあとも演出の長さ（1071ms、v1.10）までは付いていて、過ぎると消える
+    await page.clock.runFor(1070);
+    await expect(status(page)).toHaveClass(/level-up/);
+    await page.clock.runFor(1);
     await expect(status(page)).not.toHaveClass(/level-up/);
   });
 
@@ -103,8 +105,8 @@ test.describe('演出', () => {
     for (const s of scenes) {
       await startAt(page, 'BATTLE', { state: darkKnight, seed: s.seed });
       await attackPaused(page, info);
-      // 7 行目（1 行目から 400 × 4 ＋ レベルアップ 1000 ＋ 400）
-      await page.clock.runFor(3000);
+      // 7 行目（1 行目から 400 × 4 ＋ レベルアップ 1071 ＋ 400。v1.10）
+      await page.clock.runFor(3071);
       const drop = line(page, /おとした！/);
       await expect(drop).toBeVisible();
       await expect(layer(page)).toHaveAttribute('data-effect', 'rareDrop');
@@ -131,7 +133,8 @@ test.describe('演出', () => {
     await expect(layer(page)).toHaveAttribute('aria-hidden', 'true');
     await expect(layer(page)).toHaveCSS('pointer-events', 'none');
     await expect(layer(page)).toHaveCSS('position', 'fixed');
-    await page.clock.runFor(1200);
+    // 演出の長さ 2906ms（v1.10）で消える（TC-0031-12）
+    await page.clock.runFor(2906);
     await expect(layer(page)).not.toHaveAttribute('data-effect', /./);
   });
 
@@ -145,7 +148,7 @@ test.describe('演出', () => {
     expect(await cssAnimation(layer(page))).toMatchObject({ duration: '0.6s', count: '1', timing: 'linear', running: 1 });
     const colors = await keyframes(layer(page), 'backgroundColor');
     expect(colors.filter(([, v]) => v === 'rgba(232, 220, 192, 0.55)').map(([o]) => o)).toEqual([0.16, 0.83]);
-    await page.clock.runFor(600);
+    await page.clock.runFor(1000); // 演出の長さ 1000ms（v1.10）
     await expect(layer(page)).not.toHaveAttribute('data-effect', 'bossDefeat');
   });
 
@@ -154,7 +157,7 @@ test.describe('演出', () => {
     await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
     await attackPaused(page, info);
     // clear の行まで進める（クリア画面に移り、最後の行で見出しが浮かび上がる）
-    for (let i = 0; i < 80 && !(await page.evaluate(() => !!document.querySelector('.clear-heading.rising'))); i += 1) {
+    for (let i = 0; i < 120 && !(await page.evaluate(() => !!document.querySelector('.clear-heading.rising'))); i += 1) {
       await page.clock.runFor(100);
     }
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
@@ -175,7 +178,8 @@ test.describe('演出', () => {
     await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
     await attackPaused(page, info);
     const seen: string[] = [];
-    for (let t = 0; t <= 9000; t += 100) {
+    // clear の演出（5833ms、v1.10）が終わるまで見る
+    for (let t = 0; t <= 14000; t += 100) {
       const now = await page.evaluate(() => {
         const l = document.getElementById('effect-layer')?.dataset.effect ?? null;
         const s = document.querySelector('[data-testid="status-panel"].level-up') ? 'levelUp' : null;
@@ -255,7 +259,7 @@ test.describe('演出', () => {
       await attackPaused(page, info);
       await page.clock.runFor(1600);
       if (name === 'rareDrop UR') await check('levelUp', status(page));
-      await page.clock.runFor(1400);
+      await page.clock.runFor(1471);
       await expect(layer(page)).toHaveAttribute('data-effect', 'rareDrop');
       await check(name, layer(page));
     }
@@ -272,5 +276,36 @@ test.describe('演出', () => {
     await expect(layer(page)).toHaveAttribute('data-effect', 'bossDefeat');
     await check('bossDefeat', layer(page));
     expect(counts).toEqual({ levelUp: 2, 'rareDrop UR': 2, 'rareDrop LG': 3, bossAppear: 2, bossDefeat: 2 });
+  });
+
+  test('TC-0031-12 演出の長さがアニメーションより長いとき、アニメーションのあとも演出の長さまで層が残る（bossAppear 2906ms・bossDefeat 1000ms）', async ({ page }, info) => {
+    await page.clock.install();
+    // bossAppear：アニメーション 1200ms のあとも、2905ms までは名前とともに残り、2906ms で消える
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) } });
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    await page.getByRole('button', { name: '前進', exact: true }).click();
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossAppear');
+    // アニメーションは 1.2 秒 1 回（演出の 2906ms より短い）。CSS のアニメーションは偽の時計では進まないので、長さで確かめる
+    expect(await cssAnimation(layer(page))).toMatchObject({ duration: '1.2s', count: '1' });
+    await page.clock.runFor(1200);
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossAppear');
+    await expect(layer(page).locator('.effect-name')).toHaveText('暗黒のネクロマンサー');
+    await page.clock.runFor(1705);
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossAppear');
+    await page.clock.runFor(1);
+    await expect(layer(page)).not.toHaveAttribute('data-effect', /./);
+
+    // bossDefeat：999ms では付いていて、1000ms で消え、次の行がその時に出る
+    await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
+    await attackPaused(page, info);
+    await page.clock.runFor(400);
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossDefeat');
+    const before = (await logLines(page)).length;
+    await page.clock.runFor(999);
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossDefeat');
+    expect(await logLines(page)).toHaveLength(before);
+    await page.clock.runFor(1);
+    await expect(layer(page)).not.toHaveAttribute('data-effect', 'bossDefeat');
+    await expect.poll(() => logLines(page)).toHaveLength(before + 1);
   });
 });
