@@ -2,13 +2,13 @@
 id: MWIZ-US-0006
 type: User Story
 title: タイトル画面から始める
-status: review
+status: stable
 version: 1.3
 updated: 2026-11-10
 sources:
   - MWIZ-EP-0002（v1.1）
   - docs/specification-ja.md (v1.12) §10.1、§11.2、§11.5、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-10T16:53:14+09:00" }
 ---
 
 # US-0006 タイトル画面から始める

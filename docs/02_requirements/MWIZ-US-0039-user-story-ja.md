@@ -2,14 +2,14 @@
 id: MWIZ-US-0039
 type: User Story
 title: クレジットを見る
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:
   - MWIZ-EP-0002（v1.1）
   - docs/specification-ja.md (v1.12) §11.2、§11.4、§11.5、§11.11、§12.2、§16.4
   - docs/requests/2026-11-10-spec-1.12-credits.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-10T16:53:14+09:00" }
 ---
 
 # US-0039 クレジットを見る
