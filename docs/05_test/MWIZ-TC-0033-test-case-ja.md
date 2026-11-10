@@ -3,8 +3,8 @@ id: MWIZ-TC-0033
 type: Test Case
 title: 戦闘で敵の絵を見る
 status: stable
-version: 1.3
-updated: 2026-11-06
+version: 1.4
+updated: 2026-11-10
 sources:
   - MWIZ-US-0033（v1.3）
   - MWIZ-TST-0001（v1.1）
@@ -28,8 +28,8 @@ verified: null
 | TC-0033-02 | 2 | `pixel7`・`small`・`desktop` と、`setViewportSize` で 414×715・1366×657 にしたとき、どれでも枠と `img` の `getBoundingClientRect` が幅 256・高さ 256。`img` の `image-rendering` が `pixelated` | E2E | `e2e/battle.spec.ts` |
 | TC-0033-03 | 3 | `img` の `alt` が敵の名前と同じ（例：`necromancer` のとき「暗黒のネクロマンサー」、`darkKnight` のとき「ダークナイト」） | E2E | `e2e/battle.spec.ts` |
 | TC-0033-04 | 4 | `page.route('**/enemies/*.png', r => r.abort())` で絵を読めなくすると、`[data-testid="enemy-image-frame"]` がなくなり、敵の名前だけが出る。`pageerror` が出ず、ErrorPanel（「きろくを よみかき できません」）も出ない。そのあと「たたかう」で戦闘が続けられる | E2E | `e2e/battle.spec.ts` |
-| TC-0033-05 | 5 | §13.5 の 4 つ：各種類（`ENEMIES` のキー）の `public/enemies/<種類>.png` がある／PNG の署名 `89 50 4E 47 0D 0A 1A 0A`、12〜15 バイトが `IHDR`、16・20 バイト目からの 32 ビット BE の幅・高さが 256・256（v1.2。加えてビット深度 8・カラータイプ 6（RGBA））／MD5 が §13.1 の表と同じ（slime `d93b44dfa7d63c1da1e3e4b12c4b6a74`、goblin `16a4dc7c54cedf92e762f3f7e9136b8f`、skeleton `9df2f42322c0b8fe44a1d911d73a643a`、orc `4f769408998fe5060cb04f2c97986716`、darkKnight `45c25616dad075cd9d9fef3888d42e90`、necromancer `bb0343f58c663e01b63221ecb291795e`。v1.3）／`public/enemies/` の PNG が種類の一覧とちょうど同じ（余分なファイルがない） | 単体 | `tests/assets/enemy-images.test.ts` |
-| TC-0033-06 | 2 | iPhone 11 と PC で、敵の絵（256×256）がぼやけず、細かいところまで見える。絵が枠や名前と重ならない（v1.1 で足した。v1.2 で 256×256 の絵に。v1.3 で v3 の絵に。半透明の点のある縁が、背景から浮いたり欠けたりして見えない） | 手動 | 実機（iPhone 11・PC） |
+| TC-0033-05 | 5 | §13.5 の 4 つ：各種類（`ENEMIES` のキー）の `public/enemies/<種類>.png` がある／PNG の署名 `89 50 4E 47 0D 0A 1A 0A`、12〜15 バイトが `IHDR`、16・20 バイト目からの 32 ビット BE の幅・高さが 256・256（v1.2。加えてビット深度 8・カラータイプ 6（RGBA））／MD5 が §13.1 の表と同じ（slime `58a788c9a1f09c8ce6d1848ffc13fcd2`、goblin `3ce1e98f8e51eedc2135936dcf8ee213`、skeleton `4bc89ceedb1c173154607ec49fe97038`、orc `01dccc02fc2c907750fa470352afcad5`、darkKnight `fdf164a6d3c4593589c1ce9ad3e6d3ff`、necromancer `7ed1ef69c6e58fd0bd23357f45335013`。v1.4：v4 に外側の黒を透明にする加工をしたもの）／`public/enemies/` の PNG が種類の一覧とちょうど同じ（余分なファイルがない） | 単体 | `tests/assets/enemy-images.test.ts` |
+| TC-0033-06 | 2 | iPhone 11 と PC で、敵の絵（256×256）がぼやけず、細かいところまで見える。絵が枠や名前と重ならない（v1.1 で足した。v1.2 で 256×256 の絵に。v1.3 で v3 の絵に。v1.4 で v4 の絵（外側の黒を透明にしたもの）に。絵のまわりに黒い四角が見えず、縁が黒く浮いたり欠けたりして見えない） | 手動 | 実機（iPhone 11・PC） |
 
 ## 2. 準備
 
@@ -48,4 +48,4 @@ verified: null
 
 | 確認 ID | 手順 | 見ること |
 | --- | --- | --- |
-| TC-0033-06 | iPhone 11 の Safari（またはホーム画面のアプリ）と PC のブラウザで公開 URL を開き、ダンジョンを歩いて敵に出会う。出会った敵の絵を、腕を伸ばした距離で見る。6 体すべてを探さなくてよい（6 枚がそろい、大きさと描き方が同じことは TC-0033-01・02・05 で確かめる） | 絵がぼやけず、細かいところまで見える。輪郭が欠けたり、白っぽく浮いたりしていない（v3 の 5 枚は半透明の点がある）。絵と敵の名前が重ならない。見た敵の名前を返事に書く |
+| TC-0033-06 | iPhone 11 の Safari（またはホーム画面のアプリ）と PC のブラウザで公開 URL を開き、ダンジョンを歩いて敵に出会う。出会った敵の絵を、腕を伸ばした距離で見る。6 体すべてを探さなくてよい（6 枚がそろい、大きさと描き方が同じことは TC-0033-01・02・05 で確かめる） | 絵がぼやけず、細かいところまで見える。輪郭が欠けたり、浮いたりしていない。絵のまわりに黒い四角が見えない。縁に黒い線が残って見えない（v4 は外側の黒を透明にしたので、ほぼ黒の点が縁に残ることがある。v1.4）。絵と敵の名前が重ならない。見た敵の名前を返事に書く |
