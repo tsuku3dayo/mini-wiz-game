@@ -24,49 +24,96 @@ const ctx = (): FakeAudioContext => state.contexts[0];
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
 describe('効果音', () => {
-  test('TC-0032-09 encounter の長さは 680ms で、出来事の終わりのいちばん遅いものと同じ。8 種類とも長さは v1.6 までと同じ', async () => {
+  test('TC-0032-09 encounter の長さは 510ms で、出来事の終わりのいちばん遅いものと同じ。8 種類とも長さが SFX_MS で、6 秒以内・20〜2,000 Hz', async () => {
     const s = await load();
-    expect(s.sfxDuration('encounter')).toBe(680);
-    const ms = { levelUp: 510, rareDrop: 360, rareDropLG: 1020, bossAppear: 1200, bossDefeat: 500, clear: 2350, toggle: 80, encounter: 680 };
+    expect(s.sfxDuration('encounter')).toBe(510);
+    const ms = { levelUp: 1071, rareDrop: 360, rareDropLG: 1020, bossAppear: 2906, bossDefeat: 1000, clear: 5833, toggle: 80, encounter: 510 };
     expect(s.SFX_MS).toEqual(ms);
     for (const [name, evs] of Object.entries(s.SFX)) {
       expect(Math.max(...evs.map((e) => e.at + e.len)), name).toBe(ms[name as keyof typeof ms]);
       expect(evs.every((e) => e.at >= 0 && e.len > 0 && e.f.length > 0), name).toBe(true);
+      expect(evs.every((e) => e.f.every((f) => f >= 20 && f <= 2000)), name).toBe(true);
+      expect(ms[name as keyof typeof ms], name).toBeLessThanOrEqual(6000);
     }
     expect(s.SFX.encounter[0].at).toBe(0);
   });
 
-  test('TC-0032-19 8 種類の出来事（周波数・頭・長さ・音色・glide・ビブラート）が仕様書 §25.2 と同じで、FM の予約（ローパス・搬送波と変調波・止める時刻・音量）が §25.1 のとおり', async () => {
+  test('TC-0032-21 演出の付く 4 つの音の長さ（SFX_MS）が演出の長さ（EFFECT_MS）と同じ。UR・LG は演出の長さ以下', async () => {
     const s = await load();
-    // [周波数, 頭 ms, 長さ ms, 音色, glide, ビブラート]
-    type Row = [number[], number, number, string, number, boolean];
+    const { EFFECT_MS, RARE_DROP_LG_MS } = await import('../../src/logic/message-plan');
+    for (const name of ['levelUp', 'bossAppear', 'bossDefeat', 'clear'] as const) expect(s.SFX_MS[name], name).toBe(EFFECT_MS[name]);
+    expect(s.SFX_MS).toMatchObject({ levelUp: 1071, bossAppear: 2906, bossDefeat: 1000, clear: 5833 });
+    expect(s.SFX_MS.rareDrop).toBeLessThanOrEqual(EFFECT_MS.rareDrop);
+    expect(s.SFX_MS.rareDropLG).toBeLessThanOrEqual(RARE_DROP_LG_MS);
+  });
+
+  test('TC-0032-22 createDynamicsCompressor がない・例外のときも、例外を出さず、ローパスが destination に直接つながって鳴る', async () => {
+    for (const mode of ['none', 'throw'] as const) {
+      state.compressor = mode;
+      const s = await load();
+      expect(() => s.playSfx('bossAppear'), mode).not.toThrow();
+      const ac = state.contexts.at(-1)!;
+      expect(ac.compressors, mode).toHaveLength(0);
+      expect(ac.filters.length, mode).toBe(s.SFX.bossAppear.length);
+      expect(ac.filters.every((f) => f.connected.length === 1 && f.connected[0] === ac.destination), mode).toBe(true);
+      expect(ac.oscillators.length, mode).toBeGreaterThan(0);
+    }
+  });
+
+  test('TC-0032-19 8 種類の出来事（周波数・頭・長さ・音色・glide・ビブラート・音量の倍率）が仕様書 §25.2 と同じで、FM の予約（出口のコンプレッサー・ローパス・搬送波と変調波・止める時刻・音量・フェード）が §25.1 のとおり', async () => {
+    const s = await load();
+    // [周波数, 頭 ms, 長さ ms, 音色, glide, ビブラート, 音量の倍率]
+    type Row = [number[], number, number, string, number, boolean, number];
     const Eb3 = 155.6, G3 = 196, C4 = 261.6;
+    const r = (f: number[], at: number, len: number, patch: string, o: { glide?: number; vib?: boolean; gain?: number } = {}): Row =>
+      [f, at, len, patch, o.glide ?? 1, o.vib ?? false, o.gain ?? 1];
     const sparkle = (times: number, lastMs: number): Row[] => {
       const total = times * 180 + lastMs;
-      const rows: Row[] = Array.from({ length: times * 3 }, (_, k) => [[[Eb3, G3, C4][k % 3]], k * 60, Math.min(180, total - k * 60), '暗い鐘', 1, false]);
-      if (lastMs) rows.push([[C4], total - lastMs, lastMs, '暗い鐘', 1, false]);
+      const rows: Row[] = Array.from({ length: times * 3 }, (_, k) => r([[Eb3, G3, C4][k % 3]], k * 60, Math.min(180, total - k * 60), '暗い鐘'));
+      if (lastMs) rows.push(r([C4], total - lastMs, lastMs, '暗い鐘'));
       return rows;
     };
+    const 金管 = '沈んだ金管', 鐘 = '暗い鐘', オルガン = '暗いオルガン', 声 = '低い声', ひびく = 'ひびくオルガン';
     const expected: Record<string, Row[]> = {
-      levelUp: [[[262], 0, 150, '沈んだ金管', 1, false], [[311], 90, 150, '沈んだ金管', 1, false], [[392], 180, 150, '沈んだ金管', 1, false], [[523], 270, 240, '沈んだ金管', 1, true]],
+      levelUp: [
+        r([261.6, 311.1], 0, 182, 金管, { gain: 1.2 }),
+        r([293.7, 349.2], 214, 182, 金管, { gain: 1.2 }),
+        r([311.1, 392], 429, 642, 金管, { vib: true, gain: 1.2 }),
+        r([392], 429, 286, 鐘, { gain: 0.8 }),
+        r([523.3], 571, 286, 鐘, { gain: 0.8 }),
+        r([622.3], 714, 357, 鐘, { gain: 0.8 }),
+      ],
       rareDrop: sparkle(2, 0),
       rareDropLG: sparkle(4, 300),
-      bossAppear: [[[98], 0, 300, '地の底のうなり', 1, false], [[104], 300, 300, '地の底のうなり', 1, false], [[98], 600, 300, '地の底のうなり', 1, false], [[92], 900, 300, '地の底のうなり', 1, true]],
-      bossDefeat: [[[55], 0, 300, 'こもった太鼓', 0.5, false], [[196, 277.2], 0, 500, 'うなる低い金管', 0.5, false]],
-      clear: [
-        [[130.8, 196, 261.6, 311.1], 0, 800, '暗いオルガン', 1, false],
-        [[130.8, 196], 0, 800, '低い声', 1, false],
-        [[130.8, 196, 261.6, 329.6], 800, 1550, '暗いオルガン', 1, false],
-        [[130.8, 164.8, 196], 800, 1550, '低い声', 1, false],
-        [[65.4], 0, 2350, '低い声', 1, false],
+      bossAppear: [
+        r([370], 0, 141, ひびく), r([311.1], 94, 141, ひびく), r([261.6], 188, 141, ひびく), r([220], 281, 141, ひびく),
+        r([185], 375, 141, ひびく), r([155.6], 469, 141, ひびく), r([130.8], 563, 93, ひびく),
+        r([65.4, 130.8, 155.6, 185, 220], 656, 2250, ひびく, { vib: true, gain: 1.4 }),
+        r([65.4], 656, 2250, 声),
+        r([55], 656, 900, 'こもった太鼓', { glide: 0.5 }),
       ],
-      toggle: [[[523], 0, 80, '低い木の音', 1, false]],
-      encounter: [[[110, 116.5], 0, 680, 'うなる低い金管', 1.14, false]],
+      bossDefeat: [
+        r([261.6], 0, 200, 鐘), r([311.1], 100, 200, 鐘), r([392], 200, 200, 鐘), r([523.3], 300, 100, 鐘),
+        r([311.1, 392, 523.3], 400, 600, 鐘),
+        r([130.8, 196], 400, 600, オルガン),
+      ],
+      clear: [
+        r([130.8, 196, 261.6, 311.1], 0, 833, オルガン, { gain: 1.2 }),
+        r([103.8, 207.7, 261.6, 311.1], 833, 834, オルガン, { gain: 1.2 }),
+        r([87.3, 174.6, 207.7, 261.6], 1667, 833, オルガン, { gain: 1.2 }),
+        r([98, 196, 246.9, 293.7], 2500, 833, オルガン, { gain: 1.2 }),
+        r([130.8, 196, 261.6, 329.6], 3333, 2500, オルガン, { gain: 1.2 }),
+        r([65.4], 0, 833, 声), r([51.9], 833, 834, 声), r([43.7], 1667, 833, 声), r([49], 2500, 833, 声), r([65.4], 3333, 2500, 声),
+        r([261.6], 3333, 833, 鐘), r([392], 3611, 833, 鐘), r([523.3], 3889, 1944, 鐘),
+      ],
+      toggle: [r([523], 0, 80, '低い木の音')],
+      encounter: [r([262], 0, 150, 金管), r([311], 90, 150, 金管), r([392], 180, 150, 金管), r([523], 270, 240, 金管, { vib: true })],
     };
     expect(Object.keys(s.SFX).sort()).toEqual(Object.keys(expected).sort());
-    // 音色 8 種の値（§25.2 のコード）
+    // 音色 9 種の値（§25.2 のコード）
     const P = s.SE_PATCHES;
-    expect(Object.keys(P)).toHaveLength(8);
+    expect(Object.keys(P)).toHaveLength(9);
+    expect(P.ひびくオルガン).toEqual({ name: 'ひびくオルガン', ratio: 2, index: 0.7, sustain: 0.9, idecay: 1, attack: 0.01, adecay: 2, asus: 0.9, lowpass: 1400, vol: 0.12 });
     expect(P.沈んだ金管).toEqual({ name: '沈んだ金管', ratio: 1, index: 0.9, sustain: 0.5, idecay: 0.08, attack: 0.02, adecay: 0.5, asus: 0.75, lowpass: 1300, vol: 0.24 });
     expect(P.地の底のうなり).toEqual({ name: '地の底のうなり', ratio: 1, index: 1.8, sustain: 0.7, idecay: 0.5, attack: 0.06, adecay: 1.5, asus: 0.9, lowpass: 600, vol: 0.34 });
     expect(P.低い木の音).toEqual({ name: '低い木の音', ratio: 1, index: 0.8, sustain: 0, idecay: 0.02, attack: 0.004, adecay: 0.035, asus: 0, lowpass: 1000, vol: 0.28 });
@@ -78,7 +125,7 @@ describe('効果音', () => {
 
     for (const [name, rows] of Object.entries(expected)) {
       const key = name as keyof typeof s.SFX;
-      expect(s.SFX[key].map((e): Row => [[...e.f], e.at, e.len, e.patch.name, e.glide ?? 1, e.vib ?? false]), name).toEqual(rows);
+      expect(s.SFX[key].map((e): Row => [[...e.f], e.at, e.len, e.patch.name, e.glide ?? 1, e.vib ?? false, e.gain ?? 1]), name).toEqual(rows);
 
       // 予約：currentTime を 10 秒にして鳴らす
       if (state.contexts.length === 0) s.audioContext();
@@ -88,16 +135,22 @@ describe('効果音', () => {
       s.playSfx(key);
       const oscs = ac.oscillators.slice(o0), gains = ac.gains.slice(g0), filters = ac.filters.slice(f0);
       const end = 10 + s.sfxDuration(key) / 1000;
-      // 出来事ごとにローパスが 1 つ、destination へ
+      // 効果音の出口：コンプレッサーが 1 つだけ（threshold −12・ratio 4）、destination へ
+      expect(ac.compressors).toHaveLength(1);
+      const comp = ac.compressors[0];
+      expect(comp.threshold.value).toBe(-12);
+      expect(comp.ratio.value).toBe(4);
+      expect(comp.connected).toEqual([ac.destination]);
+      // 出来事ごとにローパスが 1 つ、出口へ
       expect(filters, name).toHaveLength(rows.length);
       let oi = 0, gi = 0;
-      rows.forEach(([fs, at, len, , glide, vib], ei) => {
+      rows.forEach(([fs, at, len, , glide, vib, gain], ei) => {
         const lp = filters[ei];
         const patch = s.SFX[key][ei].patch;
         expect(lp.type).toBe('lowpass');
         expect(lp.frequency.value).toBe(patch.lowpass);
         expect(lp.Q.value).toBe(0.7);
-        expect(lp.connected).toEqual([ac.destination]);
+        expect(lp.connected).toEqual([comp]);
         const t = 10 + at / 1000;
         const stop = Math.min(end, t + len / 1000);
         for (const f of fs) {
@@ -116,10 +169,16 @@ describe('効果音', () => {
           expect(mg.gain.events[0]).toEqual(['set', patch.index * f * patch.ratio, t]);
           expect(carrier.connected).toEqual([g]);
           expect(g.connected).toEqual([lp]);
-          const vol = patch.vol / Math.sqrt(fs.length);
+          const vol = (patch.vol * gain) / Math.sqrt(fs.length);
           expect(g.gain.events[0]).toEqual(['set', 0, t]);
           expect(g.gain.events[1][0]).toBe('linear');
           expect(close(g.gain.events[1][1], vol)).toBe(true);
+          // 終わりのフェード：min(0.03, 長さ / 3)
+          const fade = Math.min(0.03, (stop - t) / 3);
+          const last = g.gain.events.at(-1)!;
+          expect(last[0]).toBe('target');
+          expect(last[1]).toBe(0);
+          expect(close(last[2], stop - fade * 2), `${name} ${ei} fade`).toBe(true);
           for (const n of [carrier, mod]) {
             expect(close(n.startAt!, t), `${name} ${ei} start`).toBe(true);
             expect(close(n.stops[0]!, stop), `${name} ${ei} stop`).toBe(true);
@@ -142,7 +201,7 @@ describe('効果音', () => {
     const s = await load();
     const heard: number[] = [];
     s.onSfx((sec) => heard.push(sec));
-    s.playSfx('levelUp');
+    s.playSfx('encounter'); // 0.51 秒（v1.10。v1.9 までの levelUp と同じ音）
     const ac = ctx();
     expect(s.sfxRemainingSec()).toBeCloseTo(0.51);
     ac.currentTime = 0.3;
@@ -225,7 +284,7 @@ describe('効果音', () => {
     expect(oscs[0].startAt).toBe(3.25);
     expect(s.SFX.encounter[0].at).toBe(0);
     const last = Math.max(...oscs.map((o) => o.stops[0] ?? 0));
-    expect(close(last, 3.25 + 0.68)).toBe(true);
+    expect(close(last, 3.25 + 0.51)).toBe(true);
     expect(last - 3.25).toBeLessThan(1);
   });
 });

@@ -5,12 +5,12 @@ describe('メッセージの進め方', () => {
   test('TC-0011-01 演出のない行は 400ms、演出のある行は演出の長さ。持つ行は 7 行で、8 行目でいちばん古い行が消える', () => {
     expect(LINE_INTERVAL_MS).toBe(400);
     expect(waitAfter({})).toBe(400);
-    expect(waitAfter({ effect: 'levelUp' })).toBe(1000);
+    expect(waitAfter({ effect: 'levelUp' })).toBe(1071);
     expect(waitAfter({ effect: 'rareDrop', rarity: 'UR' })).toBe(800);
     expect(waitAfter({ effect: 'rareDrop', rarity: 'LG' })).toBe(1200);
-    expect(effectDuration('bossAppear')).toBe(1200);
-    expect(effectDuration('bossDefeat')).toBe(600);
-    expect(effectDuration('clear')).toBe(1500);
+    expect(effectDuration('bossAppear')).toBe(2906);
+    expect(effectDuration('bossDefeat')).toBe(1000);
+    expect(effectDuration('clear')).toBe(5833);
 
     expect(MAX_LINES).toBe(7);
     const seven = appendLines([], [1, 2, 3, 4, 5, 6, 7]);
@@ -20,8 +20,8 @@ describe('メッセージの進め方', () => {
 });
 
 describe('演出の長さと計画', () => {
-  test('TC-0031-06 EFFECT_MS は levelUp 1000・rareDrop 800（LG 1200）・bossAppear 1200・bossDefeat 600・clear 1500。演出のない行のあとは 400ms、演出のある行のあとはその長さ待つ計画', () => {
-    expect(EFFECT_MS).toEqual({ levelUp: 1000, rareDrop: 800, bossAppear: 1200, bossDefeat: 600, clear: 1500 });
+  test('TC-0031-06 EFFECT_MS は levelUp 1071・rareDrop 800（LG 1200）・bossAppear 2906・bossDefeat 1000・clear 5833（v1.10）。演出のない行のあとは 400ms、演出のある行のあとはその長さ待つ計画', () => {
+    expect(EFFECT_MS).toEqual({ levelUp: 1071, rareDrop: 800, bossAppear: 2906, bossDefeat: 1000, clear: 5833 });
     expect(RARE_DROP_LG_MS).toBe(1200);
     const lines = [
       { text: 'a' },
@@ -34,7 +34,7 @@ describe('演出の長さと計画', () => {
       { text: 'h', effect: 'clear' as const },
     ];
     expect(planSteps(lines).map((s) => [s.line.text, s.wait])).toEqual([
-      ['a', 400], ['b', 600], ['c', 1000], ['d', 400], ['e', 800], ['f', 1200], ['g', 1200], ['h', 1500],
+      ['a', 400], ['b', 1000], ['c', 1071], ['d', 400], ['e', 800], ['f', 1200], ['g', 2906], ['h', 5833],
     ]);
   });
 

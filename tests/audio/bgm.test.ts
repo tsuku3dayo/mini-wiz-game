@@ -114,7 +114,7 @@ describe('BGM の再生エンジン', () => {
     const g = bus(ac).gain;
     expect(bus(ac).gain.value).toBe(0.035);
     ac.currentTime = 1;
-    s.playSfx('levelUp');
+    s.playSfx('encounter'); // 0.51 秒（v1.10）
     expect(g.events).toEqual([['cancel', 0, 1], ['target', 0.0105, 1, 0.02], ['target', 0.035, 1.51, 0.02]]);
     // 前の効果音（1.51 まで）の途中で、短い効果音（0.36 秒）
     g.events = [];

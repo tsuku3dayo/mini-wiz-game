@@ -52,9 +52,16 @@ export class FakeFilter extends FakeNode {
   Q = new FakeParam();
 }
 
+export class FakeCompressor extends FakeNode {
+  threshold = new FakeParam();
+  ratio = new FakeParam();
+}
+
 export interface FakeAudioState {
   /** 作るときの state（既定は running） */
   initialState?: AudioContextState;
+  /** コンプレッサー：'none' は createDynamicsCompressor がない、'throw' は作ると例外（既定はある） */
+  compressor?: 'none' | 'throw';
   contexts: FakeAudioContext[];
 }
 
@@ -67,9 +74,20 @@ export class FakeAudioContext {
   gains: FakeGain[] = [];
   sources: FakeBufferSource[] = [];
   filters: FakeFilter[] = [];
+  compressors: FakeCompressor[] = [];
   buffers = 0;
   resume = vi.fn(async () => undefined);
-  constructor(state: AudioContextState) { this.state = state; }
+  createDynamicsCompressor?: () => FakeCompressor;
+  constructor(state: AudioContextState, compressor?: 'none' | 'throw') {
+    this.state = state;
+    if (compressor === 'none') return;
+    this.createDynamicsCompressor = () => {
+      if (compressor === 'throw') throw new Error('作れない');
+      const c = new FakeCompressor();
+      this.compressors.push(c);
+      return c;
+    };
+  }
   createOscillator() { const o = new FakeOscillator(); this.oscillators.push(o); return o; }
   createGain() { const g = new FakeGain(); this.gains.push(g); return g; }
   createBufferSource() { const s = new FakeBufferSource(); this.sources.push(s); return s; }
@@ -87,7 +105,7 @@ export function installFakeAudio(state: FakeAudioState): () => void {
   const before = { AudioContext: g.AudioContext, webkitAudioContext: g.webkitAudioContext };
   g.AudioContext = class {
     constructor() {
-      const ctx = new FakeAudioContext(state.initialState ?? 'running');
+      const ctx = new FakeAudioContext(state.initialState ?? 'running', state.compressor);
       state.contexts.push(ctx);
       return ctx;
     }
