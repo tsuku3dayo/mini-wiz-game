@@ -3,12 +3,12 @@ id: MWIZ-EP-0008
 type: Epic
 title: 敵の姿を見る
 status: stable
-version: 1.4
-updated: 2026-11-06
+version: 1.5
+updated: 2026-11-10
 sources:
-  - MWIZ-PB-0001（v1.6）
-  - docs/specification-ja.md (v1.10) §13、§16.5
-verified: { by: "tsuku3dayo", at: "2026-11-06T13:53:29+09:00" }
+  - MWIZ-PB-0001（v1.7）
+  - docs/specification-ja.md (v1.11) §13、§16.5
+verified: { by: "tsuku3dayo", at: "2026-11-10T15:23:49+09:00" }
 ---
 
 # EP-0008 敵の姿を見る
@@ -19,7 +19,7 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T13:53:29+09:00" }
 
 ## 範囲
 
-- 敵の絵 6 枚を置くこと（オーナーが用意した `docs/requests/monster/monster_*_pixel256-v3.png` を `public/enemies/` に。v1.6 で差し替えた。v1.5 は 256×256 の v2、v1.4 は 128×128 の v2 の絵を 2 倍にしていた。半透明の点があってもよい）と確かめ（MD5・256×256）、表示の大きさ（どの画面も 256px。拡大しない）・読めないときの扱い
+- 敵の絵 6 枚を置くこと（オーナーが用意した `docs/requests/monster/monster_*_pixel256_v4.png` に、外側の黒を透明にする加工（仕様書 §13.3）をして `public/enemies/` に。v1.11 で差し替えた。v1.6〜v1.10 は 256×256 の v3、v1.5 は 256×256 の v2、v1.4 は 128×128 の v2 の絵を 2 倍にしていた。半透明の点があってもよい）と確かめ（MD5・256×256）、表示の大きさ（どの画面も 256px。拡大しない）・読めないときの扱い
 
 含めないもの：絵を描くこと（オーナーが用意した絵を使う）。
 

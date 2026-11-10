@@ -12,7 +12,7 @@ sources:
   - MWIZ-TD-0005（v1.11）
   - MWIZ-GUI-0002（v1.1）
   - MWIZ-GUI-0007（v1.1）
-  - docs/specification-ja.md (v1.10) §11.12、§16.6、§27.1、§30.1、§30.2
+  - docs/specification-ja.md (v1.11) §11.12、§16.6、§27.1、§30.1、§30.2
 verified: null
 ---
 

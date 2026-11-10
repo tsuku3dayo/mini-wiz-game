@@ -14,7 +14,7 @@ sources:
   - MWIZ-GUI-0005（v1.3）
   - MWIZ-GUI-0006（v1.0）
   - MWIZ-GUI-0007（v1.1）
-  - docs/specification-ja.md (v1.10) §11.2、§11.4〜§11.9、§11.12、§13.2
+  - docs/specification-ja.md (v1.11) §11.2、§11.4〜§11.9、§11.12、§13.2
 verified: null
 ---
 
