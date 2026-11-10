@@ -8,7 +8,7 @@ updated: 2026-11-02
 sources:
   - MWIZ-TASK-0011（v1.0）
   - MWIZ-TC-0010（v1.0）
-  - MWIZ-TC-0011（v1.1）
+  - MWIZ-TC-0011（v1.2）
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0018（v1.0）
   - MWIZ-TC-0019（v1.0）

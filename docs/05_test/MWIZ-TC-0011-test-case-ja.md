@@ -3,8 +3,8 @@ id: MWIZ-TC-0011
 type: Test Case
 title: メッセージを読む
 status: stable
-version: 1.1
-updated: 2026-11-02
+version: 1.2
+updated: 2026-11-10
 sources:
   - MWIZ-US-0011（v1.1）
   - MWIZ-TST-0001（v1.1）
@@ -24,7 +24,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0011-01 | 1 | `message-plan` の決まり：演出のない行の次の行までの待ちが 400ms、演出のある行は演出の長さ（levelUp 1000・rareDrop 800（LG 1200）・bossAppear 1200・bossDefeat 600・clear 1500ms）。持つ行の数 `MAX_LINES` が 7 で、8 行目を足すといちばん古い行が消える | 単体 | `tests/logic/message-plan.test.ts` |
+| TC-0011-01 | 1 | `message-plan` の決まり：演出のない行の次の行までの待ちが 400ms、演出のある行は演出の長さ（levelUp 1071・rareDrop 800（LG 1200）・bossAppear 2906・bossDefeat 1000・clear 5833ms。v1.2）。持つ行の数 `MAX_LINES` が 7 で、8 行目を足すといちばん古い行が消える | 単体 | `tests/logic/message-plan.test.ts` |
 | TC-0011-02 | 1 | 3 行以上の結果のとき、1 行目は応答のすぐあとに出て、そのあと 400ms ごとに 1 行ずつ増える（399ms では増えず、400ms で増える） | E2E | `e2e/message.spec.ts` |
 | TC-0011-03 | 1 | メッセージ欄に出る行は、狭い画面（`pixel7`・`small`）ではダンジョン・戦闘・宿屋とも最大 5 行。広い画面（`desktop`）ではダンジョン 6 行・戦闘 7 行・宿屋 5 行。行がそれより多くたまったときは、最新の行が出て古い行が消える。折り返す長い行（戦闘の行）は、欄に入る分だけ出る（行の数は最大以下で、最新の行が出る。v1.1） | E2E | `e2e/message.spec.ts` |
 | TC-0011-04 | 1 | メッセージ欄（`[data-testid="message-window"]` の `role="log"`）の高さが「行数 × 1.6em」（16px の文字で 5 行 128px・6 行 153.6px・7 行 179.2px、±1px）で、行が 0 行のときと最大までたまったときで変わらない | E2E | `e2e/message.spec.ts` |
