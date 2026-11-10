@@ -3,18 +3,18 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.3
+version: 1.4
 updated: 2026-11-10
 sources:
   - MWIZ-TD-0003（v1.4）
   - MWIZ-GUI-0001（v1.1）
-  - MWIZ-GUI-0002（v1.2）
+  - MWIZ-GUI-0002（v1.3）
   - MWIZ-GUI-0003（v1.0）
   - MWIZ-GUI-0004（v1.0）
   - MWIZ-GUI-0005（v1.3）
   - MWIZ-GUI-0006（v1.0）
   - MWIZ-GUI-0007（v1.1）
-  - docs/specification-ja.md (v1.12) §11.2、§11.4〜§11.9、§11.12、§13.2
+  - docs/specification-ja.md (v1.13) §11.2、§11.4〜§11.9、§11.12、§13.2
 verified: null
 ---
 
@@ -31,7 +31,7 @@ verified: null
 - 「おと」は `sound.toggle()` のあと、項目の文字だけを変える（`commandMenu.update`）。メッセージは出さない。
 - 「クレジット」（v1.3。仕様書 v1.12）：メニューの 4 つ目の項目。`router.navigate('credits')`。初めのカーソル（`initialIndex`）は変えない。
 - エラー：メニューを無効にし、メニューの下に `errorPanel`。
-- 外枠は `title-main`（縦の中央。GameFrame を使わない）。
+- 外枠は `title-main`（縦の中央。GameFrame を使わない）。`@media (max-height: 680px)` で上下の余白を `max(16px, env(safe-area-inset-top))`・`max(16px, env(safe-area-inset-bottom))` にする（v1.4。仕様書 v1.13 §11.3）。
 
 ## 2. 名前入力（`ui/screens/name-entry.ts`、`#/new`）
 
@@ -137,7 +137,7 @@ GUI の要素で、受け持つモジュールのないものはない。
 - 戻るボタン：`<button class="wiz-button" type="button"><span aria-hidden="true">← </span>もどる</button>`。押すと `router.navigate('title')`。作った時点で `focus()`。
 - Esc：`document` の `keydown` で受け、`router.navigate('title')`（`destroy()` で外す）。IME の変換中（`isComposing`）は何もしない。
 - 見た目（`ui/style.css`）：
-  - `.credits-main`：`.title-main` と同じ幅・左右・上下の余白（安全領域を含む）。ただし縦の中央に寄せず、上から並べる。
+  - `.credits-main`：`.title-main` と同じ幅・左右・上下の余白（上下は 32px と安全領域の大きい方。高さ 680 以下で詰める決まりはタイトルだけ）。ただし縦の中央に寄せず、上から並べる。
   - `.credits-head`：`display: grid; grid-template-columns: 1fr auto 1fr; align-items: center`。ボタンは左の列の左端。
   - `h1`：24px・frame 色・`margin: 0`。
   - `.credits-list`：上の行との間 32px、組の間 24px、中央そろえ、`margin: 0`。

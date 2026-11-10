@@ -3,16 +3,16 @@ id: MWIZ-TC-0040
 type: Test Case
 title: クレジットを見る
 status: stable
-version: 1.0
+version: 1.1
 updated: 2026-11-10
 sources:
   - MWIZ-US-0039（v1.0）
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0004（v1.3）
+  - MWIZ-TD-0004（v1.4）
   - MWIZ-TD-0005（v1.12）
-  - MWIZ-GUI-0002（v1.2）
-  - docs/specification-ja.md (v1.12) §11.2、§11.4、§11.5、§11.11、§12.2、§16.4、§27.4
+  - MWIZ-GUI-0002（v1.3）
+  - docs/specification-ja.md (v1.13) §11.2、§11.4、§11.5、§11.11、§12.2、§16.4、§27.4
 verified: null
 ---
 
@@ -35,7 +35,7 @@ verified: null
 | TC-0040-06 | 5 | 「もどる」のボタンの読み上げの名前（`getByRole('button', { name: 'もどる', exact: true })` で見つかる）が「もどる」で、「←」は `aria-hidden="true"` の中にある。`<dt>` と `<dd>` が同じ `<dl>` の中にある | E2E | `e2e/credits.spec.ts` |
 | TC-0040-07 | 6 | 音をオンにしてタイトルを開き、`app:bgm` の記録（`e2e/helpers.ts`）を取りながら、タイトル → クレジット → タイトルと移る。`app:bgm` は最初のタイトルの曲（`title`）の 1 回だけで、クレジットに移ったとき・戻ったときには出ない（曲を替えない＝止まらず頭に戻らない） | E2E | `e2e/credits.spec.ts` |
 | TC-0040-08 | 7 | プレイ中のゲーム（INN）があるとき `#/credits` を開くと、ハッシュが `#/inn`、`body[data-screen="inn"]` になる | E2E | `e2e/credits.spec.ts` |
-| TC-0040-09 | 8 | セーブのあるタイトルで書き込みを失敗させて ErrorPanel を出した状態で、375 × 667・414 × 715（`pixel7`・`small`）、1366 × 657（`desktop`）にしたとき、`documentElement.scrollHeight − innerHeight` が 0 以下（4 行のメニューとエラーの枠があっても縦に収まる） | E2E | `e2e/credits.spec.ts` |
+| TC-0040-09 | 8 | セーブのあるタイトルで書き込みを失敗させて ErrorPanel を出した状態で、375 × 667・414 × 715（`pixel7`・`small`）、1366 × 657（`desktop`）にしたとき、`documentElement.scrollHeight − innerHeight` が 0 以下（4 行のメニューとエラーの枠があっても縦に収まる）。`.title-main` の上下の `padding` が、375 × 667・1366 × 657 で 16px、414 × 715 で 32px（v1.1。仕様書 v1.13 §11.3） | E2E | `e2e/credits.spec.ts` |
 | TC-0040-10 | 3、4、6 | iPhone 11 と PC で、タイトルのメニューに「クレジット」が「おと」と同じ見た目で出て、クレジット画面の文字が読め、中央にそろって見え、例の画像の並び方と同じに見える。「← もどる」でタイトルに戻れる。音をオンにしていれば、タイトルの曲が途切れない | 手動 | 実機（iPhone 11・PC） |
 
 ## 2. 準備

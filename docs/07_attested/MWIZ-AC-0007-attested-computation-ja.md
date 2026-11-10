@@ -18,8 +18,8 @@ sources:
   - MWIZ-TC-0012（v1.0）
   - MWIZ-TC-0038（v1.0）
   - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.3）
-  - MWIZ-GUI-0002（v1.2）
+  - MWIZ-TD-0004（v1.4）
+  - MWIZ-GUI-0002（v1.3）
   - MWIZ-GUI-0003（v1.0）
 verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---

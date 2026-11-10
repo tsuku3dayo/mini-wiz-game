@@ -10,7 +10,7 @@ sources:
   - MWIZ-GUI-0001（v1.1）
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0012（v1.1）
-  - docs/specification-ja.md (v1.12) §11.1〜§11.11、§27
+  - docs/specification-ja.md (v1.13) §11.1〜§11.11、§27
 verified: null
 ---
 
