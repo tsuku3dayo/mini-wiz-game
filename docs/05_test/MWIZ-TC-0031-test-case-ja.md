@@ -6,11 +6,11 @@ status: stable
 version: 1.0
 updated: 2026-10-30
 sources:
-  - MWIZ-US-0031（v1.0）
+  - MWIZ-US-0031（v1.1）
   - MWIZ-TST-0001（v1.1）
   - MWIZ-TD-0003（v1.4）
   - MWIZ-TD-0004（v1.2）
-  - docs/specification-ja.md (v1.9) §8.4、§11.5、§11.8、§16.3、§16.4
+  - docs/specification-ja.md (v1.10) §8.4、§11.5、§11.8、§16.3、§16.4
 verified: null
 ---
 

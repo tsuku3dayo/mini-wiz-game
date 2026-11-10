@@ -3,12 +3,12 @@ id: MWIZ-US-0031
 type: User Story
 title: 演出でできごとを感じる
 status: stable
-version: 1.0
-updated: 2026-10-26
+version: 1.1
+updated: 2026-11-10
 sources:
   - MWIZ-EP-0007（v1.0）
-  - docs/specification-ja.md (v1.9) §8.4、§11.5、§11.8、§16.3、§16.4
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
+  - docs/specification-ja.md (v1.10) §8.4、§11.5、§11.8、§12.1、§16.3、§16.4
+verified: { by: "tsuku3dayo", at: "2026-11-10T12:56:09+09:00" }
 ---
 
 # US-0031 演出でできごとを感じる
@@ -23,7 +23,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 ## 受け入れ条件
 
 - [ ] levelUp（ステータスが光り、行が拡大）・rareDrop（行の点滅と画面の光。UR は 2 回、LG は 3 回）・bossAppear（画面が明滅し、敵の名前が大きく出る）・bossDefeat・clear（クリア画面の見出しが浮かび上がる）の演出が、その行が表示された瞬間に始まる（§11.8）
-- [ ] 演出の長さは levelUp 1000／rareDrop 800（LG 1200）／bossAppear 1200／bossDefeat 600／clear 1500 ms。複数の演出は行の順に 1 つずつ（§11.8）
+- [ ] 演出の長さは levelUp 1071／rareDrop 800（LG 1200）／bossAppear 2906／bossDefeat 1000／clear 5833 ms（v1.1：levelUp・bossAppear・bossDefeat・clear は効果音が鳴り切る長さ。画面のアニメーションの長さは変えない）。複数の演出は行の順に 1 つずつ（§11.8・§12.1）
 - [ ] 演出中にクリック・Enter で飛ばすと、残りの行が一度に出て演出が終わる（§11.8）
 - [ ] 動きを減らす設定では、メッセージが一度に出て、点滅・拡大・明滅・浮かび上がりが起きない（§16.4）
 - [ ] 明滅は 1 秒に 3 回以下（§11.8）
