@@ -3,8 +3,8 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.6
-updated: 2026-11-02
+version: 1.7
+updated: 2026-11-10
 sources:
   - MWIZ-TD-0001（v1.1）
   - MWIZ-SA-0001（v1.1）
@@ -79,6 +79,7 @@ verified: null
 | `arrival.ts`・`low-hp.ts` | 遭遇の判定・足元の案内、体力わずか・HP の警告 |
 | `name.ts`・`version.ts`・`enemy-image.ts` | 名前の規則、版の表記、敵の絵の URL |
 | `bgm-scene.ts`・`bgm-notation.ts`・`bgm-tracks.ts` | TD-0005 |
+| `credits.ts`（v1.7。仕様書 v1.12） | クレジットの組 `CREDITS: readonly { role: string; name: string }[]`（仕様書 §11.5 の表のとおり 6 組。`Object.freeze`）。画面（TD-0004 §10）はこれを並べるだけ |
 
 テスト：`tests/logic/`。入力と出力の表で確かめる（DOM を使わない）。
 

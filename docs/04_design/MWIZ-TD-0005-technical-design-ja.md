@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.11
+version: 1.12
 updated: 2026-11-10
 sources:
   - MWIZ-TD-0001（v1.1）
@@ -29,6 +29,7 @@ verified: null
 | `bgm-director.ts` | 場面（パス・状態・演出）から曲を決め、変わったときだけ替える（仕様書 §26.7）。替えたら `app:bgm` イベント | ストア・ルーター・キュー・音の設定を購読する。LocationGuard の外に置き、エラーの画面でも止めない |
 
 - 曲の選び方は `logic/bgm-scene.ts`、記譜と曲データは `logic/bgm-notation.ts`・`logic/bgm-tracks.ts`（純粋関数とデータ）。
+- 仕様書 v1.12 のクレジット画面（`/credits`）は、`sceneBgm` の `'/'`・`'/new'` と同じ `case` に足して `'title'` にする。ほかは変えない（v1.12）。
 - どの関数も例外を外に出さない（Web Audio がなくても遊べる）。
 - テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の周波数・頭・止める時刻・音色（変調の深さ・ローパス）を確かめる（仕様書 §26.11。v1.8）。曲は 6 曲（v1.8）で、5/8 拍子（1 小節 2.5 拍）・5/4 拍子も同じ仕組みで鳴らす（1 周の秒 = 小節数 × 1 小節の拍数 × 60 ÷ bpm）。実際の聞こえ方は手動テスト。
 - 仕様書 v1.9 の曲の入れ替え（タイトル←カタコンベ、宿屋←ローエングリン、ボス戦←モーツァルト「怒りの日」）は、`logic/bgm-tracks.ts` の曲データだけを替える。曲の名前（`BgmName`）・場面の選び方（`bgm-scene.ts`）・再生の仕組み（`bgm.ts`・`bgm-director.ts`）は変えない（v1.10）。

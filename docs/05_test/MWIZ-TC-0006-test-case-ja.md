@@ -3,14 +3,14 @@ id: MWIZ-TC-0006
 type: Test Case
 title: タイトル画面から始める
 status: stable
-version: 1.2
-updated: 2026-11-06
+version: 1.3
+updated: 2026-11-10
 sources:
   - MWIZ-US-0006（v1.3）
-  - MWIZ-TST-0001（v1.1）
-  - MWIZ-TD-0002（v1.6）
+  - MWIZ-TST-0001（v1.2）
+  - MWIZ-TD-0002（v1.7）
   - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.2）
+  - MWIZ-TD-0004（v1.3）
   - MWIZ-GUI-0002（v1.2）
   - docs/specification-ja.md (v1.12) §10.1、§11.2、§11.4、§11.5、§16.4、§19.1、§27.4
 verified: null
@@ -25,13 +25,13 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0006-01 | 1 | タイトル画面に、`<h1>` の中のタイトル画像（`<img>`、`src` が `title/title.png`）、メニュー（`role="menu"`、`aria-label="タイトル"`）の項目が上から「はじめから」「つづきから」「おと：オフ」、「インストール」のボタン、「v1.0」が出る。メッセージ欄（`role="log"`）がない | E2E | `e2e/title.spec.ts` |
+| TC-0006-01 | 1 | タイトル画面に、`<h1>` の中のタイトル画像（`<img>`、`src` が `title/title.png`）、メニュー（`role="menu"`、`aria-label="タイトル"`）の項目が上から「はじめから」「つづきから」「おと：オフ」「クレジット」（v1.3。仕様書 v1.12）、「インストール」のボタン、「v1.0」が出る。メッセージ欄（`role="log"`）がない | E2E | `e2e/title.spec.ts` |
 | TC-0006-02 | 1 | 版の表記の関数が、`package.json` の `version` の先頭 2 つに「v」を付けて返す（`"1.0.0"` → `"v1.0"`、`"1.2.3"` → `"v1.2"`） | 単体 | `tests/logic/version.test.ts` |
 | TC-0006-03 | 2 | セーブ（名前「ゆうしゃ」・Lv12）があるとき、「つづきから」の行に ▶ があってフォーカスされ、右に「ゆうしゃ Lv12」が出る | E2E | `e2e/title.spec.ts` |
 | TC-0006-04 | 2 | セーブがないとき、カーソルは「はじめから」。「つづきから」の行は `aria-disabled="true"` で、文字の色が disabled（`#8C857A`。`rgb(140, 133, 122)`）。選んでも画面は `title` のまま、ハッシュは `#/` のまま、`body[data-busy]` が `true` にならず、何も出ない | E2E | `e2e/title.spec.ts` |
 | TC-0006-05 | 3 | 「はじめから」を決定すると、ハッシュが `#/new`、`body[data-screen="new"]` になる | E2E | `e2e/title.spec.ts` |
-| TC-0006-06 | 4 | プレイ中のゲームがないとき、`#/inn`・`#/dungeon`・`#/battle`・`#/clear`・`#/swap`・`#/nothing`・ハッシュなし を開くと、ハッシュが `#/`、`body[data-screen="title"]` になる。`#/new` を開くと名前入力のまま。置き換えなので `history.length` が増えない | E2E | `e2e/title.spec.ts` |
-| TC-0006-07 | 5 | プレイ中のゲームの場所が INN・DUNGEON・BATTLE・CLEARED・SWAP のとき、`#/`・`#/new`・ほかの画面のハッシュのどれを開いても、それぞれ `#/inn`・`#/dungeon`・`#/battle`・`#/clear`・`#/swap` になる | E2E | `e2e/title.spec.ts` |
+| TC-0006-06 | 4 | プレイ中のゲームがないとき、`#/inn`・`#/dungeon`・`#/battle`・`#/clear`・`#/swap`・`#/nothing`・ハッシュなし を開くと、ハッシュが `#/`、`body[data-screen="title"]` になる。`#/new` を開くと名前入力のまま、`#/credits` を開くとクレジットのまま（v1.3）。置き換えなので `history.length` が増えない | E2E | `e2e/title.spec.ts` |
+| TC-0006-07 | 5 | プレイ中のゲームの場所が INN・DUNGEON・BATTLE・CLEARED・SWAP のとき、`#/`・`#/new`・`#/credits`（v1.3）・ほかの画面のハッシュのどれを開いても、それぞれ `#/inn`・`#/dungeon`・`#/battle`・`#/clear`・`#/swap` になる | E2E | `e2e/title.spec.ts` |
 | TC-0006-09 | 1 | タイトル画像の `alt` が「WIZミニ ～死霊術師の迷宮～」で、見出し（`role="heading"`、レベル 1）の名前も同じ。`<img>` に `width="1080"`・`height="720"` がある。画像が読み込まれている（`naturalWidth` が 1080）。飾り線（`.deco`）・副題の文字は出ていない | E2E | `e2e/title.spec.ts` |
 | TC-0006-10 | 1 | 画像の表示の大きさ：375 × 667 で横 359 × 縦 239.3、414 × 715 で 398 × 265.3、1280 × 800 で 450 × 300（横：縦が 3：2、横は最大 450）。中央にある（左右の余白の差 1px 以内） | E2E | `e2e/title.spec.ts` |
 | TC-0006-11 | 1 | 画像を読めなくすると（`page.route` で `title/title.png` を止める）、`<img>` が消え、`<h1>` の文字が「WIZミニ」、その下に「～ 死霊術師の迷宮 ～」が出る。エラーの表示は出ない | E2E | `e2e/title.spec.ts` |

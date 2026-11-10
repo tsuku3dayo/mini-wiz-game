@@ -3,8 +3,8 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.2
-updated: 2026-11-05
+version: 1.3
+updated: 2026-11-10
 sources:
   - MWIZ-TD-0003（v1.4）
   - MWIZ-GUI-0001（v1.1）
@@ -29,6 +29,7 @@ verified: null
 - 画像の `error` で `<img>` を消し、`<h1>` の中身を文字の「WIZミニ」（`.logo` の見た目）にして、`<h1>` の下に副題「～ 死霊術師の迷宮 ～」（`.subtitle`）を足す。同じ画面の中では読み直さない。
 - 「つづきから」が無効のとき、`onDisabledSelect` を渡さない（選んでも何も出さない）。
 - 「おと」は `sound.toggle()` のあと、項目の文字だけを変える（`commandMenu.update`）。メッセージは出さない。
+- 「クレジット」（v1.3。仕様書 v1.12）：メニューの 4 つ目の項目。`router.navigate('credits')`。初めのカーソル（`initialIndex`）は変えない。
 - エラー：メニューを無効にし、メニューの下に `errorPanel`。
 - 外枠は `title-main`（縦の中央。GameFrame を使わない）。
 
@@ -114,6 +115,7 @@ verified: null
 | GUI-0001 §5 画面遷移 | ハッシュ・LocationGuard | `ui/router.ts` |
 | GUI-0002 §1 タイトル | メニュー・インストール・版・メッセージ欄なし | `screens/title.ts`・`install-dialog`・`logic/version.ts` |
 | GUI-0002 §2 名前入力 | 入力欄・文字数・規則の文 | `screens/name-entry.ts`・`text-input`・`logic/name.ts` |
+| GUI-0002 §3 クレジット（v1.3） | 戻るボタン・見出し・役割と名前の一覧 | `screens/credits.ts`・`logic/credits.ts`・`ui/router.ts`（§10） |
 | GUI-0003 §1 宿屋 | 狭い／広い（実績つき）・タイトルへ戻るの確認 | `screens/inn.ts`・`status-screen`（`recordsWindow`） |
 | GUI-0003 §2 メニュー | 操作の場所に出す・広い画面は「ステータス」なし | `game-menu` |
 | GUI-0003 §3 ステータス画面 | 狭い画面だけ・メッセージ欄なし | `status-screen` |
@@ -125,3 +127,20 @@ verified: null
 | GUI-0007 §2〜§5 | 更新の帯・インストールの案内・ErrorPanel・起動の失敗 | `update-banner`・`install-dialog`・`error-panel`・`public/boot.js` |
 
 GUI の要素で、受け持つモジュールのないものはない。
+
+## 10. クレジット（`ui/screens/credits.ts`、`#/credits`。v1.3 で追加、仕様書 v1.12）
+
+章の番号を変えないよう、最後に足した。
+
+- ルーター（`ui/router.ts`）：`ScreenName` に `'credits'`、`PATHS` に `credits: '/credits'`。プレイ中のゲームがないときに出してよい画面を `['title', 'new', 'credits']` にする。`main.ts` の `screens` に `credits: mountCredits` を足す。`body[data-screen="credits"]`。
+- 部品：`<main class="credits-main">` の中に、上の行 `<div class="credits-head">`［戻るボタン｜`<h1>`クレジット｜空き］と `<dl class="credits-list">`。一覧は `CREDITS`（`logic/credits.ts`。TD-0002 §2）から、組ごとに `<div class="credits-item"><dt>役割</dt><dd>名前</dd></div>` を作る。
+- 戻るボタン：`<button class="wiz-button" type="button"><span aria-hidden="true">← </span>もどる</button>`。押すと `router.navigate('title')`。作った時点で `focus()`。
+- Esc：`document` の `keydown` で受け、`router.navigate('title')`（`destroy()` で外す）。IME の変換中（`isComposing`）は何もしない。
+- 見た目（`ui/style.css`）：
+  - `.credits-main`：`.title-main` と同じ幅・左右・上下の余白（安全領域を含む）。ただし縦の中央に寄せず、上から並べる。
+  - `.credits-head`：`display: grid; grid-template-columns: 1fr auto 1fr; align-items: center`。ボタンは左の列の左端。
+  - `h1`：24px・frame 色・`margin: 0`。
+  - `.credits-list`：上の行との間 32px、組の間 24px、中央そろえ、`margin: 0`。
+  - `dt`：13px・textSub 色・`letter-spacing: 0.1em`。`dd`：20px・`font-weight: bold`・primary 色・`margin: 0`。
+- メッセージ欄・ErrorPanel は作らない（エラーのときは LocationGuard が画面全体を ErrorPanel にする）。音は鳴らさない。
+- BGM：`logic/bgm-scene.ts` の `sceneBgm` で `'/credits'` を `'title'` にする（TD-0005）。タイトル → クレジット → タイトルで同じ曲なので、`bgm-director` は何もしない（頭に戻らない）。

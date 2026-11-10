@@ -3,13 +3,13 @@ id: MWIZ-TC-0034
 type: Test Case
 title: 場面ごとの BGM を聴く
 status: stable
-version: 1.3
+version: 1.4
 updated: 2026-11-10
 sources:
   - MWIZ-US-0034（v1.2）
-  - MWIZ-TST-0001（v1.1）
-  - MWIZ-TD-0002（v1.6）
-  - MWIZ-TD-0005（v1.11）
+  - MWIZ-TST-0001（v1.2）
+  - MWIZ-TD-0002（v1.7）
+  - MWIZ-TD-0005（v1.12）
   - docs/specification-ja.md (v1.12) §12.2、§16.5、§26
 verified: null
 ---
@@ -24,7 +24,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0034-01 | 1 | `sceneBgm(pathname, state, active)` が、`'/'`・`'/new'` → `'title'`、`'/inn'` → `'inn'`、`'/dungeon'`・`'/swap'`（`dungeon` あり）→ `'dungeon'`、`'/battle'` → `'battle'`（`state` なし、または `battle.isBoss` が false）、`'/battle'` で `battle.isBoss` が true → `'boss'` を返す | 単体 | `tests/logic/bgm-scene.test.ts` |
+| TC-0034-01 | 1 | `sceneBgm(pathname, state, active)` が、`'/'`・`'/new'`・`'/credits'`（v1.4。仕様書 v1.12）→ `'title'`、`'/inn'` → `'inn'`、`'/dungeon'`・`'/swap'`（`dungeon` あり）→ `'dungeon'`、`'/battle'` → `'battle'`（`state` なし、または `battle.isBoss` が false）、`'/battle'` で `battle.isBoss` が true → `'boss'` を返す | 単体 | `tests/logic/bgm-scene.test.ts` |
 | TC-0034-02 | 1 | `playBgm(name)` で 1 周分（16 小節）の音が `今 + 0.05` から予約され、次の周の頭 `nextStart = t0 + loopSec` の 1 秒前を切ったときの見回り（250ms）で、`nextStart` から次の周が頭から予約される（すき間も重なりもない） | 単体 | `tests/audio/bgm.test.ts` |
 | TC-0034-03 | 1 | 音がオンのとき、画面に入るたびに `app:bgm` が出る：タイトル `title`、名前入力でそのまま（イベントなし）、宿屋 `inn`、ダンジョン `dungeon`、通常の入れ替え画面でそのまま、戦闘 `battle`、ボス戦 `boss` | E2E | `e2e/sound.spec.ts` |
 | TC-0034-04 | 1 | 実機で 6 曲を聴き、1 周（タイトル 48・宿屋 約 73.8・ダンジョン 約 33.3・戦闘 約 28.6・ボス戦 約 26.7・クリア 約 43.6 秒）の終わりで頭へ途切れずにつながる。ボス戦の曲（音が多い）で音が途切れたり遅れたりしない（v1.2） | 手動 | 実機（iPhone 11・PC） |
