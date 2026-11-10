@@ -24,6 +24,7 @@ export function sceneBgm(
   switch (pathname) {
     case '/':
     case '/new':
+    case '/credits': // v1.12。タイトル → クレジット → タイトルで曲を替えない
       return 'title';
     case '/inn':
       return 'inn';

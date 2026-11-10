@@ -14,9 +14,10 @@ const swapAfterBoss = view(makeState('SWAP', { dungeon: null }));
 const cleared = view(makeState('CLEARED', { dungeon: null }));
 
 describe('場面と曲', () => {
-  test('TC-0034-01 / と /new はタイトル、/inn は宿屋、/dungeon・/swap（ダンジョンあり）はダンジョン、/battle は戦闘、ボス戦はボスの曲', () => {
+  test('TC-0034-01 /・/new・/credits はタイトル、/inn は宿屋、/dungeon・/swap（ダンジョンあり）はダンジョン、/battle は戦闘、ボス戦はボスの曲', () => {
     expect(sceneBgm('/', null, null)).toBe('title');
     expect(sceneBgm('/new', null, null)).toBe('title');
+    expect(sceneBgm('/credits', null, null)).toBe('title');
     expect(sceneBgm('/inn', inn, null)).toBe('inn');
     expect(sceneBgm('/dungeon', dungeon, null)).toBe('dungeon');
     expect(sceneBgm('/swap', swap, null)).toBe('dungeon');

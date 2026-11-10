@@ -1,5 +1,5 @@
 // 起動（仕様書 §27.2、TD-0001 §3）。組み立てだけを行い、判断を持たない
-// 音：効果音・BGM（監督）。画面はタイトル・名前入力・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
+// 音：効果音・BGM（監督）。画面はタイトル・名前入力・クレジット・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え
 import './ui/theme.css';
 import './ui/style.css';
 import { createGameApi } from './api/game-api';
@@ -21,6 +21,7 @@ import { effectLayer } from './ui/components/effect-layer';
 import { lowHpFrame } from './ui/components/low-hp-frame';
 import { mountBattle } from './ui/screens/battle';
 import { mountClear } from './ui/screens/clear';
+import { mountCredits } from './ui/screens/credits';
 import { mountDungeon } from './ui/screens/dungeon';
 import { mountInn } from './ui/screens/inn';
 import { mountNameEntry } from './ui/screens/name-entry';
@@ -86,7 +87,7 @@ if (app) {
     command,
     queue,
     sound,
-    screens: { title: mountTitle, new: mountNameEntry, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear, swap: mountSwap },
+    screens: { title: mountTitle, new: mountNameEntry, credits: mountCredits, inn: mountInn, dungeon: mountDungeon, battle: mountBattle, clear: mountClear, swap: mountSwap },
     onScreenChange: (name) => {
       banner.setAllowed(name === 'title' || name === 'inn');
       bgm?.update();

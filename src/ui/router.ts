@@ -7,18 +7,20 @@ import { gameFrame } from './components/game-frame';
 import type { MessageQueue } from './message-queue';
 import type { Store } from './store';
 
-export type ScreenName = 'title' | 'new' | 'inn' | 'dungeon' | 'battle' | 'clear' | 'swap';
+export type ScreenName = 'title' | 'new' | 'credits' | 'inn' | 'dungeon' | 'battle' | 'clear' | 'swap';
 
 const PATHS: Readonly<Record<ScreenName, string>> = {
-  title: '/', new: '/new', inn: '/inn', dungeon: '/dungeon', battle: '/battle', clear: '/clear', swap: '/swap',
+  title: '/', new: '/new', credits: '/credits', inn: '/inn', dungeon: '/dungeon', battle: '/battle', clear: '/clear', swap: '/swap',
 };
+/** プレイ中のゲームがないときに出してよい画面（先頭へ置き換える。クレジットは v1.12） */
+const NO_GAME: readonly ScreenName[] = ['title', 'new', 'credits'];
 const BY_LOCATION: Readonly<Record<Location, ScreenName>> = {
   INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: 'clear', SWAP: 'swap',
 };
 
 export interface Router {
   readonly current: ScreenName | null;
-  /** 履歴に積んで移る（「はじめから」と名前入力の「もどる」だけが使う） */
+  /** 履歴に積んで移る（「はじめから」・名前入力の「もどる」・タイトルの「クレジット」・クレジットの「もどる」だけが使う） */
   navigate(name: ScreenName): void;
   start(): void;
   destroy(): void;
@@ -123,7 +125,7 @@ export function createRouter(deps: RouterDeps): Router {
       }
       return;
     }
-    const allowed: ScreenName[] = game.state === null ? ['title', 'new'] : [BY_LOCATION[game.state.location]];
+    const allowed: readonly ScreenName[] = game.state === null ? NO_GAME : [BY_LOCATION[game.state.location]];
     if (!allowed.includes(name)) {
       if (queue.holdNavigation && current !== null) return;
       name = allowed[0];
