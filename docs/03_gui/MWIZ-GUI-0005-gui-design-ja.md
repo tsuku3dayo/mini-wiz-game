@@ -16,7 +16,7 @@ sources:
   - MWIZ-US-0024（v1.0）
   - MWIZ-US-0025（v1.0）
   - MWIZ-US-0033（v1.3）
-  - docs/specification-ja.md (v1.11) §5.8、§11.5、§11.6、§11.8、§13.2
+  - docs/specification-ja.md (v1.12) §5.8、§11.5、§11.6、§11.8、§13.2
 verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 ---
 

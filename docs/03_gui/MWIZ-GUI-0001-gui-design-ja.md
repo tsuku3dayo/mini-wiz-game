@@ -6,7 +6,7 @@ status: stable
 version: 1.1
 updated: 2026-10-30
 sources:
-  - MWIZ-US-0006（v1.2）
+  - MWIZ-US-0006（v1.3）
   - MWIZ-US-0010（v1.1）
   - MWIZ-US-0011（v1.1）
   - MWIZ-US-0012（v1.1）
@@ -15,7 +15,7 @@ sources:
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0010（v1.0）
   - MWIZ-ADR-0012（v1.1）
-  - docs/specification-ja.md (v1.11) §11.1〜§11.4、§11.6、§11.8、§11.11、§14
+  - docs/specification-ja.md (v1.12) §11.1〜§11.4、§11.6、§11.8、§11.11、§14
 verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
 ---
 
