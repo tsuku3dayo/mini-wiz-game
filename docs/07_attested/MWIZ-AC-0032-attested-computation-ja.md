@@ -2,7 +2,7 @@
 id: MWIZ-AC-0032
 type: Attested Computation
 title: 効果音のジングル化と演出の長さの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0032（v1.2）
   - MWIZ-TC-0034（v1.3）
   - MWIZ-TD-0005（v1.11）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-10T15:04:36+09:00" }
 ---
 
 # AC-0032 効果音のジングル化と演出の長さの実施記録
