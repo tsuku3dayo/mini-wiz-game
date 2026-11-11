@@ -3,18 +3,18 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.5
+version: 1.6
 updated: 2026-11-11
 sources:
   - MWIZ-TD-0003（v1.5）
   - MWIZ-GUI-0001（v1.2）
-  - MWIZ-GUI-0002（v1.4）
+  - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0003（v1.2）
   - MWIZ-GUI-0004（v1.0）
   - MWIZ-GUI-0005（v1.4）
   - MWIZ-GUI-0006（v1.1）
   - MWIZ-GUI-0007（v1.1）
-  - docs/specification-ja.md (v1.14) §11.2、§11.4〜§11.9、§11.12、§13.2
+  - docs/specification-ja.md (v1.15) §11.2、§11.4〜§11.9、§11.12、§13.2
 verified: null
 ---
 
@@ -28,7 +28,7 @@ verified: null
 - タイトル画像の大きさは CSS で決める：`width: 100%; max-width: 450px; height: auto; aspect-ratio: 3 / 2`。画像の URL は `logic/title-image.ts` の `TITLE_IMAGE_URL`（相対パス。`enemyImageUrl` と同じ考え方）。
 - 画像の `error` で `<img>` を消し、`<h1>` の中身を文字の「WIZミニ」（`.logo` の見た目）にして、`<h1>` の下に副題「～ 死霊術師の迷宮 ～」（`.subtitle`）を足す。同じ画面の中では読み直さない。
 - 「つづきから」が無効のとき、`onDisabledSelect` を渡さない（選んでも何も出さない）。
-- 「つづきから」（v1.5。仕様書 v1.14）：どれかのスロットにセーブがあれば有効。選ぶとメニューの場所（中央の箱）を `saveSlotMenu({ title: 'つづきから', mode: 'load', initialSlot: latestSlot(slots) })` に替える。選んだら `command.run(() => api.load({ slot }))`。もどる・Esc でタイトルのメニューに戻し、カーソルを「つづきから」に置く。右の「{名前} Lv{n}」は作らない。エラーの ErrorPanel はメニューの場所の下（スロットの一覧が出ているときもその下）
+- 「つづきから」（v1.5。仕様書 v1.14）：どれかのスロットにセーブがあれば有効。選ぶとメニューの場所（中央の箱）を `saveSlotMenu({ title: 'つづきから', mode: 'load', initialSlot: latestSlot(slots) })` に替える。選んだら `command.run(() => api.load({ slot }))`。もどる・Esc でタイトルのメニューに戻し、カーソルを「つづきから」に置く。右の「{名前} Lv{n}」は作らない。続けられないエラー（`command.fatal`）が出たら、スロットの一覧を閉じてタイトルのメニューに戻し（カーソルは「つづきから」、`autoFocus` なし）、その下に ErrorPanel（v1.6。仕様書 v1.15：一覧の下に出すと縦にはみ出すため）。「再試行」で直っても一覧は開き直さない
 - 「おと」は `sound.toggle()` のあと、項目の文字だけを変える（`commandMenu.update`）。メッセージは出さない。
 - 「クレジット」（v1.3。仕様書 v1.12）：メニューの 4 つ目の項目。`router.navigate('credits')`。初めのカーソル（`initialIndex`）は変えない。
 - エラー：メニューを無効にし、メニューの下に `errorPanel`。
