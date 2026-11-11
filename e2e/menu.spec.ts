@@ -27,14 +27,16 @@ test.describe('メニューとコマンド', () => {
     await expectAt('宿屋', 'やすむ');
     for (let i = 0; i < 6; i += 1) await page.keyboard.press('ArrowDown');
     await expectAt('宿屋', 'タイトルへ戻る');
+    // 並び（v1.14）：やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る
     await page.keyboard.press('ArrowUp');
-    await expectAt('宿屋', 'ダンジョンへ');
+    await expectAt('宿屋', 'セーブ');
 
     // Enter と Space
     await startAt(page, 'INN');
     await page.keyboard.press('Enter');
     await expect.poll(async () => (await logLines(page)).at(-1)).toBe('HP と MP が かいふくした');
-    await page.keyboard.press('ArrowDown');
+    for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowDown');
+    await expectAt('宿屋', 'セーブ');
     await page.keyboard.press(' ');
     await expect.poll(async () => (await logLines(page)).at(-1)).toBe('セーブしました');
 
@@ -241,7 +243,7 @@ test.describe('メニューとコマンド', () => {
     const items = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, itemId: 'weapon1', rarity: 'N', value: 1 }));
     await startAt(page, 'INN', { state: { inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: null }, items, nextId: 4, pending: null } } });
     await expect.poll(focused).toBe('やすむ');
-    await page.keyboard.press('ArrowDown');
+    // 並び（v1.14）：やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る
     await page.keyboard.press('ArrowDown');
     await innAt('メニュー');
 
@@ -282,9 +284,8 @@ test.describe('メニューとコマンド', () => {
     await page.keyboard.press('Escape');
     await innAt('メニュー');
 
-    // 宿屋の確認（タイトルへ戻る）
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
+    // 宿屋の確認（タイトルへ戻る。「メニュー」から 3 つ下）
+    for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowDown');
     await innAt('タイトルへ戻る');
     await page.keyboard.press('Enter');
     await expect.poll(focused).toBe('いいえ');

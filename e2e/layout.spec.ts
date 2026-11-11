@@ -83,6 +83,34 @@ test.describe('画面の大きさとタッチ', () => {
     });
   });
 
+  test('TC-0035-13 戦闘のボタンは高さ 56px・横 1 列で下の方にあり、414×715 ではみ出さず、375×667 のはみ出しは v1.1（47px）より小さい', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop', '指で触る画面だけ');
+    const measure = async () => page.evaluate(() => {
+      const menu = document.querySelector('[role="menu"][aria-label="戦闘"]')!;
+      const rects = [...menu.querySelectorAll('[role="menuitem"]')].map((b) => b.getBoundingClientRect());
+      const doc = document.documentElement;
+      return {
+        heights: rects.map((r) => Math.round(r.height)),
+        tops: rects.map((r) => Math.round(r.top)),
+        // ページの一番下までスクロールしたときの、ボタンの下端から画面の下端まで
+        fromBottom: Math.round(Math.max(doc.scrollHeight, window.innerHeight) - (rects[0].bottom + window.scrollY)),
+        overflowY: doc.scrollHeight - window.innerHeight,
+      };
+    });
+    for (const [width, height] of [[414, 715], [375, 667]] as const) {
+      await page.setViewportSize({ width, height });
+      await startAt(page, 'BATTLE');
+      const m = await measure();
+      info.annotations.push({ type: '戦闘の画面', description: `${width}×${height}：縦のはみ出し ${m.overflowY}px、ボタンの下端から画面の下まで ${m.fromBottom}px` });
+      expect(m.heights, `${width}×${height}`).toEqual([56, 56, 56]);
+      expect(new Set(m.tops).size, `${width}×${height}`).toBe(1);
+      // 親指で押す下の方（スクロールして届くところで、下端から 160px 以内）
+      expect(m.fromBottom, `${width}×${height}`).toBeLessThanOrEqual(160);
+      if (width === 414) expect(m.overflowY).toBeLessThanOrEqual(0);
+      else expect(m.overflowY).toBeLessThan(47);
+    }
+  });
+
   test('TC-0035-12 desktop（1280×800）と 1366×657 で、はみ出さず、外枠は 800px 以下で中央、宿屋・ダンジョン・戦闘は 2 列', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'PC だけ');
     for (const size of [{ width: 1280, height: 800 }, { width: 1366, height: 657 }]) {

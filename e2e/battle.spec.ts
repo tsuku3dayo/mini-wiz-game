@@ -16,8 +16,12 @@ async function pauseClock(page: Page) {
 }
 
 test.describe('戦闘の画面', () => {
-  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・見出し「コマンド」のメニュー（たたかう／ヒール／にげる）・メッセージ欄が出る', async ({ page }) => {
+  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・見出し「コマンド」のメニュー（たたかう／ヒール／にげる。狭い画面はボタン）・メッセージ欄が出る', async ({ page }, info) => {
     await startAt(page, 'BATTLE');
+    // 狭い画面は横 1 列のボタン、広い画面は縦のメニュー（v1.14）
+    const menu = page.getByRole('menu', { name: '戦闘' });
+    if (info.project.name === 'desktop') await expect(menu).toHaveClass(/wiz-menu/);
+    else await expect(menu).toHaveClass(/command-buttons/);
     const enemy = page.getByTestId('enemy-window');
     await expect(enemy).toHaveText('ゴブリン');
     expect(await enemy.textContent()).not.toMatch(/[0-9]/);
@@ -100,6 +104,94 @@ test.describe('戦闘の画面', () => {
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
     await expect.poll(async () => (await logLines(page)).at(-1)).toBe('うまく にげきれた');
     expect((await page.evaluate(() => window.__wiz!.debugDungeon())).player).toEqual(before);
+  });
+
+  test('TC-0019-14 狭い画面の戦闘のコマンドは横 1 列のボタン（たたかう・ヒール・にげる、幅 2：1：1、高さ 56px、▶ なし、初めのフォーカスは たたかう）。広い画面は縦の 3 行', async ({ page }, info) => {
+    await startAt(page, 'BATTLE');
+    const buttons = page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem');
+    await expect(buttons).toHaveCount(3);
+    const boxes = await buttons.evaluateAll((list) => list.map((e) => {
+      const r = e.getBoundingClientRect();
+      return { text: e.textContent ?? '', top: r.top, left: r.left, width: r.width, height: r.height };
+    }));
+    if (info.project.name === 'desktop') {
+      // 広い画面は縦の CommandMenu のまま
+      expect(boxes[0].top).toBeLessThan(boxes[1].top);
+      expect(boxes[1].top).toBeLessThan(boxes[2].top);
+      return;
+    }
+    expect(boxes.map((b) => b.text)).toEqual(['たたかう', 'ヒール', 'にげる']);
+    // 上端がそろい、左から並ぶ
+    expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
+    expect(boxes[0].left).toBeLessThan(boxes[1].left);
+    expect(boxes[1].left).toBeLessThan(boxes[2].left);
+    // 幅 2：1：1（grid-template-columns: 2fr 1fr 1fr。たたかう ＝ ヒール ＋ にげる）、高さ 56px
+    expect(Math.abs(boxes[0].width - (boxes[1].width + boxes[2].width))).toBeLessThanOrEqual(1);
+    for (const b of boxes) expect(Math.round(b.height)).toBe(56);
+    expect(boxes.some((b) => b.text.includes('▶'))).toBe(false);
+    await expect(buttons.filter({ hasText: 'たたかう' })).toBeFocused();
+  });
+
+  test('TC-0019-15 狭い画面のボタン：たたかう で進む。押せない ヒール・にげる は理由を出して進まない。← → ↑ ↓ で動いて端で止まり、Enter・Space で決まる。応答待ちは 1 回だけ', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop', '狭い画面だけのボタン');
+    const revision = () => page.evaluate(() => JSON.parse(localStorage.getItem('mini-wiz-game-game')!).revision as number);
+    const disabledColor = 'rgb(140, 133, 122)';
+
+    // たたかう をタップするとターンが進む
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999 }, seed: SEEDS.hits });
+    const r0 = await revision();
+    await commandItem(page, 'たたかう').tap();
+    await expect.poll(revision).toBe(r0 + 1);
+
+    // MP 2 の ヒール・ボス戦の にげる：押せない色で、押すと理由だけが出る
+    for (const [state, name, reason] of [
+      [{ mp: 2 }, 'ヒール', 'MP が たりない'],
+      [{ battle: battleOf('necromancer', 260), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
+    ] as const) {
+      await startAt(page, 'BATTLE', { state, seed: SEEDS.hits });
+      const button = commandItem(page, name);
+      await expect(button).toHaveAttribute('aria-disabled', 'true');
+      await expect(button).toHaveCSS('color', disabledColor);
+      const before = await revision();
+      // 押せないボタン（aria-disabled）は、押せるようになるのを待たずに押す
+      await button.tap({ force: true });
+      await expect.poll(async () => (await logLines(page)).at(-1), name).toBe(reason);
+      expect(await revision(), name).toBe(before);
+    }
+
+    // キー：→ ↓ が次、← ↑ が前。端で止まる。Enter・Space で決まる
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999 }, seed: SEEDS.hits });
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(commandItem(page, 'ヒール')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(commandItem(page, 'にげる')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(commandItem(page, 'にげる')).toBeFocused();
+    await expect(commandItem(page, 'にげる')).toHaveAttribute('tabindex', '0');
+    await expect(commandItem(page, 'たたかう')).toHaveAttribute('tabindex', '-1');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowLeft');
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    const k0 = await revision();
+    await page.keyboard.press('Enter');
+    await expect.poll(revision).toBe(k0 + 1);
+    await expect(page.getByRole('menu', { name: '戦闘' })).not.toHaveAttribute('aria-disabled', 'true', { timeout: 10_000 });
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press(' ');
+    await expect.poll(revision).toBe(k0 + 2);
+
+    // 応答待ちのあいだに 2 回押しても 1 ターンだけ
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999 }, seed: SEEDS.hits });
+    await page.evaluate(() => window.__wiz!.setDelay(1000));
+    const d0 = await revision();
+    await commandItem(page, 'たたかう').tap();
+    await commandItem(page, 'たたかう').tap({ force: true });
+    await expect(page.getByRole('menu', { name: '戦闘' })).not.toHaveAttribute('aria-disabled', 'true', { timeout: 10_000 });
+    expect(await revision()).toBe(d0 + 1);
+    await page.evaluate(() => window.__wiz!.setDelay(0));
   });
 
   test.describe('敵の絵', () => {

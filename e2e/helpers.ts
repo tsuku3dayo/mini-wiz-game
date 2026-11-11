@@ -257,7 +257,8 @@ export function shownLabels(page: Page, label: string): Promise<string[]> {
 
 /** メニューの ▶ のある行の文字 */
 export async function cursorLabel(page: Page, label: string): Promise<string> {
-  const text = await page.getByRole('menu', { name: label }).locator('.wiz-menu-item.active').textContent();
+  // 縦のメニューの行（.wiz-menu-item）と、狭い画面の戦闘のボタン（.command-button。v1.14）の両方
+  const text = await page.getByRole('menu', { name: label }).locator('[role="menuitem"].active').textContent();
   return (text ?? '').replace(/^[▶\s]/, '');
 }
 
