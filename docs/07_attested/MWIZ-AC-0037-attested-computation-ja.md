@@ -2,7 +2,7 @@
 id: MWIZ-AC-0037
 type: Attested Computation
 title: セーブ 3 つの実施記録
-status: draft
+status: stable
 version: 1.0
 updated: 2026-11-11
 sources:
@@ -20,7 +20,7 @@ sources:
   - MWIZ-TC-0036（v1.2）
   - MWIZ-TC-0037（v1.1）
   - MWIZ-TC-0038（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T17:34:34+09:00" }
 ---
 
 # AC-0037 セーブ 3 つの実施記録
@@ -71,7 +71,7 @@ verified: null
 | TC-0024-07 | E2E | OK |
 | TC-0035-01 | E2E（`pixel7`・`small`。タップだけ） | OK |
 | TC-0036-01・10 | E2E（01 は `desktop` のキーだけ、10 は 3 端末の axe） | OK |
-| TC-0004-04 | 手動（iPhone 11） | WS-0019 の終わりに行う |
+| TC-0004-04 | 手動（iPhone 11 の Safari。2026-11-11 オーナー） | OK（いままでのセーブがスロット 1 に移った） |
 
 設計・仕様を直したこと：
 
@@ -88,9 +88,15 @@ verified: null
 - `npm run verify`：lint エラー 0、check:docs エラー 0・注意 1（AC-0024 の仕様書の版の表記＝承認済みの記録なので変えない）、単体 191 件、build、check:dist OK
 - `npm run test:e2e`：1 回目は 12 件落ちた（タイトルのスロットの一覧＋エラーの枠のはみ出し＝仕様書 v1.15 で直した、テストの書き方 2 つ）。直したあとの全部で 506 件通った・46 件はその端末の対象外で飛ばした（7.9 分）
 
+手動の確認（WS-0019 の終わり。公開中の版 `index-Dyp40HUq.js`）：
+
+| 項目 | 方法 | 結果 |
+| --- | --- | --- |
+| セーブのスロットの一覧・上書きの確認 | 手動（iPhone 11 の Safari・PC の Chrome。2026-11-11 オーナー） | iPhone：OK。PC：OK |
+| タイトルの「つづきから」（スロットを選んで再開） | 手動（iPhone 11 の Safari・PC の Chrome。2026-11-11 オーナー） | iPhone：OK。PC：OK |
+
 ## 3. 確認できなかったこと
 
-- 手動の確認（いまのセーブがスロット 1 に移ること・実機での遊びやすさ）は WS-0019 の終わりにまとめて行う。
 - Android の実機はない（E2E の `pixel7` で代わりに確かめた）。
 
 ## 4. 後片付け
@@ -104,4 +110,5 @@ verified: null
 - [x] 画面の変更は、PC と一番小さいスマートフォンの幅でスクリーンショットを見た
 - [x] 設計と違う作りにしたら、TD・GUI を直した（仕様書 v1.15・GUI-0002 v1.5 を再承認）
 - [x] AC-0037（draft）に自動テストの結果を書き、同じ PR に入れた
-- [ ] PR の CI が緑で、マージされた（マージ = 公開）
+- [x] PR の CI が緑で、マージされた（PR #119。マージ = 公開。仕様書 v1.15 は PR #118）
+- [x] WS の終わりに実機の確認を案内し、結果を書いて review にした（iPhone・PC とも OK。2026-11-11）
