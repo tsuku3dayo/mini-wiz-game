@@ -10,7 +10,7 @@ sources:
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0002（v1.8）
   - MWIZ-TD-0003（v1.5）
-  - docs/specification-ja.md (v1.15) §5.6、§7.3、§16.1、§16.4
+  - docs/specification-ja.md (v1.16) §5.6、§7.3、§16.1、§16.4
 verified: null
 ---
 

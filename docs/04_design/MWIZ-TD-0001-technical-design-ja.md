@@ -12,7 +12,7 @@ sources:
   - MWIZ-ADR-0004（v1.0）
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0011（v1.0）
-  - docs/specification-ja.md (v1.15) §11.1、§19.4、§20、§22.3、§27.2
+  - docs/specification-ja.md (v1.16) §11.1、§19.4、§20、§22.3、§27.2
 verified: null
 ---
 
