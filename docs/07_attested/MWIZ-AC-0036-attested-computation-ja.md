@@ -2,7 +2,7 @@
 id: MWIZ-AC-0036
 type: Attested Computation
 title: 宿屋のメニューの並び・狭い画面の戦闘のボタンの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-11
 sources:
@@ -11,7 +11,7 @@ sources:
   - MWIZ-TC-0010（v1.1）
   - MWIZ-TC-0019（v1.2）
   - MWIZ-TC-0035（v1.2）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T17:34:34+09:00" }
 ---
 
 # AC-0036 宿屋のメニューの並び・狭い画面の戦闘のボタンの実施記録

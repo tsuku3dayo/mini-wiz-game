@@ -2,7 +2,7 @@
 id: MWIZ-AC-0035
 type: Attested Computation
 title: ルール（やすむでレベルアップ・回避の式・たての かいひ・オークロード）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-11
 sources:
@@ -19,7 +19,7 @@ sources:
   - MWIZ-TC-0032（v1.3）
   - MWIZ-TC-0034（v1.5）
   - MWIZ-GUI-0003（v1.2）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T17:34:34+09:00" }
 ---
 
 # AC-0035 ルール（やすむでレベルアップ・回避の式・たての かいひ・オークロード）の実施記録

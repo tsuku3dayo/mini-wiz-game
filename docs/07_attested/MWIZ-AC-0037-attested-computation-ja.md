@@ -2,7 +2,7 @@
 id: MWIZ-AC-0037
 type: Attested Computation
 title: セーブ 3 つの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-11
 sources:
@@ -20,7 +20,7 @@ sources:
   - MWIZ-TC-0036（v1.2）
   - MWIZ-TC-0037（v1.1）
   - MWIZ-TC-0038（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T17:34:34+09:00" }
 ---
 
 # AC-0037 セーブ 3 つの実施記録
