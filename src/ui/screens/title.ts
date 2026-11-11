@@ -96,7 +96,7 @@ export function mountTitle(root: HTMLElement, ctx: ScreenContext): { destroy(): 
       slotMenu?.destroy();
       slotMenu = null;
       drawnSave = undefined;
-    } else if (mode === 'slots' && hasAnySave(store.save.slots)) {
+    } else if (mode === 'slots' && hasAnySave(store.save.slots) && !error) {
       if (!slotMenu || drawnSave !== saveKey()) {
         slotMenu?.destroy();
         drawnSave = saveKey();
@@ -117,10 +117,14 @@ export function mountTitle(root: HTMLElement, ctx: ScreenContext): { destroy(): 
       }
     } else {
       if (mode === 'slots') {
-        // セーブがなくなったら、タイトルのメニューに戻す
+        // セーブがなくなった・続けられないエラーが出たら、タイトルのメニューに戻す（カーソルは「つづきから」）。
+        // エラーの枠は一覧の下でなくメニューの下に出す（一覧の下では縦にはみ出すため。仕様書 v1.15 §11.5）。再試行で直っても一覧は開き直さない
         mode = 'menu';
+        cursor = INDEX_CONTINUE;
         slotMenu?.destroy();
         slotMenu = null;
+        menu?.destroy();
+        menu = null;
       }
       if (!menu || drawnSave !== saveKey()) {
         menu?.destroy();

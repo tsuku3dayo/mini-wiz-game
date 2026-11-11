@@ -172,9 +172,12 @@ test.describe('クレジット', () => {
       await page.evaluate(() => localStorage.clear());
       await page.goto('about:blank');
       await openTitle(page, true);
-      await failWrites(page);
+      // つづきから → スロットの一覧（v1.14）→ 書けないとき、一覧が閉じてタイトルのメニューの下にエラーの枠（v1.15）
       await press(info, item(page, 'タイトル', 'つづきから'));
+      await failWrites(page);
+      await press(info, item(page, 'つづきから', 'スロット1'));
       await expect(page.getByTestId('error-panel')).toBeVisible();
+      await expect(page.getByRole('menu', { name: 'タイトル' })).toBeVisible();
       await expect.poll(() => page.locator('h1 img').evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(1080);
       const y = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
       expect(y, `${size.width}×${size.height}`).toBeLessThanOrEqual(0);

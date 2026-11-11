@@ -89,8 +89,9 @@ test.describe('タイトル', () => {
     await expect(cont).toHaveAttribute('tabindex', '0');
   });
 
-  test('TC-0006-14 つづきから のスロットの一覧とエラーの枠を出しても、縦にはみ出さない（375×667・414×715・1366×657）', async ({ page }, info) => {
+  test('TC-0006-14 つづきから のスロットの一覧は縦にはみ出さない。書けないときは一覧が閉じてメニュー（つづきから）の下にエラーの枠、やはりはみ出さない（375×667・414×715・1366×657）', async ({ page }, info) => {
     const size = info.project.name === 'desktop' ? { width: 1366, height: 657 } : info.project.name === 'small' ? { width: 375, height: 667 } : { width: 414, height: 715 };
+    const overflow = () => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
     await page.setViewportSize(size);
     await openDebug(page);
     await writeScene(page, { saves: { 1: storedSave({ level: 15 }), 2: storedSave({ name: 'アルドアルドアル', level: 99 }), 3: storedSave() } });
@@ -98,12 +99,18 @@ test.describe('タイトル', () => {
     const list = page.getByRole('menu', { name: 'つづきから' });
     await expect(list).toBeVisible();
     await expect(page.getByTestId('save-slot-window').locator('.wiz-window-title')).toContainText('つづきから');
-    // 書き込みを失敗させてスロットを選ぶ → 一覧の下にエラーの枠
+    expect(await overflow(), `一覧 ${size.width}×${size.height}`).toBeLessThanOrEqual(0);
+    // 書き込みを失敗させてスロットを選ぶ → 一覧が閉じてタイトルのメニュー（カーソルは つづきから）、その下にエラーの枠（v1.15）
     await failWrites(page);
     await list.getByRole('menuitem').filter({ hasText: 'スロット1' }).click();
-    await expect(page.getByTestId('error-panel')).toBeVisible();
-    const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-    expect(overflow, `${size.width}×${size.height}`).toBeLessThanOrEqual(0);
+    const panel = page.getByTestId('error-panel');
+    await expect(panel).toBeVisible();
+    await expect(list).toHaveCount(0);
+    await expect(title(page)).toBeVisible();
+    expect(await cursorLabel(page, 'タイトル')).toBe('つづきから');
+    const menuBottom = await title(page).evaluate((e) => e.getBoundingClientRect().bottom);
+    expect(await panel.evaluate((e) => e.getBoundingClientRect().top)).toBeGreaterThan(menuBottom);
+    expect(await overflow(), `エラー ${size.width}×${size.height}`).toBeLessThanOrEqual(0);
   });
 
   test('TC-0006-04 セーブがないとき、カーソルは「はじめから」。「つづきから」は無効の色で、選んでも何も起きない', async ({ page }, info) => {

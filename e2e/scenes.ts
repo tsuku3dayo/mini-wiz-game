@@ -59,7 +59,7 @@ export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[
         await page.goto('about:blank');
         await openDebug(page);
         await writeScene(page, { save: storedSave({ level: 15 }) });
-        // v1.14：つづきから はスロットの一覧を出す。スロットを選んで書けないと、一覧の下にエラーの枠（タイトルでいちばん高い）
+        // v1.14：つづきから はスロットの一覧を出す。スロットを選んで書けないと、一覧が閉じてタイトルのメニューの下にエラーの枠（v1.15）
         await press(item(page, 'タイトル', 'つづきから'));
         await failWrites(page);
         await press(item(page, 'つづきから', /スロット1/));
