@@ -3,14 +3,14 @@ id: MWIZ-TC-0007
 type: Test Case
 title: 名前を付けてキャラクターを作る
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0007（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.4）
+  - MWIZ-TD-0002（v1.8）
+  - MWIZ-TD-0003（v1.5）
+  - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0002（v1.4）
   - docs/specification-ja.md (v1.14) §2.1、§11.5、§16.1、§16.4、§21.6、§22.3
 verified: null
@@ -32,7 +32,7 @@ verified: null
 | TC-0007-05 | 4 | 画面の名前の規則（`logic/name.ts`）：空は「エラーを出さない・決定は無効・理由は「名前を入力してください」」、9 文字以上・記号を含むものは、エラーの文と決定の無効の理由が §2.1 の文言、規則に合うものは決定が有効。文字数をコードポイントで数える（`"𠮷𠮷"` は 2） | 単体 | `tests/logic/name.test.ts` |
 | TC-0007-06 | 4 | 名前入力の画面：表示した時点で入力欄にフォーカスがある。空のとき「決定」が `aria-disabled="true"` でエラーの文は出ない。`a<b` を入れると「決定」が無効になり、入力欄の下に「つかえない もじが ふくまれています」。9 文字を入れると「名前は1〜8文字で入力してください」。無効の「決定」を選ぶと、その文がメッセージ欄に出る。右下の文字数が「{文字数}/8」 | E2E | `e2e/name-entry.spec.ts` |
 | TC-0007-07 | 4 | 入力欄で、`isComposing: true` の Enter では画面が変わらない。変換していない Enter で決定して宿屋に移る。Esc でハッシュが `#/`、タイトル画面になる | E2E（キー、`desktop`） | `e2e/name-entry.spec.ts` |
-| TC-0007-08 | 5 | 「ゆうしゃ」で決定すると `body[data-screen="inn"]` になり、メッセージ欄に「ゆうしゃの ぼうけんが はじまった」が出る。前から置いたセーブ（`mini-wiz-game-save`）の文字列が変わらない | E2E | `e2e/name-entry.spec.ts` |
+| TC-0007-08 | 5 | 「ゆうしゃ」で決定すると `body[data-screen="inn"]` になり、メッセージ欄に「ゆうしゃの ぼうけんが はじまった」が出る。前から置いたセーブ（`mini-wiz-game-save-1`）の文字列が変わらない | E2E | `e2e/name-entry.spec.ts` |
 | TC-0007-09 | 5 | `api.startGame` は、前のプレイ中の状態を上書きし（前があれば `revision` は前の値 + 1）、セーブのキーを読みも書きもしない。メッセージは「{名前}の ぼうけんが はじまった」（normal） 1 行 | 単体 | `tests/api/game-api.test.ts` |
 | TC-0007-10 | 6 | ソフトウェアキーボードが出たときの高さを模して `setViewportSize` を 414 × 400 にしても、入力欄と「決定」が画面の中に見え（`getBoundingClientRect` の下端 ≦ 400）、横にはみ出さない（`scrollWidth − innerWidth` が 0）。入力欄の文字が 16px 以上 | E2E | `e2e/name-entry.spec.ts` |
 | TC-0007-11 | 6 | iPhone 11 の Safari で名前の入力欄をタップしてソフトウェアキーボードを出しても、画面が崩れず、入力欄と「決定」が隠れない。入力欄をタップしても画面が拡大しない | 手動 | 実機（iPhone 11） |

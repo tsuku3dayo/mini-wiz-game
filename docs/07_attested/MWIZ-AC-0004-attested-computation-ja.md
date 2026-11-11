@@ -7,11 +7,11 @@ version: 1.0
 updated: 2026-11-02
 sources:
   - MWIZ-TASK-0004（v1.0）
-  - MWIZ-TC-0007（v1.0）
-  - MWIZ-TC-0008（v1.0）
-  - MWIZ-TC-0009（v1.0）
-  - MWIZ-TC-0012（v1.0）
-  - MWIZ-TD-0002（v1.7）
+  - MWIZ-TC-0007（v1.1）
+  - MWIZ-TC-0008（v1.1）
+  - MWIZ-TC-0009（v1.1）
+  - MWIZ-TC-0012（v1.1）
+  - MWIZ-TD-0002（v1.8）
 verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 

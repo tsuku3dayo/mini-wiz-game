@@ -3,13 +3,13 @@ id: MWIZ-TC-0012
 type: Test Case
 title: できない操作・保存の失敗が分かる
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0012（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0004（v1.4）
+  - MWIZ-TD-0002（v1.8）
+  - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0007（v1.1）
   - docs/specification-ja.md (v1.14) §10.3、§11.9、§16.2、§16.4、§21、§22.3
 verified: null
@@ -45,7 +45,7 @@ verified: null
 | 確認 ID | 手順 |
 | --- | --- |
 | TC-0012-06 | 各画面で、先にメッセージ欄（`[data-testid="message-window"]`）の位置を測る → `setItem` を失敗させる → 操作する（宿屋：やすむ、ダンジョン：↑、戦闘：たたかう、名前入力：名前を入れて決定）→ ErrorPanel の位置と中身を確かめる |
-| TC-0012-07 | セーブがある状態でタイトルを開く → `setItem` を失敗させる → 「つづきから」 |
+| TC-0012-07 | セーブがある状態でタイトルを開く → `setItem` を失敗させる → 「つづきから」→「スロット1」（v1.1。スロットの一覧の下に ErrorPanel が出る） |
 | TC-0012-08 | 宿屋のメニューから そうび を開いて候補を付ける／もちもの を開いて捨てる（はい）→ その画面の一番下に ErrorPanel |
 | TC-0012-10 | `#/inn` を開く → タイトルが出て、ErrorPanel がない |
 

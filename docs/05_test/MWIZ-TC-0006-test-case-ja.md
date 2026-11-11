@@ -3,14 +3,14 @@ id: MWIZ-TC-0006
 type: Test Case
 title: タイトル画面から始める
 status: stable
-version: 1.3
-updated: 2026-11-10
+version: 1.4
+updated: 2026-11-11
 sources:
   - MWIZ-US-0006（v1.4）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.4）
+  - MWIZ-TD-0002（v1.8）
+  - MWIZ-TD-0003（v1.5）
+  - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0002（v1.4）
   - docs/specification-ja.md (v1.14) §10.1、§11.2、§11.4、§11.5、§16.4、§19.1、§27.4
 verified: null
@@ -27,7 +27,7 @@ verified: null
 | --- | --- | --- | --- | --- |
 | TC-0006-01 | 1 | タイトル画面に、`<h1>` の中のタイトル画像（`<img>`、`src` が `title/title.png`）、メニュー（`role="menu"`、`aria-label="タイトル"`）の項目が上から「はじめから」「つづきから」「おと：オフ」「クレジット」（v1.3。仕様書 v1.12）、「インストール」のボタン、「v1.0」が出る。メッセージ欄（`role="log"`）がない | E2E | `e2e/title.spec.ts` |
 | TC-0006-02 | 1 | 版の表記の関数が、`package.json` の `version` の先頭 2 つに「v」を付けて返す（`"1.0.0"` → `"v1.0"`、`"1.2.3"` → `"v1.2"`） | 単体 | `tests/logic/version.test.ts` |
-| TC-0006-03 | 2 | セーブ（名前「ゆうしゃ」・Lv12）があるとき、「つづきから」の行に ▶ があってフォーカスされ、右に「ゆうしゃ Lv12」が出る | E2E | `e2e/title.spec.ts` |
+| TC-0006-03 | 2 | どれかのスロットにセーブ（名前「ゆうしゃ」・Lv12）があるとき、「つづきから」の行に ▶ があってフォーカスされる。行の文字は「つづきから」だけ（v1.4 で右の「ゆうしゃ Lv12」をなくした） | E2E | `e2e/title.spec.ts` |
 | TC-0006-04 | 2 | セーブがないとき、カーソルは「はじめから」。「つづきから」の行は `aria-disabled="true"` で、文字の色が disabled（`#8C857A`。`rgb(140, 133, 122)`）。選んでも画面は `title` のまま、ハッシュは `#/` のまま、`body[data-busy]` が `true` にならず、何も出ない | E2E | `e2e/title.spec.ts` |
 | TC-0006-05 | 3 | 「はじめから」を決定すると、ハッシュが `#/new`、`body[data-screen="new"]` になる | E2E | `e2e/title.spec.ts` |
 | TC-0006-06 | 4 | プレイ中のゲームがないとき、`#/inn`・`#/dungeon`・`#/battle`・`#/clear`・`#/swap`・`#/nothing`・ハッシュなし を開くと、ハッシュが `#/`、`body[data-screen="title"]` になる。`#/new` を開くと名前入力のまま、`#/credits` を開くとクレジットのまま（v1.3）。置き換えなので `history.length` が増えない | E2E | `e2e/title.spec.ts` |
@@ -37,6 +37,7 @@ verified: null
 | TC-0006-11 | 1 | 画像を読めなくすると（`page.route` で `title/title.png` を止める）、`<img>` が消え、`<h1>` の文字が「WIZミニ」、その下に「～ 死霊術師の迷宮 ～」が出る。エラーの表示は出ない | E2E | `e2e/title.spec.ts` |
 | TC-0006-12 | 1 | `public/title/title.png` があり、PNG の署名・`IHDR`・幅 1080・高さ 720、MD5 が仕様書 §13.6 の値（`36dd93edda255751560af6e4bcfb1aab`。v1.2 で v2 の画像に）と同じ | 単体 | `tests/assets/title-image.test.ts` |
 | TC-0006-13 | 1 | iPhone 11 で、タイトル画像がぼやけず、文字（「WIZミニ」「～死霊術師の迷宮～」）が読め、メニューと重ならずに 1 画面に収まる。PC でも同じ | 手動 | 実機（iPhone 11・PC） |
+| TC-0006-14 | 2 | 「つづきから」のスロットの一覧（見出し「つづきから」）を出し、続けられないエラーの ErrorPanel も出した状態で、375 × 667・414 × 715（`pixel7`・`small`）、1366 × 657（`desktop`）のどれでも縦にはみ出さない（`documentElement.scrollHeight − innerHeight` が 0 以下。v1.4） | E2E | `e2e/title.spec.ts` |
 | TC-0006-08 | 5 | プレイ中のゲームがある（INN）とき、`#/nothing` を開くと `#/` を経て `#/inn` になり、宿屋の画面が出る | E2E | `e2e/title.spec.ts` |
 
 ## 2. 準備

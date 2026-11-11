@@ -3,10 +3,10 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.4
-updated: 2026-11-10
+version: 1.5
+updated: 2026-11-11
 sources:
-  - MWIZ-TD-0003（v1.4）
+  - MWIZ-TD-0003（v1.5）
   - MWIZ-GUI-0001（v1.2）
   - MWIZ-GUI-0002（v1.4）
   - MWIZ-GUI-0003（v1.1）
@@ -28,6 +28,7 @@ verified: null
 - タイトル画像の大きさは CSS で決める：`width: 100%; max-width: 450px; height: auto; aspect-ratio: 3 / 2`。画像の URL は `logic/title-image.ts` の `TITLE_IMAGE_URL`（相対パス。`enemyImageUrl` と同じ考え方）。
 - 画像の `error` で `<img>` を消し、`<h1>` の中身を文字の「WIZミニ」（`.logo` の見た目）にして、`<h1>` の下に副題「～ 死霊術師の迷宮 ～」（`.subtitle`）を足す。同じ画面の中では読み直さない。
 - 「つづきから」が無効のとき、`onDisabledSelect` を渡さない（選んでも何も出さない）。
+- 「つづきから」（v1.5。仕様書 v1.14）：どれかのスロットにセーブがあれば有効。選ぶとメニューの場所（中央の箱）を `saveSlotMenu({ title: 'つづきから', mode: 'load', initialSlot: latestSlot(slots) })` に替える。選んだら `command.run(() => api.load({ slot }))`。もどる・Esc でタイトルのメニューに戻し、カーソルを「つづきから」に置く。右の「{名前} Lv{n}」は作らない。エラーの ErrorPanel はメニューの場所の下（スロットの一覧が出ているときもその下）
 - 「おと」は `sound.toggle()` のあと、項目の文字だけを変える（`commandMenu.update`）。メッセージは出さない。
 - 「クレジット」（v1.3。仕様書 v1.12）：メニューの 4 つ目の項目。`router.navigate('credits')`。初めのカーソル（`initialIndex`）は変えない。
 - エラー：メニューを無効にし、メニューの下に `errorPanel`。
@@ -46,7 +47,9 @@ verified: null
 | 狭い画面 | `statusPanel(full, 見出し=名前)` → `messageLog(5)` → 操作の場所 |
 | 広い画面 | 2 段×2 カラム（各段で高さをそろえる）。上：`statusPanel(full, 見出し=ステータス＋なまえ行)`｜`recordsWindow`。下：`messageLog(5)`｜操作の場所 |
 
-- **操作の場所** は 1 つの入れ物で、中身を替える：宿屋の `commandMenu` ／ `gameMenu`（宿屋）／ `confirmMenu`（タイトルへ戻る）。
+- **操作の場所** は 1 つの入れ物で、中身を替える：宿屋の `commandMenu` ／ `gameMenu`（宿屋）／ `confirmMenu`（タイトルへ戻る）／ `saveSlotMenu`（セーブ。v1.5）／ `confirmMenu`（上書き。v1.5）。
+- （v1.5。仕様書 v1.14）宿屋の `commandMenu` の項目を やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る の順にする。メニューを閉じたあとの `initialIndex` は 1（メニュー）、セーブの一覧から戻ったあと・書いたあとは 3（セーブ）、タイトルへ戻るの確認から戻ったあとは 4。
+- （v1.5）セーブ：`saveSlotMenu({ title: 'セーブ', mode: 'save', initialSlot: defaultSaveSlot(slots, game.saveSlot) })`。空きを選ぶと `command.run(() => api.save({ slot }))`、中身のあるスロットを選ぶと `confirmMenu`（「スロット{n}（{名前} Lv{n}）に うわがきしますか？」）→ はい で同じ操作、いいえ・Esc でスロットの一覧へ（カーソルは同じスロット）。成功したら `store.refreshSave()` してから宿屋の `commandMenu` に戻す
 - エラー：続けられないエラーのときは、メッセージ欄の場所に `errorPanel`（仕様書 §11.5、TC-0012-06）。宿屋の `commandMenu` は無効にする。v1.0 では操作の場所に出すと書いていたが、仕様書に合わせて v1.1 で直した。
 - そうび・もちもの・ステータス（狭い画面だけ）は、画面全体の中身を差し替える（§7）。閉じたら作り直し、カーソルを「メニュー」に戻す。
 
@@ -67,27 +70,30 @@ verified: null
 
 | 画面 | 並び |
 | --- | --- |
-| 狭い画面 | `gameFrame(hideNameOnNarrow)` → 敵のウィンドウ［`enemyImage`（256px）・敵の名前］→ `messageLog(5)` → `statusPanel(compact)` → `gameWindow`（コマンド）［`commandMenu`］ |
+| 狭い画面 | `gameFrame(hideNameOnNarrow)` → 敵のウィンドウ［`enemyImage`（256px）・敵の名前］→ `messageLog(5)` → `statusPanel(compact)` → `gameWindow`（コマンド）［`commandButtons`（v1.5。横 1 列、`grid-template-columns: 2fr 1fr 1fr`、間 8px、高さ 56px）］ |
 | 広い画面 | 敵のウィンドウ、下：`messageLog(7)`｜［`statusPanel(compact)`・コマンド］ |
 
 - 敵の種類が変わったら `enemyImage` を作り直す。遷移の保留中は直前の敵を出し続ける。
 - ダメージの行で HP の値を 200ms 点滅（`ui/effects.ts`）。
+- （v1.5）狭い画面と広い画面でコマンドの部品が違う（`commandButtons`／`commandMenu`）。`onWideChange` で作り直す。項目・無効・理由・`onSelect` は同じ値（`battleItems(game)`）から作る。狭い画面の高さは、3 行（44 × 3）が 1 行（56）になるので低くなる。実装のあと 375 × 667・414 × 715 で測り、GUI-0005 の高さの記述を直す
 - iPhone 11 の Safari（414 × 715）で 1 画面に収まる高さ（714px）は、敵の絵と名前の間 0・名前の行の高さ 1.1・1 行のステータスの余白（上 8・下 6）で作る（GUI-0001 §7.4）。
 
 ## 6. ゲームクリア・入れ替え
 
 | 画面 | モジュール | 並び |
 | --- | --- | --- |
-| ゲームクリア（`#/clear`） | `ui/screens/clear.ts` | 縦の中央。見出し → クリアの文のウィンドウ → `messageLog(5)` → `commandMenu`（宿屋へ） |
+| ゲームクリア（`#/clear`） | `ui/screens/clear.ts` | 縦の中央。見出し → クリアの文のウィンドウ（v1.5：`clear.autoSaved` が false なら textSub 色「スロットが いっぱいなので セーブしなかった」）→ `messageLog(5)` → `commandMenu`（宿屋へ） |
 | 入れ替え（`#/swap`） | `ui/screens/swap.ts` | `gameFrame`（いれかえ）→ ウィンドウ（もちものが いっぱいだ）［おちている：ItemLabel・段階ごとの中身（2 択／`itemList`／確認）］→ `messageLog(5)`（ドロップの行を読むので残す） |
 
 ## 7. そうび・もちもの・ステータス（宿屋・ダンジョンの中）
 
 | 画面 | 部品 | 並び |
 | --- | --- | --- |
-| そうび | `equipmentPanel`（枠の一覧／候補の一覧 と のうりょく） | 広い画面は 2 カラム、狭い画面は縦。**メッセージ欄なし** |
+| そうび | `equipmentPanel`（枠の一覧／候補の一覧 と のうりょく。v1.5 から のうりょく は かいひ を含む 6 行） | 広い画面は 2 カラム、狭い画面は縦。**メッセージ欄なし** |
 | もちもの | `inventoryPanel`（`itemList`・捨てる確認） | 狭い画面は `fitItemList`（TD-0003 §6）。**メッセージ欄なし** |
 | ステータス（狭い画面だけ） | `statusPanel(full)`・`recordsWindow`・`commandMenu`（もどる） | 縦。**メッセージ欄なし** |
+
+- （v1.5）`statusPanel(full)` と ステータス画面の能力に「かいひ」の行（値 3 桁、` (+n)` なし）。EXP の行は `expToNext` が 0 なら「{累計}（やどで レベルアップ）」
 
 - 付け替え・はずす・捨てるの結果の文は `queue.enqueue` する（元の画面に戻ると見える。仕様書 §11.7）。
 - エラー：その画面の一番下に `errorPanel`（仕様書 §11.9）。
@@ -115,6 +121,9 @@ verified: null
 | GUI-0001 §5 画面遷移 | ハッシュ・LocationGuard | `ui/router.ts` |
 | GUI-0002 §1 タイトル | メニュー・インストール・版・メッセージ欄なし | `screens/title.ts`・`install-dialog`・`logic/version.ts` |
 | GUI-0002 §2 名前入力 | 入力欄・文字数・規則の文 | `screens/name-entry.ts`・`text-input`・`logic/name.ts` |
+| GUI-0002 §1.3 つづきから（v1.5） | スロットの一覧・空きは無効・いちばん新しいスロットにカーソル | `screens/title.ts`・`save-slot-menu`・`logic/save-slots.ts` |
+| GUI-0003 §1.4 セーブ（v1.5） | スロットの一覧・上書きの確認 | `screens/inn.ts`・`save-slot-menu`・`confirm-menu`・`logic/save-slots.ts` |
+| GUI-0005 §1 戦闘のボタン（v1.5） | 狭い画面の横 1 列のボタン | `screens/battle.ts`・`command-buttons` |
 | GUI-0002 §3 クレジット（v1.3） | 戻るボタン・見出し・役割と名前の一覧 | `screens/credits.ts`・`logic/credits.ts`・`ui/router.ts`（§10） |
 | GUI-0003 §1 宿屋 | 狭い／広い（実績つき）・タイトルへ戻るの確認 | `screens/inn.ts`・`status-screen`（`recordsWindow`） |
 | GUI-0003 §2 メニュー | 操作の場所に出す・広い画面は「ステータス」なし | `game-menu` |
