@@ -42,7 +42,7 @@ test.describe('テスト用の入口', () => {
     expect(await debugResult(page)).toEqual({ status: 409, message: 'ダンジョンに いません' });
   });
 
-  test('TC-0038-05 writeState で戦闘の状態を書くと戦闘の画面と敵の名前。writeSave でセーブを書くと、タイトルの「つづきから」にカーソルと「名前 Lv」', async ({ page }) => {
+  test('TC-0038-05 writeState で戦闘の状態を書くと戦闘の画面と敵の名前。writeSave でセーブを書くと、タイトルの「つづきから」にカーソル、スロットの一覧に「名前 Lv」', async ({ page }) => {
     await startAt(page, 'BATTLE', { state: { battle: battleOf('skeleton', 20) } });
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
     await expect(page.locator('body')).toHaveAttribute('data-location', 'BATTLE');
@@ -50,10 +50,14 @@ test.describe('テスト用の入口', () => {
 
     await page.evaluate(() => localStorage.clear());
     await openDebug(page);
+    // slot を省くとスロット 1、渡すとそのスロット（v1.14）
     await page.evaluate((save) => window.__wiz!.writeSave(save), storedSave({ name: 'アルド', level: 5 }));
+    await page.evaluate((save) => window.__wiz!.writeSave(save, 3), storedSave({ name: 'ミナ', level: 9 }));
     const cont = page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'つづきから' });
-    await expect(cont).toContainText('アルド Lv5');
     await expect(cont).toHaveClass(/active/);
+    await cont.click();
+    const rows = (await page.getByRole('menu', { name: 'つづきから' }).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''));
+    expect(rows).toEqual(['もどる', 'スロット1　アルド Lv5', 'スロット2　－ なし －', 'スロット3　ミナ Lv9']);
   });
 
   test('TC-0038-04 useSeed で同じシードなら「ダンジョンへ」で同じ迷宮、違うシードなら違う迷宮', async ({ page }) => {

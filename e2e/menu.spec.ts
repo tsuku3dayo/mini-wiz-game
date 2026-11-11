@@ -37,8 +37,11 @@ test.describe('メニューとコマンド', () => {
     await expect.poll(async () => (await logLines(page)).at(-1)).toBe('HP と MP が かいふくした');
     for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowDown');
     await expectAt('宿屋', 'セーブ');
+    // Space でセーブのスロットの一覧（v1.14）→ Space で空きのスロット1 に書く
     await page.keyboard.press(' ');
-    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('セーブしました');
+    await expectAt('セーブ', 'スロット1　－ なし －');
+    await page.keyboard.press(' ');
+    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('スロット1に セーブしました');
 
     // タイトル・戦闘でも、端で止まる（プレイ中の状態があるとタイトルは宿屋に移るので、保存を消してから開く）
     await page.evaluate(() => localStorage.clear());
@@ -171,7 +174,10 @@ test.describe('メニューとコマンド', () => {
     await startAt(page, 'INN');
     const save = page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'セーブ' });
     await save.tap();
-    await expect.poll(() => logLines(page)).toEqual(['セーブしました']);
+    // セーブのスロットの一覧（v1.14）。スロット2 をタップすると、そこにカーソルが移って決まる
+    const slot2 = page.getByRole('menu', { name: 'セーブ' }).getByRole('menuitem').filter({ hasText: 'スロット2' });
+    await slot2.tap();
+    await expect.poll(() => logLines(page)).toEqual(['スロット2に セーブしました']);
     expect(await cursorLabel(page, '宿屋')).toBe('セーブ');
   });
 

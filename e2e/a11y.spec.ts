@@ -52,8 +52,21 @@ test.describe('キーボードと読み上げ', () => {
     // 並び（v1.14）：やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る
     for (let i = 0; i < 3; i += 1) await key('ArrowDown');
     await expect.poll(() => focused(page)).toBe('セーブ');
+    // セーブ：スロットの一覧（初めは最初の空き＝スロット1）→ Enter ですぐ書く（v1.14）
     await key('Enter');
-    await expect.poll(() => lastLine(page)).toBe('セーブしました');
+    await expect.poll(() => focused(page)).toMatch(/^スロット1\s－ なし －$/);
+    await key('Enter');
+    await expect.poll(() => lastLine(page)).toBe('スロット1に セーブしました');
+    await expect.poll(() => focused(page)).toBe('セーブ');
+    // もう一度：最後に使ったスロット1 は中身があるので上書きの確認（初めは いいえ）→ Esc で一覧 → Esc で宿屋のメニュー
+    await key('Enter');
+    await expect.poll(() => focused(page)).toMatch(/^スロット1\sゆうしゃ Lv1$/);
+    await key('Enter');
+    await expect.poll(() => focused(page)).toBe('いいえ');
+    await key('Escape');
+    await expect.poll(() => focused(page)).toMatch(/^スロット1\sゆうしゃ Lv1$/);
+    await key('Escape');
+    await expect.poll(() => focused(page)).toBe('セーブ');
     await key('ArrowUp');
     await key('ArrowUp');
     await expect.poll(() => focused(page)).toBe('メニュー');
@@ -153,6 +166,17 @@ test.describe('キーボードと読み上げ', () => {
     await expect.poll(() => focused(page)).toBe('はい');
     await key('Enter');
     await screen(page, 'title');
+
+    // タイトル：つづきから → スロットの一覧（Esc でもどる）→ もう一度 → スロットを選んで宿屋へ（v1.14）
+    await expect.poll(() => focused(page)).toBe('つづきから');
+    await key('Enter');
+    await expect.poll(() => focused(page)).toMatch(/^スロット\d\s/);
+    await key('Escape');
+    await expect.poll(() => focused(page)).toBe('つづきから');
+    await key('Enter');
+    await expect.poll(() => focused(page)).toMatch(/^スロット\d\s/);
+    await key('Enter');
+    await screen(page, 'inn');
     expect(pointers).toBe(0);
   });
 

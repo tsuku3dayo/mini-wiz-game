@@ -3,7 +3,9 @@ import { ConflictError } from '../domain/errors';
 import {
   GAME_SCHEMA_VERSION,
   migrateGameState,
+  SAVE_SLOTS,
   type DroppedItem,
+  type SaveSlot,
   type GameStateData,
   type SaveData,
   type StoredGameState,
@@ -31,7 +33,8 @@ export class StorageError extends Error {
 }
 
 const GAME = 'game';
-const SAVE = 'save';
+/** セーブのキーはスロットごと（save-1〜save-3。v1.14。仕様書 §21.2） */
+const saveKey = (slot: SaveSlot) => `save-${slot}`;
 
 const CHARACTER_NUMBERS = ['level', 'exp', 'hp', 'maxHp', 'mp', 'maxMp', 'attack', 'defense', 'speed'] as const;
 const LOCATIONS = ['INN', 'DUNGEON', 'BATTLE', 'CLEARED', 'SWAP'];
@@ -72,6 +75,12 @@ export function createRepository(store: KeyValueStore, now: () => string) {
     if (!r.ok || revisionOf(r.value) !== revision) throw new ConflictError();
   }
 
+  /** そのスロットのセーブ。ない・形が違うときは null（空きとして扱う） */
+  function findSave(slot: SaveSlot): StoredSave | null {
+    const r = store.read(saveKey(slot));
+    return r.ok && isStoredSave(r.value) ? r.value : null;
+  }
+
   return {
     /** プレイ中の状態。ない・読めないときは null（読めないときは console.warn。値は消さない） */
     findGame(): { state: GameStateData; revision: number; storedVersion: number } | null {
@@ -105,20 +114,20 @@ export function createRepository(store: KeyValueStore, now: () => string) {
       if (!store.remove(GAME)) throw new StorageError();
     },
 
-    /** セーブ。ない・形が違うときは null */
-    findSave(): StoredSave | null {
-      const r = store.read(SAVE);
-      return r.ok && isStoredSave(r.value) ? r.value : null;
+    findSave,
+
+    /** 3 スロットを 1→3 の順に（空き・読めないものは null） */
+    listSaves(): (StoredSave | null)[] {
+      return SAVE_SLOTS.map(findSave);
     },
 
-    writeSave(save: SaveData): void {
-      if (!store.write(SAVE, { ...save, savedAt: now() })) throw new StorageError();
-    },
-
-    /** クリア時の自動セーブ：プレイ中の状態とセーブをまとめて書く（途中で失敗したら両方戻る） */
-    writeGameAndSave(state: GameStateData, revision: number, save: SaveData): void {
+    /**
+     * プレイ中の状態とそのスロットのセーブをまとめて書く（セーブ・クリア時の自動セーブ。途中で失敗したら両方戻る）。
+     * revision を確かめてから書く
+     */
+    writeGameAndSave(state: GameStateData, revision: number, slot: SaveSlot, save: SaveData): void {
       checkRevision(revision);
-      const ok = store.writeAll([[GAME, toStored(state, revision + 1)], [SAVE, { ...save, savedAt: now() }]]);
+      const ok = store.writeAll([[GAME, toStored(state, revision + 1)], [saveKey(slot), { ...save, savedAt: now() }]]);
       if (!ok) throw new StorageError();
     },
   };

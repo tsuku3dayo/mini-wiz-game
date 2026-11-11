@@ -18,7 +18,10 @@ export function mountClear(root: HTMLElement, ctx: ScreenContext): { destroy(): 
   const body = gameWindow({ className: 'clear-window' },
     el('p', { class: 'clear-line' }, '暗黒のネクロマンサーは ほろび、ダンジョンに 平和が もどった'),
     el('p', { class: 'clear-line' }, `${c.name} Lv${c.level}`),
-    state.clear?.autoSaved ? el('p', { class: 'clear-line clear-saved' }, 'ぼうけんの きろくを セーブした') : null,
+    // 自動セーブしなかった（3 スロットとも埋まっていて、最後に使ったスロットもない）ときは、その文を副文字色で（v1.14）
+    state.clear?.autoSaved
+      ? el('p', { class: 'clear-line clear-saved' }, 'ぼうけんの きろくを セーブした')
+      : el('p', { class: 'clear-line clear-not-saved' }, 'スロットが いっぱいなので セーブしなかった'),
     el('p', { class: 'clear-line clear-laps' }, `${state.records.laps} 周目へ すすむ`));
   const log = messageLog({ queue, command, rows: 5 });
   const logSlot = el('div', { class: 'clear-log-slot' }, log.el);

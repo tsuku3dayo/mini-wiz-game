@@ -23,7 +23,10 @@ export function toInventoryView(inv: InventoryData): InventoryView {
   return { equipped, items: [...inv.items].reverse().map(toItemView), count: inv.items.length, capacity: INVENTORY_CAPACITY };
 }
 
-/** autoSaved は getGame だけが渡す（保存値の版が 3 以上なら true）。操作の応答では常に true */
+/**
+ * autoSaved は getGame だけが渡す（保存値の版が 3 以上で saveSlot があれば true）。
+ * 操作の応答では saveSlot が null でないとき true（自動セーブは saveSlot のスロットに書く。v1.14）
+ */
 export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } = {}): GameView {
   const eff = effectiveStats(state);
   const nextLevelExp = expForLevel(state.level + 1);
@@ -47,7 +50,8 @@ export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } =
     // 視界と、今の階の地図だけ（未踏破のマスの壁・ほかの階・ボスの位置は入れない。§22.5）
     dungeon: state.dungeon ? { ...toFirstPersonView(state.dungeon), map: toAutoMapView(state.dungeon) } : null,
     battle: toBattleView(state),
-    clear: state.location === 'CLEARED' ? { autoSaved: opts.autoSaved ?? true } : null,
+    clear: state.location === 'CLEARED' ? { autoSaved: opts.autoSaved ?? state.saveSlot !== null } : null,
+    saveSlot: state.saveSlot,
     pendingDrop: state.location === 'SWAP' && state.inventory.pending ? toItemView(state.inventory.pending.item) : null,
     canHeal: state.location === 'DUNGEON' && state.mp >= HEAL.mpCost,
   };

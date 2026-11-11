@@ -124,13 +124,15 @@ test.describe('このアプリの外と通信しない・通信なしで遊べ�
   test('TC-0001-04 遊んで「おと：オン」にしたあと、localStorage のキーはすべて mini-wiz-game- で、sessionStorage のキーはすべて mini-wiz-game: で始まる', async ({ page }) => {
     await page.goto('./?debug=1');
     await newGame(page);
+    // セーブ：スロットの一覧から スロット1（v1.14）
     await menuItem(page, '宿屋', 'セーブ').click();
-    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('セーブしました');
+    await menuItem(page, 'セーブ', 'スロット1').click();
+    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('スロット1に セーブしました');
     await menuItem(page, '宿屋', 'メニュー').click();
     await menuItem(page, 'メニュー', 'おと：オフ').click();
     await expect(menuItem(page, 'メニュー', 'おと：')).toHaveText(/おと：オン$/);
     const { local, session } = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
-    expect(local.sort()).toEqual(['mini-wiz-game-game', 'mini-wiz-game-save', 'mini-wiz-game-schema', 'mini-wiz-game-sound']);
+    expect(local.sort()).toEqual(['mini-wiz-game-game', 'mini-wiz-game-save-1', 'mini-wiz-game-schema', 'mini-wiz-game-sound']);
     expect(session.every((k) => k.startsWith('mini-wiz-game:'))).toBe(true);
   });
 
@@ -143,8 +145,10 @@ test.describe('このアプリの外と通信しない・通信なしで遊べ�
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
     await newGame(page);
+    // セーブ：スロットの一覧から スロット1（v1.14）
     await menuItem(page, '宿屋', 'セーブ').click();
-    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('セーブしました');
+    await menuItem(page, 'セーブ', 'スロット1').click();
+    await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('スロット1に セーブしました');
     await menuItem(page, '宿屋', 'ダンジョンへ').click();
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
     await page.evaluate((s) => window.__wiz!.writeState(s), slimeBattle());
@@ -157,6 +161,7 @@ test.describe('このアプリの外と通信しない・通信なしで遊べ�
     await menuItem(page, '宿屋', 'タイトルへ戻る').click();
     await menuItem(page, 'かくにん', 'はい').click();
     await menuItem(page, 'タイトル', 'つづきから').click();
+    await menuItem(page, 'つづきから', 'スロット1').click();
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
     await expect.poll(async () => (await page.locator('[role="log"] .wiz-line').allTextContents()).at(-1)).toBe('ゆうしゃは 宿屋で めをさました');
     expect(errors).toEqual([]);

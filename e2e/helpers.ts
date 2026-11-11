@@ -9,13 +9,14 @@ const RECORDS = { battles: 0, kills: 0, deaths: 0, laps: 1, bossKills: 0 };
 export function storedInn(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     ...CHARACTER,
-    schemaVersion: 5,
+    schemaVersion: 6,
     revision: 0,
     location: 'INN',
     dungeon: null,
     battle: null,
     inventory: EMPTY_INVENTORY,
     records: RECORDS,
+    saveSlot: null,
     updatedAt: '2026-11-02T00:00:00.000Z',
     ...overrides,
   };
@@ -32,10 +33,16 @@ export async function openDebug(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__wiz !== undefined);
 }
 
-/** プレイ中の状態とセーブを書く */
-export async function writeScene(page: Page, scene: { state?: Record<string, unknown>; save?: Record<string, unknown> }): Promise<void> {
-  await page.evaluate(async ({ state, save }) => {
-    if (save) await window.__wiz!.writeSave(save);
+export type SlotSaves = Partial<Record<1 | 2 | 3, Record<string, unknown>>>;
+
+/** プレイ中の状態とセーブを書く。save はスロット 1、saves はスロットごと（v1.14） */
+export async function writeScene(
+  page: Page,
+  scene: { state?: Record<string, unknown>; save?: Record<string, unknown>; saves?: SlotSaves },
+): Promise<void> {
+  await page.evaluate(async ({ state, save, saves }) => {
+    if (save) await window.__wiz!.writeSave(save, 1);
+    for (const [slot, value] of Object.entries(saves ?? {})) await window.__wiz!.writeSave(value, Number(slot) as 1 | 2 | 3);
     if (state) await window.__wiz!.writeState(state);
   }, scene);
 }
@@ -163,7 +170,7 @@ const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: '
 export async function startAt(
   page: Page,
   location: keyof typeof SCREEN_OF,
-  opts: { state?: Record<string, unknown>; save?: Record<string, unknown>; seed?: number } = {},
+  opts: { state?: Record<string, unknown>; save?: Record<string, unknown>; saves?: SlotSaves; seed?: number } = {},
 ): Promise<void> {
   await openDebug(page);
   const base: Record<string, Record<string, unknown>> = {
@@ -173,7 +180,7 @@ export async function startAt(
     CLEARED: { location: 'CLEARED', records: { battles: 30, kills: 25, deaths: 1, laps: 2, bossKills: 1 } },
     SWAP: { location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() },
   };
-  await writeScene(page, { state: storedInn({ ...base[location], ...opts.state }), save: opts.save });
+  await writeScene(page, { state: storedInn({ ...base[location], ...opts.state }), save: opts.save, saves: opts.saves });
   await page.evaluate((seed) => window.__wiz!.useSeed(seed), opts.seed ?? SEEDS.noEncounter);
   await page.locator(`body[data-screen="${SCREEN_OF[location]}"]`).waitFor({ state: 'attached' });
 }
@@ -262,7 +269,7 @@ export async function cursorLabel(page: Page, label: string): Promise<string> {
   return (text ?? '').replace(/^[▶\s]/, '');
 }
 
-/** 保存の 3 つの値（プレイ中の状態・セーブ・音の設定）の文字列 */
+/** 保存の値（プレイ中の状態・スロット 1 のセーブ・音の設定・スロット 2・3 のセーブ）の文字列（v1.14 でスロット 2・3 を後ろに足した） */
 export function readStorage(page: Page): Promise<(string | null)[]> {
-  return page.evaluate(() => ['mini-wiz-game-game', 'mini-wiz-game-save', 'mini-wiz-game-sound'].map((k) => localStorage.getItem(k)));
+  return page.evaluate(() => ['game', 'save-1', 'sound', 'save-2', 'save-3'].map((k) => localStorage.getItem(`mini-wiz-game-${k}`)));
 }

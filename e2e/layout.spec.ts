@@ -236,8 +236,16 @@ test.describe('画面の大きさとタッチ', () => {
     // 宿屋：やすむ・セーブ・メニュー（そうび・もちもの・ステータス）
     await tap(item(page, '宿屋', 'やすむ'));
     await expect.poll(lastLine).toBe('HP と MP が かいふくした');
+    // セーブ：スロットを選ぶ（空きはすぐ書く）→ もう一度、中身のあるスロットで上書きの確認 → はい（v1.14）
     await tap(item(page, '宿屋', 'セーブ'));
-    await expect.poll(lastLine).toBe('セーブしました');
+    await tap(item(page, 'セーブ', 'スロット1'));
+    await expect.poll(lastLine).toBe('スロット1に セーブしました');
+    await expect(page.getByRole('menu', { name: '宿屋' })).not.toHaveAttribute('aria-disabled', 'true');
+    await tap(item(page, '宿屋', 'セーブ'));
+    await tap(item(page, 'セーブ', 'スロット1'));
+    await tap(item(page, 'かくにん', 'はい'));
+    await expect.poll(lastLine).toBe('スロット1に セーブしました');
+    await expect(page.getByRole('menu', { name: '宿屋' })).not.toHaveAttribute('aria-disabled', 'true');
     await tap(item(page, '宿屋', 'メニュー'));
     await back('メニュー');
     await expect(page.getByRole('menu', { name: '宿屋' })).toBeVisible();
@@ -305,6 +313,15 @@ test.describe('画面の大きさとタッチ', () => {
       await tap(page.getByTestId('message-window'));
     }
     await tap(item(page, 'ゲームクリア', '宿屋へ'));
+    await screen('inn');
+
+    // タイトルへ戻る →「つづきから」→ スロットを選んで宿屋へ（v1.14）
+    await expect(page.getByRole('menu', { name: '宿屋' })).not.toHaveAttribute('aria-disabled', 'true');
+    await tap(item(page, '宿屋', 'タイトルへ戻る'));
+    await tap(item(page, 'かくにん', 'はい'));
+    await screen('title');
+    await tap(item(page, 'タイトル', 'つづきから'));
+    await tap(item(page, 'つづきから', 'スロット1'));
     await screen('inn');
     expect(keys).toBe(0);
   });

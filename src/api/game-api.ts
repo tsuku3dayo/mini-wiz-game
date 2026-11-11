@@ -7,12 +7,12 @@ import { fieldHeal } from '../domain/heal';
 import { abandonLoot, takeLoot } from '../domain/loot';
 import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
-import { assertLocation, fromSaveData, migrateSave, toSaveData, type GameStateData, type StepResult } from '../domain/game-state';
+import { assertLocation, fromSaveData, migrateSave, SAVE_SLOTS, toSaveData, type GameStateData, type SaveSlot, type StepResult } from '../domain/game-state';
 import type { Rng } from '../domain/rng';
 import { toGameView } from './game-view';
 import { createRepository, StorageError, warnDropped, type KeyValueStore } from './repository';
 import { GameError, type CommandResult, type GameApi } from './types';
-import { validateBattle, validateDiscardId, validateItemId, validateMove, validateSlot, validateStairs, validateStartGame } from './validate';
+import { validateBattle, validateDiscardId, validateItemId, validateMove, validateSaveSlot, validateSlot, validateStairs, validateStartGame } from './validate';
 
 export interface GameApiDeps {
   store: KeyValueStore;
@@ -58,14 +58,26 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     return found;
   }
 
-  /** 読む → ルールの関数 → revision を確かめて書く（CLEARED に入ったらセーブもまとめて書く）→ GameView */
+  /** 最初の空きスロット（1→3）。なければ null */
+  function firstEmptySlot(): SaveSlot | null {
+    const index = repo.listSaves().findIndex((s) => s === null);
+    return index === -1 ? null : SAVE_SLOTS[index];
+  }
+
+  /**
+   * 読む → ルールの関数 → revision を確かめて書く → GameView。
+   * CLEARED に入ったら、最後に使ったスロット（なければ最初の空き）へ自動セーブもまとめて書く。
+   * 書くスロットがなければ自動セーブしない（saveSlot は null のまま。仕様書 §9.2・§21.6。v1.14）
+   */
   function run(step: (state: GameStateData) => StepResult): Promise<CommandResult> {
     return respond(() => {
       const { state, revision } = requireGame();
       const result = step(state);
-      const next = result.state;
-      if (next.location === 'CLEARED' && state.location !== 'CLEARED') {
-        repo.writeGameAndSave(next, revision, toSaveData(next));
+      let next = result.state;
+      const slot = next.location === 'CLEARED' && state.location !== 'CLEARED' ? (next.saveSlot ?? firstEmptySlot()) : null;
+      if (slot !== null) {
+        next = { ...next, saveSlot: slot };
+        repo.writeGameAndSave(next, revision, slot, toSaveData(next));
       } else {
         repo.updateGame(next, revision);
       }
@@ -76,15 +88,13 @@ export function createGameApi(deps: GameApiDeps): GameApi {
   return {
     getGame: () => respond(() => {
       const found = repo.findGame();
-      return { state: found ? toGameView(found.state, { autoSaved: found.storedVersion >= 3 }) : null };
+      // 版 2 以下は自動セーブ導入前のクリア。3 以上は最後に使ったスロットがあれば自動セーブした（v1.14）
+      return { state: found ? toGameView(found.state, { autoSaved: found.storedVersion >= 3 && found.state.saveSlot !== null }) : null };
     }),
 
-    getSave: () => respond(() => {
-      const save = repo.findSave();
-      return save
-        ? { exists: true, summary: { name: save.name, level: save.level, savedAt: save.savedAt } }
-        : { exists: false, summary: null };
-    }),
+    getSaves: () => respond(() => ({
+      slots: repo.listSaves().map((s, i) => (s ? { slot: SAVE_SLOTS[i], name: s.name, level: s.level, savedAt: s.savedAt } : null)),
+    })),
 
     startGame: (input) => respond(() => {
       const state = createCharacter(validateStartGame(input));
@@ -98,17 +108,21 @@ export function createGameApi(deps: GameApiDeps): GameApi {
       repo.deleteGame();
     }),
 
-    save: () => respond(() => {
-      const { state } = requireGame();
+    save: (input) => respond(() => {
+      const slot = validateSaveSlot(input);
+      const { state, revision } = requireGame();
       assertLocation(state, 'INN');
-      repo.writeSave(toSaveData(state));
-      return { state: toGameView(state), messages: [{ text: 'セーブしました', tone: 'success' }] };
+      // セーブとプレイ中の状態（最後に使ったスロット）をまとめて書く（仕様書 §21.6。v1.14）
+      const next: GameStateData = { ...state, saveSlot: slot };
+      repo.writeGameAndSave(next, revision, slot, toSaveData(next));
+      return { state: toGameView(next), messages: [{ text: `スロット${slot}に セーブしました`, tone: 'success' }] };
     }),
 
-    load: () => respond(() => {
-      const stored = repo.findSave();
+    load: (input) => respond(() => {
+      const slot = validateSaveSlot(input);
+      const stored = repo.findSave(slot);
       if (!stored) throw new SaveNotFoundError();
-      const state = fromSaveData(migrateSave(stored, warnDropped));
+      const state = fromSaveData(migrateSave(stored, warnDropped), slot);
       repo.replaceGame(state);
       return { state: toGameView(state), messages: [{ text: `${state.name}は 宿屋で めをさました`, tone: 'normal' }] };
     }),

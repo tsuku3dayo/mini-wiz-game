@@ -149,7 +149,7 @@ test.describe('起動に失敗しても直る', () => {
     const scope = await scopeOf(page);
     const repairedAt = Number(await page.evaluate((key) => sessionStorage.getItem(key), KEY));
     await page.evaluate(async ({ s, save }) => {
-      localStorage.setItem('mini-wiz-game-save', JSON.stringify(save));
+      localStorage.setItem('mini-wiz-game-save-1', JSON.stringify(save));
       localStorage.setItem('mini-wiz-game-sound', 'on');
       await (await caches.open(`workbox-precache-v2-${s}`)).put(s, new Response('x'));
     }, { s: scope, save: storedSave() });

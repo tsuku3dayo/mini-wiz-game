@@ -5,6 +5,7 @@ import { validateName } from '../domain/character';
 import type { MoveAction } from '../domain/dungeon';
 import { ValidationError } from '../domain/errors';
 import type { StairsDirection } from '../domain/explore';
+import { isSaveSlot, SAVE_SLOTS, type SaveSlot } from '../domain/game-state';
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
@@ -40,6 +41,13 @@ function positiveInt(input: unknown, field: string): number {
 export const validateItemId = (input: unknown): number => positiveInt(input, 'itemId');
 export const validateDiscardId = (input: unknown): number => positiveInt(input, 'discardId');
 export const validateSlot = (input: unknown): Slot => oneOf(input, 'slot', SLOTS);
+
+/** save・load の slot（整数 1〜3。v1.14）。違反の文は IsIn の既定の文と同じ形（TD-0002 §3.1） */
+export function validateSaveSlot(input: unknown): SaveSlot {
+  const v = isObject(input) ? input.slot : undefined;
+  if (isSaveSlot(v)) return v;
+  throw new ValidationError([{ field: 'slot', message: `slot must be one of the following values: ${SAVE_SLOTS.join(', ')}` }]);
+}
 
 export const BATTLE_COMMANDS: readonly BattleCommand[] = ['attack', 'heal', 'flee'];
 export const validateBattle = (input: unknown): BattleCommand => oneOf(input, 'command', BATTLE_COMMANDS);
