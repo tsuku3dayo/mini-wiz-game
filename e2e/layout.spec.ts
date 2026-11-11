@@ -83,7 +83,7 @@ test.describe('画面の大きさとタッチ', () => {
     });
   });
 
-  test('TC-0035-13 戦闘のボタンは高さ 56px・横 1 列で下の方にあり、414×715 ではみ出さず、375×667 のはみ出しは v1.1（47px）より小さい', async ({ page }, info) => {
+  test('TC-0035-13 戦闘のボタンは高さ 88px（枠なし）・横 1 列で下の方にあり、414×715 ではみ出さず、375×667 のはみ出しは v1.1（47px）より小さい', async ({ page }, info) => {
     test.skip(info.project.name === 'desktop', '指で触る画面だけ');
     const measure = async () => page.evaluate(() => {
       const menu = document.querySelector('[role="menu"][aria-label="戦闘"]')!;
@@ -102,7 +102,7 @@ test.describe('画面の大きさとタッチ', () => {
       await startAt(page, 'BATTLE');
       const m = await measure();
       info.annotations.push({ type: '戦闘の画面', description: `${width}×${height}：縦のはみ出し ${m.overflowY}px、ボタンの下端から画面の下まで ${m.fromBottom}px` });
-      expect(m.heights, `${width}×${height}`).toEqual([56, 56, 56]);
+      expect(m.heights, `${width}×${height}`).toEqual([88, 88, 88]);
       expect(new Set(m.tops).size, `${width}×${height}`).toBe(1);
       // 親指で押す下の方（スクロールして届くところで、下端から 160px 以内）
       expect(m.fromBottom, `${width}×${height}`).toBeLessThanOrEqual(160);

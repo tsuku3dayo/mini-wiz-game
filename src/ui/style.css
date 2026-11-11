@@ -193,9 +193,9 @@ body {
   background: var(--wiz-color-background);
 }
 
-/* 狭い画面の戦闘のコマンドのボタン（仕様書 §11.5「狭い画面のコマンドのボタン」。v1.14）：幅 2：1：1、間 8px、高さ 56px、▶ なし */
+/* 狭い画面の戦闘のコマンドのボタン（仕様書 §11.5「狭い画面のコマンドのボタン」。v1.14）：幅 2：1：1、間 8px、高さ 88px（v1.16）、▶ なし。ウィンドウで包まない */
 .command-buttons { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; user-select: none; -webkit-user-select: none; }
-.command-buttons .command-button { height: 56px; min-width: 0; padding: 0 4px; white-space: nowrap; }
+.command-buttons .command-button { height: 88px; min-width: 0; padding: 0 4px; white-space: nowrap; } /* v1.16：枠なしで 56px → 88px */
 .command-buttons .command-button.active { color: var(--wiz-color-secondary); border-color: var(--wiz-color-secondary); }
 .command-buttons .command-button[aria-disabled="true"],
 .command-buttons[aria-disabled="true"] .command-button { color: var(--wiz-color-disabled); border-color: var(--wiz-color-disabled); cursor: default; }

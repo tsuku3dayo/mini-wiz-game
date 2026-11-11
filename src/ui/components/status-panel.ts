@@ -40,8 +40,8 @@ function fullBody(c: CharacterView, wide: boolean): HTMLElement {
     ...row('こうげき', `${pad3(c.attack)}${plus(c.bonus.attack)}`),
     ...row('ぼうぎょ', `${pad3(c.defense)}${plus(c.bonus.defense)}`),
     ...row('すばやさ', `${pad3(c.speed)}${plus(c.bonus.speed)}`),
-    // かいひ は値が補正そのものなので「 (+n)」を付けない（v1.14）
-    ...row('かいひ', pad3(c.evasion)),
+    // かいひ は 素早さ＋たて。ほかの能力と同じく補正があれば「 (+n)」（v1.16）
+    ...row('かいひ', `${pad3(c.evasion)}${plus(c.bonus.evasion)}`),
   );
 }
 

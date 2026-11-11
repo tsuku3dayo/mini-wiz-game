@@ -54,7 +54,7 @@ test.describe('装備画面', () => {
     expect((await cursorLabel(page, SLOTS)).startsWith('ぶき')).toBe(true);
     await expect(row(page, SLOTS, 'ぶき')).toBeFocused();
     expect(await page.getByTestId('ability-window').locator('.wiz-ability-name').allTextContents()).toEqual(['こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ', 'さいだいHP', 'さいだいMP']);
-    expect(await abilityTexts(page)).toEqual([' 48 =  18 + 30', ' 40 =  15 + 25', ' 12 =  12 + 0', '  0 =   0 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
+    expect(await abilityTexts(page)).toEqual([' 48 =  18 + 30', ' 40 =  15 + 25', ' 12 =  12 + 0', ' 12 =  12 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
     await expect(page.locator('[data-testid="message-window"]')).toHaveCount(0);
     // 装備名はレアリティの色、空き枠は副文字色
     await expect(row(page, SLOTS, 'アクセ').locator('.wiz-item-name')).toHaveCSS('color', 'rgb(255, 77, 109)');
@@ -142,7 +142,7 @@ test.describe('装備画面', () => {
     expect(await cursorLabel(page, 'ぶき')).toContain('バスタードソード［SR］');
     await expect(ability(page, 'attack').locator('.wiz-ability-value')).toHaveText(' 48 →  53 ↑');
     await expect(ability(page, 'attack')).toHaveCSS('color', 'rgb(92, 214, 92)');
-    expect((await abilityTexts(page)).slice(1)).toEqual([' 40 =  15 + 25', ' 12 =  12 + 0', '  0 =   0 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
+    expect((await abilityTexts(page)).slice(1)).toEqual([' 40 =  15 + 25', ' 12 =  12 + 0', ' 12 =  12 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
     await expect(ability(page, 'defense')).toHaveCSS('color', 'rgb(232, 220, 192)');
 
     // 弱い候補（+2）
@@ -155,7 +155,7 @@ test.describe('装備画面', () => {
     // もどる：全部内訳に戻る
     for (let i = 0; i < 4; i += 1) await page.keyboard.press('ArrowUp');
     expect(await cursorLabel(page, 'ぶき')).toBe('もどる');
-    expect(await abilityTexts(page)).toEqual([' 48 =  18 + 30', ' 40 =  15 + 25', ' 12 =  12 + 0', '  0 =   0 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
+    expect(await abilityTexts(page)).toEqual([' 48 =  18 + 30', ' 40 =  15 + 25', ' 12 =  12 + 0', ' 12 =  12 + 0', ' 60 =  60 + 0', ' 20 =  20 + 0']);
     await expect(ability(page, 'attack')).toHaveCSS('color', 'rgb(232, 220, 192)');
   });
 

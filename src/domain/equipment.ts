@@ -16,14 +16,15 @@ export function equipmentBonus(inv: InventoryData): Stats {
   return bonus;
 }
 
-/** 実効値 = 基礎値 + 装備の補正（かいひ の基礎値はいつも 0。v1.14） */
+/** 実効値 = 基礎値 + 装備の補正。かいひ は 素早さの実効値 ＋ たての補正（v1.16。TD-0002 §1.8） */
 export function effectiveStats(state: GameStateData): Stats {
   const b = equipmentBonus(state.inventory);
+  const speed = state.speed + b.speed;
   return {
     attack: state.attack + b.attack,
     defense: state.defense + b.defense,
-    speed: state.speed + b.speed,
-    evasion: 0 + b.evasion,
+    speed,
+    evasion: speed + b.evasion,
     maxHp: state.maxHp + b.maxHp,
     maxMp: state.maxMp + b.maxMp,
   };

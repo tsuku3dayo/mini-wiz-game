@@ -66,7 +66,10 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
     const menuOpts = { label: '戦闘', items: items(shown), autoFocus: !locked(), disabled: locked(), onDisabledSelect: showReason };
     menu = wide ? commandMenu(menuOpts) : commandButtons(menuOpts);
     drawnKey = `${shown.canHeal}|${shown.canFlee}`;
-    const commandWin = gameWindow({ title: 'コマンド', className: 'battle-command' }, menu.el);
+    // 広い画面は見出し「コマンド」のウィンドウの中、狭い画面は枠なしの箱にボタンを置く（v1.16）
+    const commandWin = wide
+      ? gameWindow({ title: 'コマンド', className: 'battle-command' }, menu.el)
+      : { el: el('div', { class: 'battle-command-buttons' }, menu.el) };
     const log = messageLog({ queue, command, rows: wide ? 7 : 5 });
     logEl = log.el;
     logSlot = el('div', { class: 'battle-log-slot' }, log.el);

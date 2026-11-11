@@ -12,8 +12,15 @@ const pad3 = (n: number) => String(n).padStart(3, ' ');
  */
 export function statDiff(effective: Stats, current: Bonus | null, candidate: Bonus | null): Stats {
   const after = { ...effective };
-  if (current) for (const s of current.stats) after[s] -= current.value;
-  if (candidate) for (const s of candidate.stats) after[s] += candidate.value;
+  // かいひ は 素早さ＋たて なので、素早さを上げる個体は かいひ にも同じ値を足し引きする（v1.16。TD-0002 §1.8）
+  const apply = (b: Bonus, sign: 1 | -1) => {
+    for (const s of b.stats) {
+      after[s] += sign * b.value;
+      if (s === 'speed') after.evasion += sign * b.value;
+    }
+  };
+  if (current) apply(current, -1);
+  if (candidate) apply(candidate, 1);
   return after;
 }
 
