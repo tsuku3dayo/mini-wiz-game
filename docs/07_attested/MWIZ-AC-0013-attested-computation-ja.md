@@ -11,7 +11,7 @@ sources:
   - MWIZ-TC-0026（v1.1）
   - MWIZ-TD-0003（v1.5）
   - MWIZ-TD-0004（v1.6）
-  - MWIZ-GUI-0003（v1.2）
+  - MWIZ-GUI-0003（v1.3）
 verified: { by: "tsuku3dayo", at: "2026-11-02T17:49:25+09:00" }
 ---
 
