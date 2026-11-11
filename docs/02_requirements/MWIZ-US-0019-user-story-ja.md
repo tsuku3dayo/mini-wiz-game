@@ -2,13 +2,13 @@
 id: MWIZ-US-0019
 type: User Story
 title: 敵とたたかう
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-11
 sources:
   - MWIZ-EP-0004（v1.1）
   - docs/specification-ja.md (v1.14) §5.2、§5.3、§5.4、§5.7、§5.8、§11.5、§11.6、§11.8、§15.1、§16.1、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T13:04:12+09:00" }
 ---
 
 # US-0019 敵とたたかう

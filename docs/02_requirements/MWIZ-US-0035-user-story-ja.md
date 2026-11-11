@@ -2,13 +2,13 @@
 id: MWIZ-US-0035
 type: User Story
 title: スマートフォンの画面で快適に遊ぶ
-status: review
+status: stable
 version: 1.2
 updated: 2026-11-11
 sources:
   - MWIZ-EP-0010（v1.0）
   - docs/specification-ja.md (v1.14) §1.3、§11.1、§11.3、§11.11、§11.12、§14、§15.4、§16.4、§16.6
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T13:04:12+09:00" }
 ---
 
 # US-0035 スマートフォンの画面で快適に遊ぶ

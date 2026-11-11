@@ -2,13 +2,13 @@
 id: MWIZ-US-0009
 type: User Story
 title: セーブして、つづきから再開する
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-11
 sources:
   - MWIZ-EP-0002（v1.2）
   - docs/specification-ja.md (v1.14) §9.2、§11.5、§16.2、§21.4、§21.6
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T13:04:12+09:00" }
 ---
 
 # US-0009 セーブして、つづきから再開する

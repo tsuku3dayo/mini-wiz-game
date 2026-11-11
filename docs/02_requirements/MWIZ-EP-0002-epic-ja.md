@@ -2,13 +2,13 @@
 id: MWIZ-EP-0002
 type: Epic
 title: キャラクターを作り、宿屋を拠点に遊ぶ
-status: review
+status: stable
 version: 1.2
 updated: 2026-11-11
 sources:
   - MWIZ-PB-0001（v1.9）
   - docs/specification-ja.md (v1.14) §2.1、§7.2、§9.2、§10、§11.2〜§11.10、§16.1、§16.2、§16.4、§21
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T13:04:12+09:00" }
 ---
 
 # EP-0002 キャラクターを作り、宿屋を拠点に遊ぶ
