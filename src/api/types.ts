@@ -111,6 +111,8 @@ export interface GameView {
   pendingDrop: ItemView | null;
   canHeal: boolean;
   records: Records;
+  /** 最後に使ったスロット（宿屋のセーブの初めのカーソル。v1.14） */
+  saveSlot: SaveSlot | null;
 }
 
 export interface GameResponse {
@@ -122,9 +124,20 @@ export interface CommandResult {
   messages: Message[];
 }
 
-export interface SaveSummary {
-  exists: boolean;
-  summary: { name: string; level: number; savedAt: string } | null;
+/** セーブのスロット（v1.14） */
+export type SaveSlot = 1 | 2 | 3;
+
+/** スロット 1 つのセーブの要約（getSaves。v1.14） */
+export interface SaveSlotSummary {
+  slot: SaveSlot;
+  name: string;
+  level: number;
+  savedAt: string;
+}
+
+/** 3 スロットの一覧（空き・読めないものは null。長さ 3） */
+export interface SaveList {
+  slots: (SaveSlotSummary | null)[];
 }
 
 export type MoveAction = 'forward' | 'backward' | 'turnLeft' | 'turnRight';
@@ -161,11 +174,11 @@ export class GameError extends Error implements GameErrorBody {
 /** ゲーム API（仕様書 §22.2）。操作は作る TASK ごとに足す */
 export interface GameApi {
   getGame(): Promise<GameResponse>;
-  getSave(): Promise<SaveSummary>;
+  getSaves(): Promise<SaveList>;
   startGame(input: { name: string }): Promise<CommandResult>;
   quitGame(): Promise<void>;
-  save(): Promise<CommandResult>;
-  load(): Promise<CommandResult>;
+  save(input: { slot: SaveSlot }): Promise<CommandResult>;
+  load(input: { slot: SaveSlot }): Promise<CommandResult>;
   rest(): Promise<CommandResult>;
   /** クリアの画面から宿屋へ（周回） */
   continueGame(): Promise<CommandResult>;

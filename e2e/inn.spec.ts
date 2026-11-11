@@ -41,24 +41,95 @@ test.describe('宿屋', () => {
     await expect.poll(() => logLines(page)).toEqual(['HP と MP が かいふくした', 'HP と MP が かいふくした']);
   });
 
-  test('TC-0009-02 「セーブ」は 2 回とも確認を出さずに「セーブしました」になる', async ({ page }, info) => {
-    await startAt(page, 'INN');
+  test('TC-0009-02 「セーブ」でスロットの一覧（もどる／スロット1〜3）。初めのカーソルは最後に使ったスロット → 最初の空き → 1。空きを選ぶと確認なしで書き、宿屋のメニューの「セーブ」に戻る', async ({ page }, info) => {
+    const slots = (p: Page) => p.getByRole('menu', { name: 'セーブ' });
+    // スロット 1 に中身、2・3 は空き。最後に使ったスロットはない → 最初の空き（スロット2）
+    await startAt(page, 'INN', { saves: { 1: storedSave({ name: 'アルド', level: 12 }) } });
     await choose(page, info, innItem(page, 'セーブ'));
-    await expect.poll(() => logLines(page)).toEqual(['セーブしました']);
+    await expect(slots(page)).toBeVisible();
+    await expect(page.getByTestId('save-slot-window').locator('.wiz-window-title')).toContainText('セーブ');
+    expect(await menuLabels(page, 'セーブ')).toEqual(['もどる', 'スロット1　アルド Lv12', 'スロット2　－ なし －', 'スロット3　－ なし －']);
+    expect(await cursorLabel(page, 'セーブ')).toBe('スロット2　－ なし －');
+    await expect(innMenu(page)).toHaveCount(0);
+    // 空きを選ぶ → すぐ書く（確認なし）
+    await choose(page, info, slots(page).getByRole('menuitem').filter({ hasText: 'スロット3' }));
+    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('スロット3に セーブしました');
     await expect(confirmMenu(page)).toHaveCount(0);
+    await expect(innMenu(page)).toBeVisible();
+    expect(await cursorLabel(page, '宿屋')).toBe('セーブ');
+    if (info.project.name === 'desktop') await expect(innItem(page, 'セーブ')).toBeFocused();
+    expect(JSON.parse((await page.evaluate(() => localStorage.getItem('mini-wiz-game-save-3')))!)).toMatchObject({ name: 'ゆうしゃ' });
+    // もう一度開くと、最後に使ったスロット（3）にカーソル
     await expect(innMenu(page)).not.toHaveAttribute('aria-disabled', 'true');
     await choose(page, info, innItem(page, 'セーブ'));
-    await expect.poll(() => logLines(page)).toEqual(['セーブしました', 'セーブしました']);
-    await expect(confirmMenu(page)).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem('mini-wiz-game-save'))).not.toBeNull();
+    expect(await cursorLabel(page, 'セーブ')).toBe('スロット3　ゆうしゃ Lv1');
+    // 3 つとも埋まっていて最後に使ったスロットもなければ スロット1
+    await startAt(page, 'INN', { saves: { 1: storedSave(), 2: storedSave(), 3: storedSave() } });
+    await choose(page, info, innItem(page, 'セーブ'));
+    expect(await cursorLabel(page, 'セーブ')).toBe('スロット1　ゆうしゃ Lv1');
   });
 
-  test('TC-0009-04 タイトルで「つづきから」を決定すると宿屋になり、「ゆうしゃは 宿屋で めをさました」が出る', async ({ page }, info) => {
+  test('TC-0009-11 中身のあるスロットを選ぶと上書きの確認（初めは いいえ）。いいえ・Esc で一覧の同じスロットに戻り、はい で書く', async ({ page }, info) => {
+    await startAt(page, 'INN', { state: { level: 3 }, saves: { 2: storedSave({ name: 'アルド', level: 12 }) } });
+    const before = await page.evaluate(() => localStorage.getItem('mini-wiz-game-save-2'));
+    const pick = async () => {
+      await choose(page, info, page.getByRole('menu', { name: 'セーブ' }).getByRole('menuitem').filter({ hasText: 'スロット2' }));
+      await expect(confirmMenu(page)).toBeVisible();
+    };
+    await choose(page, info, innItem(page, 'セーブ'));
+    await pick();
+    await expect(page.locator('.wiz-confirm .wiz-window-title')).toContainText('かくにん');
+    await expect(page.locator('.wiz-confirm')).toContainText('スロット2（アルド Lv12）に うわがきしますか？');
+    expect(await cursorLabel(page, 'かくにん')).toBe('いいえ');
+    // いいえ → 一覧の同じスロット。書かない
+    await choose(page, info, confirmMenu(page).getByRole('menuitem').filter({ hasText: 'いいえ' }));
+    expect(await cursorLabel(page, 'セーブ')).toBe('スロット2　アルド Lv12');
+    expect(await page.evaluate(() => localStorage.getItem('mini-wiz-game-save-2'))).toBe(before);
+    // Esc（desktop）も同じ
+    if (info.project.name === 'desktop') {
+      await pick();
+      await page.keyboard.press('Escape');
+      expect(await cursorLabel(page, 'セーブ')).toBe('スロット2　アルド Lv12');
+      await expect(page.getByRole('menu', { name: 'セーブ' }).getByRole('menuitem').filter({ hasText: 'スロット2' })).toBeFocused();
+    }
+    // はい → 書く
+    await pick();
+    await choose(page, info, confirmMenu(page).getByRole('menuitem').filter({ hasText: 'はい' }));
+    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('スロット2に セーブしました');
+    expect(JSON.parse((await page.evaluate(() => localStorage.getItem('mini-wiz-game-save-2')))!)).toMatchObject({ name: 'ゆうしゃ', level: 3 });
+    expect(await cursorLabel(page, '宿屋')).toBe('セーブ');
+  });
+
+  test('TC-0009-04 タイトルの「つづきから」でスロットの一覧（空きは無効、初めはいちばん新しいスロット）。選ぶと宿屋へ。もどる・Esc でタイトルの「つづきから」', async ({ page }, info) => {
     await openDebug(page);
-    await writeScene(page, { save: storedSave() });
-    await choose(page, info, page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'つづきから' }));
+    await writeScene(page, {
+      saves: {
+        1: storedSave({ name: 'アルド', savedAt: '2026-11-01T00:00:00.000Z' }),
+        3: storedSave({ name: 'ゆうしゃ', level: 7, savedAt: '2026-11-05T00:00:00.000Z' }),
+      },
+    });
+    const title = page.getByRole('menu', { name: 'タイトル' });
+    const list = page.getByRole('menu', { name: 'つづきから' });
+    // もどる → タイトルの「つづきから」にカーソル
+    await choose(page, info, title.getByRole('menuitem').filter({ hasText: 'つづきから' }));
+    await expect(list).toBeVisible();
+    expect(await menuLabels(page, 'つづきから')).toEqual(['もどる', 'スロット1　アルド Lv1', 'スロット2　－ なし －', 'スロット3　ゆうしゃ Lv7']);
+    await expect(list.getByRole('menuitem').filter({ hasText: 'スロット2' })).toHaveAttribute('aria-disabled', 'true');
+    expect(await cursorLabel(page, 'つづきから')).toBe('スロット3　ゆうしゃ Lv7');
+    await choose(page, info, list.getByRole('menuitem').filter({ hasText: 'もどる' }));
+    await expect(title).toBeVisible();
+    expect(await cursorLabel(page, 'タイトル')).toBe('つづきから');
+    if (info.project.name === 'desktop') {
+      await page.keyboard.press('Enter');
+      await expect(list).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(title.getByRole('menuitem').filter({ hasText: 'つづきから' })).toBeFocused();
+    }
+    // スロット1 を選ぶ → 宿屋
+    await choose(page, info, title.getByRole('menuitem').filter({ hasText: 'つづきから' }));
+    await choose(page, info, list.getByRole('menuitem').filter({ hasText: 'スロット1' }));
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'inn');
-    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('ゆうしゃは 宿屋で めをさました');
+    await expect.poll(async () => (await logLines(page)).at(-1)).toBe('アルドは 宿屋で めをさました');
   });
 
   test('TC-0009-05 「タイトルへ戻る」で確認に替わり、いいえ で戻る（カーソルは タイトルへ戻る）、はい でタイトルになりプレイ中の状態が消える', async ({ page }, info) => {

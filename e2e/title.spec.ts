@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { cursorLabel, openDebug, startAt, storedSave, writeScene } from './helpers';
+import { failWrites } from './scenes';
 
 const title = (page: Page) => page.getByRole('menu', { name: 'タイトル' });
 const item = (page: Page, text: string) => title(page).getByRole('menuitem').filter({ hasText: text });
@@ -76,14 +77,40 @@ test.describe('タイトル', () => {
     await context.close();
   });
 
-  test('TC-0006-03 セーブがあるとき、「つづきから」にカーソルとフォーカスがあり、右に「ゆうしゃ Lv12」が出る', async ({ page }) => {
+  test('TC-0006-03 どれかのスロットにセーブがあるとき、「つづきから」にカーソルとフォーカスがあり、行の文字は「つづきから」だけ', async ({ page }) => {
     await openDebug(page);
-    await writeScene(page, { save: storedSave({ level: 12 }) });
+    // スロット 1 は空き、スロット 2 にだけセーブ（v1.14）
+    await writeScene(page, { saves: { 2: storedSave({ level: 12 }) } });
     const cont = item(page, 'つづきから');
-    await expect(cont).toContainText('ゆうしゃ Lv12');
-    expect(await cursorLabel(page, 'タイトル')).toMatch(/^つづきから/);
+    await expect(cont).not.toHaveAttribute('aria-disabled', 'true');
+    expect(await cursorLabel(page, 'タイトル')).toBe('つづきから');
+    await expect(cont).not.toContainText('ゆうしゃ');
     await expect(cont).toBeFocused();
     await expect(cont).toHaveAttribute('tabindex', '0');
+  });
+
+  test('TC-0006-14 つづきから のスロットの一覧は縦にはみ出さない。書けないときは一覧が閉じてメニュー（つづきから）の下にエラーの枠、やはりはみ出さない（375×667・414×715・1366×657）', async ({ page }, info) => {
+    const size = info.project.name === 'desktop' ? { width: 1366, height: 657 } : info.project.name === 'small' ? { width: 375, height: 667 } : { width: 414, height: 715 };
+    const overflow = () => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    await page.setViewportSize(size);
+    await openDebug(page);
+    await writeScene(page, { saves: { 1: storedSave({ level: 15 }), 2: storedSave({ name: 'アルドアルドアル', level: 99 }), 3: storedSave() } });
+    await item(page, 'つづきから').click();
+    const list = page.getByRole('menu', { name: 'つづきから' });
+    await expect(list).toBeVisible();
+    await expect(page.getByTestId('save-slot-window').locator('.wiz-window-title')).toContainText('つづきから');
+    expect(await overflow(), `一覧 ${size.width}×${size.height}`).toBeLessThanOrEqual(0);
+    // 書き込みを失敗させてスロットを選ぶ → 一覧が閉じてタイトルのメニュー（カーソルは つづきから）、その下にエラーの枠（v1.15）
+    await failWrites(page);
+    await list.getByRole('menuitem').filter({ hasText: 'スロット1' }).click();
+    const panel = page.getByTestId('error-panel');
+    await expect(panel).toBeVisible();
+    await expect(list).toHaveCount(0);
+    await expect(title(page)).toBeVisible();
+    expect(await cursorLabel(page, 'タイトル')).toBe('つづきから');
+    const menuBottom = await title(page).evaluate((e) => e.getBoundingClientRect().bottom);
+    expect(await panel.evaluate((e) => e.getBoundingClientRect().top)).toBeGreaterThan(menuBottom);
+    expect(await overflow(), `エラー ${size.width}×${size.height}`).toBeLessThanOrEqual(0);
   });
 
   test('TC-0006-04 セーブがないとき、カーソルは「はじめから」。「つづきから」は無効の色で、選んでも何も起きない', async ({ page }, info) => {

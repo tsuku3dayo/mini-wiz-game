@@ -347,6 +347,7 @@ body {
 .clear-line { margin: 0; }
 .clear-line + .clear-line { margin-top: 8px; }
 .clear-saved { color: var(--wiz-color-success); }
+.clear-not-saved { color: var(--wiz-color-text-sub); }
 .clear-laps { color: var(--wiz-color-arcane); }
 .clear-log-slot { display: grid; }
 

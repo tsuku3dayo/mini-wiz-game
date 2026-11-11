@@ -3,8 +3,8 @@ id: MWIZ-TC-0038
 type: Test Case
 title: テストで決まった場面を作れる
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0038（v1.0）
   - MWIZ-TST-0001（v1.2）
@@ -28,7 +28,7 @@ verified: null
 | TC-0038-02 | 1 | ダンジョンにいるとき `__wiz.debugDungeon()` が `{ floor, player: { x, y, facing }, walls, up, down, boss, visited }` を返し、`walls` の長さが 100、`floor`・`player` が画面の「{階}F　{向き}」と合う。プレイ中のゲームがないときは 404、宿屋（ダンジョンなし）では 409「ダンジョンに いません」で reject する | E2E | `e2e/debug.spec.ts` |
 | TC-0038-03 | 1 | ゲーム API の `debugDungeon()` が、保存の状態から今の階の全マス（未踏破のマス・ボスの位置を含む）を返し、ふつうの操作の結果（GameView）にはそれらが入らない | 単体 | `tests/api/game-api.test.ts` |
 | TC-0038-04 | 2 | `useSeed(7)` のあと宿屋で「ダンジョンへ」を選ぶ → `debugDungeon()` の結果を記録。同じ状態に戻して `useSeed(7)` → 「ダンジョンへ」でもう一度 → 2 回の結果（`walls`・`up`・`down`・`boss`・`player`）が同じ。別のシードでは `walls` が違う | E2E | `e2e/debug.spec.ts` |
-| TC-0038-05 | 2 | `writeState(stored)` で戦闘中の状態を書くと、ストアが取り直され、`body[data-screen]` が `battle`、`body[data-location]` が `BATTLE` になり、書いた敵の名前が出る。`writeSave(stored)` でセーブを書くと、タイトルで「つづきから」にカーソルがあり、右に「{名前} Lv{n}」が出る | E2E | `e2e/debug.spec.ts` |
+| TC-0038-05 | 2 | `writeState(stored)` で戦闘中の状態を書くと、ストアが取り直され、`body[data-screen]` が `battle`、`body[data-location]` が `BATTLE` になり、書いた敵の名前が出る。`writeSave(stored, slot?)` でセーブを書くと（`slot` を省くとスロット 1）、タイトルで「つづきから」にカーソルがあり、「つづきから」のスロットの一覧のそのスロットの行に「{名前} Lv{n}」が出る（v1.1：仕様書 v1.14 でセーブを 3 スロットにし、タイトルの右の「{名前} Lv{n}」をなくした） | E2E | `e2e/debug.spec.ts` |
 | TC-0038-06 | 2 | `setDelay(1000)` のあと宿屋で「やすむ」を選ぶと、応答までの約 1000ms のあいだ `body[data-busy]` が `true` で、300ms を過ぎるとメッセージ欄の右下に「▼」（`aria-label="応答待ち"`）が出る。応答のあとで ▼ が消え、`data-busy` が `true` でなくなる。`setDelay(0)` で元に戻る | E2E | `e2e/debug.spec.ts` |
 | TC-0038-07 | 3 | `body[data-screen]` が画面ごとに `title`・`new`・`inn`・`dungeon`・`battle`・`clear`・`swap`。`body[data-location]` がゲームの状態の場所（`INN`・`DUNGEON`・`BATTLE`・`SWAP`・`CLEARED`）で、プレイ中のゲームがないときは `none`。`body[data-busy]` が操作の受付を止めている間だけ `true` | E2E | `e2e/debug.spec.ts` |
 | TC-0038-08 | 3 | 効果音を鳴らす判断のたびに `window` に `app:sound` が出て、`detail` が `{ name, muted }`（音がオフでも `muted: true` で出る）。曲を替えた・止めたときに `app:bgm` が出て、`detail` が `{ name }`（止めたときは `null`） | E2E | `e2e/debug.spec.ts` |

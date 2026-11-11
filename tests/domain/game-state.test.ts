@@ -68,7 +68,7 @@ describe('セーブして、つづきから再開する', () => {
     // 版 5：そのまま。キャラクターの 10 項目はそのまま、所持品・実績は補う
     const d5 = openMap({ x: 1, y: 1 });
     const s5 = migrateGameState(deepFreeze(stored({ location: 'DUNGEON', dungeon: d5, inventory: SAVE_INVENTORY, records: { ...RECORDS, deaths: -1 } })));
-    expect(s5).toEqual({ ...CHARACTER, location: 'DUNGEON', dungeon: d5, battle: null, inventory: SAVE_INVENTORY, records: { ...RECORDS, deaths: 0 } });
+    expect(s5).toEqual({ ...CHARACTER, location: 'DUNGEON', dungeon: d5, battle: null, inventory: SAVE_INVENTORY, records: { ...RECORDS, deaths: 0 }, saveSlot: null });
 
     // migrateSave：版 1 は所持品を空・実績を初期値
     const save = (schemaVersion: number): StoredSave => deepFreeze({ ...CHARACTER, schemaVersion, inventory: SAVE_INVENTORY, records: RECORDS, savedAt: '2026-11-02T00:00:00.000Z' });
@@ -146,10 +146,10 @@ describe('読み込み時の補正とセーブの変換', () => {
     expect(normalizeRecords(RECORDS)).toEqual(RECORDS);
   });
 
-  test('toSaveData は版 3・入れ替え待ちなし、fromSaveData は宿屋から', () => {
-    const s = deepFreeze(makeState('SWAP', { ...CHARACTER, records: RECORDS }));
+  test('toSaveData は版 3・入れ替え待ちなし（saveSlot は入れない）、fromSaveData は宿屋から・saveSlot は読んだスロット', () => {
+    const s = deepFreeze(makeState('SWAP', { ...CHARACTER, records: RECORDS, saveSlot: 2 }));
     const save = toSaveData(s);
     expect(save).toEqual({ schemaVersion: 3, ...CHARACTER, inventory: { ...s.inventory, pending: null }, records: RECORDS });
-    expect(fromSaveData(deepFreeze(save))).toEqual({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, inventory: { ...s.inventory, pending: null }, records: RECORDS });
+    expect(fromSaveData(deepFreeze(save), 3)).toEqual({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, inventory: { ...s.inventory, pending: null }, records: RECORDS, saveSlot: 3 });
   });
 });

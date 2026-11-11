@@ -55,6 +55,7 @@ export function createCharacter(name: string): GameStateData {
     battle: null,
     inventory: emptyInventory(),
     records: initialRecords(),
+    saveSlot: null,
   };
 }
 

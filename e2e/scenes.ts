@@ -59,9 +59,24 @@ export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[
         await page.goto('about:blank');
         await openDebug(page);
         await writeScene(page, { save: storedSave({ level: 15 }) });
-        await failWrites(page);
+        // v1.14：つづきから はスロットの一覧を出す。スロットを選んで書けないと、一覧が閉じてタイトルのメニューの下にエラーの枠（v1.15）
         await press(item(page, 'タイトル', 'つづきから'));
+        await failWrites(page);
+        await press(item(page, 'つづきから', /スロット1/));
         await expect(page.getByTestId('error-panel')).toBeVisible();
+      },
+    },
+    {
+      // v1.14：つづきから のスロットの一覧（3 スロットとも埋まっている）
+      name: 'タイトル・つづきから',
+      open: async () => {
+        await openDebug(page);
+        await page.evaluate(() => localStorage.clear());
+        await page.goto('about:blank');
+        await openDebug(page);
+        await writeScene(page, { saves: { 1: storedSave({ level: 15 }), 2: storedSave({ name: 'アルドアルドアル', level: 99 }), 3: storedSave({ level: 3 }) } });
+        await press(item(page, 'タイトル', 'つづきから'));
+        await expect(page.getByRole('menu', { name: 'つづきから' })).toBeVisible();
       },
     },
     {
@@ -91,6 +106,25 @@ export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[
       open: async () => {
         await startAt(page, 'INN', { state: heavy });
         await press(item(page, '宿屋', 'タイトルへ戻る'));
+        await expect(page.getByRole('menu', { name: 'かくにん' })).toBeVisible();
+      },
+    },
+    {
+      // v1.14：セーブのスロットの一覧（空きと中身のあるスロット）
+      name: '宿屋・セーブ',
+      open: async () => {
+        await startAt(page, 'INN', { state: heavy, saves: { 1: storedSave({ level: 15 }), 3: storedSave({ name: 'アルドアルドアル', level: 99 }) } });
+        await press(item(page, '宿屋', 'セーブ'));
+        await expect(page.getByRole('menu', { name: 'セーブ' })).toBeVisible();
+      },
+    },
+    {
+      // v1.14：中身のあるスロットへの上書きの確認
+      name: '宿屋・上書きの確認',
+      open: async () => {
+        await startAt(page, 'INN', { state: heavy, saves: { 1: storedSave({ name: 'アルドアルドアル', level: 99 }) } });
+        await press(item(page, '宿屋', 'セーブ'));
+        await press(item(page, 'セーブ', /スロット1/));
         await expect(page.getByRole('menu', { name: 'かくにん' })).toBeVisible();
       },
     },
@@ -183,6 +217,8 @@ export function scenes(page: Page, press: (l: Locator) => Promise<void>): Scene[
         await expect(page.getByRole('menu', { name: 'かくにん' })).toBeVisible();
       },
     },
-    { name: 'ゲームクリア', open: () => startAt(page, 'CLEARED', { state: heavy }) },
+    { name: 'ゲームクリア', open: () => startAt(page, 'CLEARED', { state: { ...heavy, saveSlot: 1 } }) },
+    // v1.14：スロットがいっぱいで自動セーブしなかったクリア
+    { name: 'ゲームクリア（セーブなし）', open: () => startAt(page, 'CLEARED', { state: heavy }) },
   ];
 }

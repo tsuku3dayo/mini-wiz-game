@@ -120,7 +120,8 @@ test.describe('起動に失敗しても直る', () => {
     await writeScene(page, { state: storedInn(), save: storedSave() });
     await page.evaluate(() => localStorage.setItem('mini-wiz-game-sound', 'on'));
     const before = await readStorage(page);
-    expect(before.every((v) => v !== null)).toBe(true);
+    // プレイ中の状態・スロット 1 のセーブ・音の設定の 3 つ（スロット 2・3 は空き。v1.14）
+    expect(before.slice(0, 3).every((v) => v !== null)).toBe(true);
 
     // TC-0005-02 の場面：1 回だけ失敗 → 自動で直して読み込み直す → 起動できる
     await breakEntry(page, 1);
@@ -149,7 +150,7 @@ test.describe('起動に失敗しても直る', () => {
     const scope = await scopeOf(page);
     const repairedAt = Number(await page.evaluate((key) => sessionStorage.getItem(key), KEY));
     await page.evaluate(async ({ s, save }) => {
-      localStorage.setItem('mini-wiz-game-save', JSON.stringify(save));
+      localStorage.setItem('mini-wiz-game-save-1', JSON.stringify(save));
       localStorage.setItem('mini-wiz-game-sound', 'on');
       await (await caches.open(`workbox-precache-v2-${s}`)).put(s, new Response('x'));
     }, { s: scope, save: storedSave() });

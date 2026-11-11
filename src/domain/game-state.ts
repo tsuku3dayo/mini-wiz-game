@@ -5,10 +5,15 @@ import { emptyInventory } from './loot';
 import { initialRecords, normalizeRecords, type Records } from './records';
 import type { EnemyKind } from './constants';
 
-export const GAME_SCHEMA_VERSION = 5;
+export const GAME_SCHEMA_VERSION = 6;
 export const SAVE_SCHEMA_VERSION = 3;
 
-export type Location = 'INN' | 'DUNGEON' | 'BATTLE' | 'CLEARED' | 'SWAP';
+/** セーブのスロット（v1.14。仕様書 §21.2） */
+export type SaveSlot = 1 | 2 | 3;
+export const SAVE_SLOTS: readonly SaveSlot[] = [1, 2, 3];
+export const isSaveSlot = (v: unknown): v is SaveSlot => v === 1 || v === 2 || v === 3;
+
+export type Location ='INN' | 'DUNGEON' | 'BATTLE' | 'CLEARED' | 'SWAP';
 export type Facing = 'N' | 'E' | 'S' | 'W';
 
 export interface Position {
@@ -71,6 +76,8 @@ export interface GameStateData extends Character {
   battle: BattleData | null;
   inventory: InventoryData;
   records: Records;
+  /** 最後に使ったスロット（セーブ・つづきから・自動セーブで決まる）。なければ null（v1.14） */
+  saveSlot: SaveSlot | null;
 }
 
 export type MessageTone = 'normal' | 'success' | 'danger';
@@ -97,6 +104,7 @@ export interface StoredGameState extends Character {
   battle: unknown;
   inventory?: unknown;
   records?: unknown;
+  saveSlot?: unknown;     // 版 6（v1.14）
   updatedAt: string;
 }
 
@@ -230,6 +238,8 @@ export function migrateGameState(row: StoredGameState, onDropped?: (dropped: Dro
     battle,
     inventory: inv,
     records: normalizeRecords(row.records),
+    // 版を問わず 1〜3 なら採る（移し替えで 1 を書き足した版 5 の状態も読む。TD-0002 §1.7）
+    saveSlot: isSaveSlot(row.saveSlot) ? row.saveSlot : null,
   };
 }
 
@@ -243,8 +253,8 @@ export function toSaveData(state: GameStateData): SaveData {
   };
 }
 
-/** つづきから：場所 INN、ダンジョン・戦闘・入れ替え待ちはなし */
-export function fromSaveData(save: SaveData): GameStateData {
+/** つづきから：場所 INN、ダンジョン・戦闘・入れ替え待ちはなし。最後に使ったスロットは読んだスロット */
+export function fromSaveData(save: SaveData, slot: SaveSlot): GameStateData {
   return {
     ...pickCharacter(save),
     location: 'INN',
@@ -252,6 +262,7 @@ export function fromSaveData(save: SaveData): GameStateData {
     battle: null,
     inventory: { ...save.inventory, pending: null },
     records: save.records,
+    saveSlot: slot,
   };
 }
 

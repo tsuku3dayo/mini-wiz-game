@@ -1,7 +1,10 @@
 // localStorage の読み書き（仕様書 §21、ADR-0006・0007）。例外を外に出さず、戻り値で失敗を返す
 // 形はゲーム API の KeyValueStore（src/api/repository.ts）と同じ。キーは `<アプリ識別子>-<名前>`
 
-export const STORAGE_VERSION = 1;
+/** 保存の形全体の版（v1.14 で 1 → 2：セーブを 3 スロットに） */
+export const STORAGE_VERSION = 2;
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 export type ReadResult =
   | { ok: true; value: unknown }
@@ -13,7 +16,7 @@ export interface LocalStore {
   /** 順に書き、途中で失敗したら書く前の値に戻して false */
   writeAll(entries: readonly (readonly [string, unknown])[]): boolean;
   remove(name: string): boolean;
-  /** 保存の形全体の版（schema）を確かめ、古ければ移して版を書く（版 1 では移す中身はない） */
+  /** 保存の形全体の版（schema）を確かめ、古ければ移して版を書く（版 1 → 2 でセーブを save-1 に移す） */
   migrateStorage(): void;
 }
 
@@ -78,9 +81,24 @@ export function createLocalStorage(appId: string, getStorage: () => Storage = ()
     }
   }
 
+  /**
+   * 版 1 → 2（v1.14。仕様書 §21.7、TD-0002 §4）：1 つだったセーブ `save` を `save-1` に移し、
+   * プレイ中の状態に saveSlot がなければ 1 を書き足す（`save` があったときだけ。中身・revision は変えない）。
+   * まとめて書けたら `save` を消して版 2 を書く。書けなければ書く前の値に戻り、版 1 のまま（次の起動でやり直す）
+   */
   function migrateStorage(): void {
     const r = read('schema');
-    if (!r.ok || r.value !== STORAGE_VERSION) write('schema', STORAGE_VERSION);
+    if (r.ok && r.value === STORAGE_VERSION) return;
+    const old = read('save');
+    if (old.ok) {
+      const entries: [string, unknown][] = [];
+      if (!read('save-1').ok) entries.push(['save-1', old.value]);
+      const game = read('game');
+      if (game.ok && isObject(game.value) && !('saveSlot' in game.value)) entries.push(['game', { ...game.value, saveSlot: 1 }]);
+      if (!writeAll(entries)) return;
+      if (!remove('save')) return;
+    }
+    write('schema', STORAGE_VERSION);
   }
 
   return { read, write, writeAll, remove, migrateStorage };

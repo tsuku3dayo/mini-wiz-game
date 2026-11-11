@@ -18,7 +18,7 @@ const INVENTORY = {
   pending: { item: makeItem(4, 'weapon1', 'N', 1), thenClear: false },
 };
 
-function storedGame(state: GameStateData, revision = 3, schemaVersion = 5) {
+function storedGame(state: GameStateData, revision = 3, schemaVersion = 6) {
   return { ...state, schemaVersion, revision, updatedAt: '2026-11-01T00:00:00.000Z' };
 }
 
@@ -53,8 +53,8 @@ afterEach(() => {
 
 describe('名前を付けてキャラクターを作る', () => {
   test('TC-0007-03 startGame は名前の違反を 400 validation_error（details つき）で reject し、保存は変わらない', async () => {
-    const { api, store } = setup({ game: storedGame(makeState('INN')), save: storedSave() });
-    const before = [store.raw('game'), store.raw('save')];
+    const { api, store } = setup({ game: storedGame(makeState('INN')), 'save-1': storedSave() });
+    const before = [store.raw('game'), store.raw('save-1')];
     const cases: [string, string][] = [
       ['', '名前を入力してください'],
       ['   ', '名前を入力してください'],
@@ -67,19 +67,19 @@ describe('名前を付けてキャラクターを作る', () => {
         status: 400, error: 'validation_error', message: '入力が正しくありません', details: [{ field: 'name', message }],
       });
     }
-    expect([store.raw('game'), store.raw('save')]).toEqual(before);
+    expect([store.raw('game'), store.raw('save-1')]).toEqual(before);
   });
 
   test('TC-0007-09 startGame は前の状態を上書きし（revision は前 + 1）、セーブを読みも書きもしない。メッセージは 1 行', async () => {
-    const { api, store } = setup({ game: storedGame(makeState('DUNGEON', CHARACTER), 4), save: storedSave() });
-    const save = store.raw('save');
+    const { api, store } = setup({ game: storedGame(makeState('DUNGEON', CHARACTER), 4), 'save-1': storedSave() });
+    const save = store.raw('save-1');
     const r = await api.startGame({ name: ' ゆうしゃ ' });
     expect(r.messages).toEqual([{ text: 'ゆうしゃの ぼうけんが はじまった', tone: 'normal' }]);
     expect(r.state).toMatchObject({ location: 'INN', character: { name: 'ゆうしゃ', level: 1, hp: 30, maxHp: 30 } });
     const game = JSON.parse(store.raw('game')!);
-    expect(game).toMatchObject({ name: 'ゆうしゃ', level: 1, location: 'INN', dungeon: null, revision: 5, schemaVersion: 5, updatedAt: NOW });
-    expect(store.log.filter((l) => l.name === 'save')).toEqual([]);
-    expect(store.raw('save')).toBe(save);
+    expect(game).toMatchObject({ name: 'ゆうしゃ', level: 1, location: 'INN', dungeon: null, revision: 5, schemaVersion: 6, updatedAt: NOW });
+    expect(store.log.filter((l) => l.name.startsWith('save'))).toEqual([]);
+    expect(store.raw('save-1')).toBe(save);
 
     // 前がなければ revision 0
     const fresh = setup();
@@ -89,43 +89,82 @@ describe('名前を付けてキャラクターを作る', () => {
 });
 
 describe('セーブして、つづきから再開する', () => {
-  test('TC-0009-01 INN で save すると版 3 のセーブを書き、プレイ中の状態は変えない。ほかの場所では 409', async () => {
+  test('TC-0009-01 INN で save({ slot: 2 }) すると save-2 に版 3 のセーブを書き、プレイ中の状態は saveSlot 2・revision + 1。slot の違反は 400、ほかの場所では 409', async () => {
     const state = makeState('INN', { ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS });
-    const { api, store } = setup({ game: storedGame(state) });
-    const game = store.raw('game');
-    const r = await api.save();
-    expect(r.messages).toEqual([{ text: 'セーブしました', tone: 'success' }]);
-    expect(JSON.parse(store.raw('save')!)).toEqual({
+    const { api, store } = setup({ game: storedGame(state, 3), 'save-1': storedSave(), 'save-3': storedSave() });
+    const before = JSON.parse(store.raw('game')!);
+    const others = [store.raw('save-1'), store.raw('save-3')];
+    const r = await api.save({ slot: 2 });
+    expect(r.messages).toEqual([{ text: 'スロット2に セーブしました', tone: 'success' }]);
+    expect(JSON.parse(store.raw('save-2')!)).toEqual({
       schemaVersion: 3, ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS, savedAt: NOW,
     });
-    expect(store.raw('game')).toBe(game);
+    // プレイ中の状態は saveSlot と revision・updatedAt だけが変わる
+    expect(JSON.parse(store.raw('game')!)).toEqual({ ...before, saveSlot: 2, revision: 4, updatedAt: NOW });
+    expect(r.state.saveSlot).toBe(2);
+    expect([store.raw('save-1'), store.raw('save-3')]).toEqual(others);
+
+    // slot が 1〜3 でなければ 400（details つき）。何も書かない
+    for (const input of [{ slot: 0 }, { slot: 4 }, { slot: '1' }, {}]) {
+      const g = store.raw('game');
+      const err = await caught(api.save(input as never));
+      expect({ status: err.status, error: err.error, details: err.details }).toEqual({
+        status: 400, error: 'validation_error', details: [{ field: 'slot', message: 'slot must be one of the following values: 1, 2, 3' }],
+      });
+      expect(store.raw('game')).toBe(g);
+    }
 
     for (const location of ['DUNGEON', 'BATTLE', 'SWAP', 'CLEARED'] as const) {
-      const other = setup({ game: storedGame(makeState(location)), save: storedSave() });
-      const before = other.store.raw('save');
-      const err = await caught(other.api.save());
+      const other = setup({ game: storedGame(makeState(location)), 'save-1': storedSave() });
+      const before = other.store.raw('save-1');
+      const err = await caught(other.api.save({ slot: 1 }));
       expect({ status: err.status, error: err.error }).toEqual({ status: 409, error: 'invalid_state' });
-      expect(other.store.raw('save')).toBe(before);
+      expect(other.store.raw('save-1')).toBe(before);
     }
   });
 
-  test('TC-0009-03 load はどの場所からでもセーブの値で置き換えて宿屋から始める。セーブがなければ 404', async () => {
+  test('TC-0009-03 load({ slot }) はどの場所からでもそのスロットの値で置き換えて宿屋から（saveSlot はそのスロット）。空きは 404、slot の違反は 400。getSaves は 3 つ', async () => {
     for (const location of LOCATIONS) {
-      const { api, store } = setup({ game: storedGame(makeState(location), 7), save: storedSave() });
-      const r = await api.load();
+      const { api, store } = setup({ game: storedGame(makeState(location), 7), 'save-3': storedSave() });
+      const r = await api.load({ slot: 3 });
       expect(r.messages).toEqual([{ text: 'アルドは 宿屋で めをさました', tone: 'normal' }]);
-      expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, pendingDrop: null, records: RECORDS });
+      expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, pendingDrop: null, records: RECORDS, saveSlot: 3 });
       expect(r.state.character).toMatchObject({ name: 'アルド', level: 4, hp: 12, mp: 3 });
       const game = JSON.parse(store.raw('game')!);
-      expect(game).toMatchObject({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, revision: 8 });
+      expect(game).toMatchObject({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, revision: 8, saveSlot: 3 });
       expect(game.inventory.pending).toBeNull();
     }
-    const { api } = setup({ game: storedGame(makeState('INN')) });
-    const err = await caught(api.load());
+    const { api } = setup({ game: storedGame(makeState('INN')), 'save-1': storedSave() });
+    const err = await caught(api.load({ slot: 2 }));
     expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 404, error: 'save_not_found', message: 'セーブデータが ありません' });
+    const bad = await caught(api.load({ slot: 4 } as never));
+    expect({ status: bad.status, error: bad.error }).toEqual({ status: 400, error: 'validation_error' });
+
+    // getSaves：長さ 3。セーブがあれば要約、空き・読めない値は null
+    const list = setup({ 'save-1': storedSave(), 'save-3': { ...storedSave(), name: 'ゆうしゃ', level: 12, savedAt: '2026-11-03T00:00:00.000Z' } });
+    list.store.setRaw('save-2', '{broken');
+    expect(await list.api.getSaves()).toEqual({
+      slots: [
+        { slot: 1, name: 'アルド', level: 4, savedAt: '2026-11-01T00:00:00.000Z' },
+        null,
+        { slot: 3, name: 'ゆうしゃ', level: 12, savedAt: '2026-11-03T00:00:00.000Z' },
+      ],
+    });
   });
 
-  test('TC-0009-10 版 1・2 のゲーム状態は移した GameView、版 1・2 のセーブは宿屋から。版 4 のセーブは 500 internal_error', async () => {
+  test('TC-0009-10 版 1・2 のゲーム状態は移した GameView、saveSlot は版 5 以下で持たなければ null・1〜3 ならその値。版 1・2 のセーブは宿屋から。版 4 のセーブは 500 internal_error', async () => {
+    // saveSlot（v1.14）：版 5 で持たない → null、移し替えで 1 を足した版 5・版 6 の 2 → その値、形違い → null
+    const plain = without(storedGame(makeState('INN', CHARACTER), 1, 5), 'saveSlot');
+    for (const [stored, want] of [
+      [plain, null],
+      [{ ...plain, saveSlot: 1 }, 1],
+      [{ ...plain, schemaVersion: 6, saveSlot: 2 }, 2],
+      [{ ...plain, schemaVersion: 6, saveSlot: 4 }, null],
+      [{ ...plain, schemaVersion: 6, saveSlot: '3' }, null],
+    ] as const) {
+      expect((await setup({ game: stored }).api.getGame()).state!.saveSlot).toBe(want);
+    }
+
     // 版 1・ダンジョンの中 → 宿屋に戻る。所持品・実績はない → 補う
     const v1Fields = without(makeState('DUNGEON', CHARACTER), 'inventory', 'records');
     const v1 = setup({ game: { ...v1Fields, schemaVersion: 1, revision: 2, updatedAt: '2026-01-01T00:00:00.000Z' } });
@@ -138,21 +177,21 @@ describe('セーブして、つづきから再開する', () => {
     expect((await v2.api.getGame()).state).toMatchObject({ location: 'INN', character: { name: 'アルド' }, inventory: { count: 0 }, records: { laps: 1 } });
 
     for (const v of [1, 2]) {
-      const { api } = setup({ save: storedSave(v) });
-      const r = await api.load();
+      const { api } = setup({ 'save-1': storedSave(v) });
+      const r = await api.load({ slot: 1 });
       expect(r.state).toMatchObject({ location: 'INN', character: { name: 'アルド', level: 4 }, records: { battles: 0, laps: 1 } });
       expect(r.state.inventory.count).toBe(v === 1 ? 0 : 2);
     }
 
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const v4 = setup({ save: storedSave(4) });
-    const err = await caught(v4.api.load());
+    const v4 = setup({ 'save-1': storedSave(4) });
+    const err = await caught(v4.api.load({ slot: 1 }));
     expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 500, error: 'internal_error', message: '内部エラー' });
   });
 });
 
 describe('保存の失敗が分かる', () => {
-  test('TC-0012-09 プレイ中の状態が壊れていたら getGame は null（warn 1 回、値は残る）。セーブが壊れていたら getSave はなし', async () => {
+  test('TC-0012-09 プレイ中の状態が壊れていたら getGame は null（warn 1 回、値は残る）。セーブが壊れていたらそのスロットは空き', async () => {
     const noName = without(storedGame(makeState('INN')), 'name');
     for (const text of ['{broken', '42', JSON.stringify(noName)]) {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -165,8 +204,8 @@ describe('保存の失敗が分かる', () => {
     }
     for (const text of ['{broken', '42', JSON.stringify({ schemaVersion: 3, name: 'x' })]) {
       const { api, store } = setup();
-      store.setRaw('save', text);
-      expect(await api.getSave()).toEqual({ exists: false, summary: null });
+      store.setRaw('save-1', text);
+      expect(await api.getSaves()).toEqual({ slots: [null, null, null] });
     }
   });
 });
@@ -230,12 +269,12 @@ describe('保存の失敗と競合（迷宮の操作）', () => {
     expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 500, error: 'storage_error', message: '保存できませんでした' });
     expect(store.raw('game')).toBe(before);
 
-    const inn = setup({ game: storedGame(makeState('INN')), save: storedSave() });
-    inn.store.failWrites.add('save');
-    const saveBefore = inn.store.raw('save');
-    const e2 = await caught(inn.api.save());
+    const inn = setup({ game: storedGame(makeState('INN')), 'save-1': storedSave() });
+    inn.store.failWrites.add('save-1');
+    const saveBefore = inn.store.raw('save-1');
+    const e2 = await caught(inn.api.save({ slot: 1 }));
     expect({ status: e2.status, error: e2.error }).toEqual({ status: 500, error: 'storage_error' });
-    expect(inn.store.raw('save')).toBe(saveBefore);
+    expect(inn.store.raw('save-1')).toBe(saveBefore);
   });
 });
 
@@ -308,15 +347,17 @@ describe('戦闘とヒール（ゲーム API）', () => {
     const inventory = { ...INVENTORY, pending: null };
     const state = battleState('goblin', 18, { hp: 1, exp: 9, inventory });
     // ゴブリン（速さ 6）が先：回避の 100（外れ）・ダメージ 0 → 4 ダメージで倒れる
-    const { api, store } = setupWith({ game: storedGame(state), save: storedSave() }, new SequenceRng([100, 0]));
-    const save = store.raw('save');
+    const { api, store } = setupWith({ game: storedGame(state), 'save-1': storedSave(), 'save-2': storedSave(2) }, new SequenceRng([100, 0]));
+    const saves = () => [store.raw('save-1'), store.raw('save-2'), store.raw('save-3')];
+    const before = saves();
     const r = await api.battle({ command: 'attack' });
     expect(r.state.location).toBe('INN');
     expect(r.state.character.exp).toBe(9);
     const game = JSON.parse(store.raw('game')!);
     expect(game.inventory).toEqual(inventory);
     expect(game.inventory.nextId).toBe(5);
-    expect(store.raw('save')).toBe(save);
+    // セーブはどのスロットも変わらない（v1.14：3 スロット）
+    expect(saves()).toEqual(before);
   });
 });
 
@@ -340,7 +381,7 @@ describe('エラーの形（ゲーム API）', () => {
   test('TC-0012-02 §10.3 の表で許されない場所から呼ぶと 409 invalid_state。保存（revision を含む）は同じ', async () => {
     const ops: [string, (api: GameApi) => Promise<unknown>, string[]][] = [
       ['rest', (a) => a.rest(), ['INN']],
-      ['save', (a) => a.save(), ['INN']],
+      ['save', (a) => a.save({ slot: 1 }), ['INN']],
       ['enterDungeon', (a) => a.enterDungeon(), ['INN']],
       ['move', (a) => a.move({ action: 'forward' }), ['DUNGEON']],
       ['stairs', (a) => a.stairs({ direction: 'down' }), ['DUNGEON']],
@@ -357,11 +398,11 @@ describe('エラーの形（ゲーム API）', () => {
     ];
     for (const [name, call, allowed] of ops) {
       for (const location of LOCATIONS.filter((l) => !allowed.includes(l))) {
-        const { api, store } = setup({ game: storedGame(makeState(location, { inventory: { ...GEAR, pending: location === 'SWAP' ? makeState('SWAP').inventory.pending : null } })), save: storedSave() });
-        const before = [store.raw('game'), store.raw('save')];
+        const { api, store } = setup({ game: storedGame(makeState(location, { inventory: { ...GEAR, pending: location === 'SWAP' ? makeState('SWAP').inventory.pending : null } })), 'save-1': storedSave() });
+        const before = [store.raw('game'), store.raw('save-1')];
         const err = await caught(call(api));
         expect({ op: name, location, status: err.status, error: err.error }).toEqual({ op: name, location, status: 409, error: 'invalid_state' });
-        expect([store.raw('game'), store.raw('save')]).toEqual(before);
+        expect([store.raw('game'), store.raw('save-1')]).toEqual(before);
       }
     }
   });
@@ -382,7 +423,7 @@ describe('エラーの形（ゲーム API）', () => {
     const dungeon = () => setup({ game: storedGame(dungeonState(openMap({ x: 4, y: 5 }))) });
     check(await caught(dungeon().api.move({ action: 'jump' } as never)), 400, 'validation_error');
     check(await caught(setup().api.move({ action: 'forward' })), 404, 'game_not_found');
-    check(await caught(setup().api.load()), 404, 'save_not_found');
+    check(await caught(setup().api.load({ slot: 1 })), 404, 'save_not_found');
     check(await caught(dungeon().api.rest()), 409, 'invalid_state');
     const conflict = dungeon();
     conflict.store.onRead = (name, n) => { if (name === 'game' && n === 2) conflict.store.put('game', storedGame(dungeonState(), 9)); };
@@ -393,7 +434,7 @@ describe('エラーの形（ゲーム API）', () => {
     const fail = dungeon();
     fail.store.failWrites.add('game');
     check(await caught(fail.api.move({ action: 'forward' })), 500, 'storage_error');
-    check(await caught(setup({ save: { ...storedSave(), schemaVersion: 9 } }).api.load()), 500, 'internal_error');
+    check(await caught(setup({ 'save-1': { ...storedSave(), schemaVersion: 9 } }).api.load({ slot: 1 })), 500, 'internal_error');
   });
 });
 
@@ -412,12 +453,12 @@ describe('装備と所持品（ゲーム API）', () => {
 
   test('TC-0029-08 セーブに装備・所持品・nextId が入り、つづきからでその時点に戻る。SWAP から作ったセーブ・自動セーブの pending は null', async () => {
     const { api, store } = setup({ game: storedGame(makeState('INN', { inventory: GEAR })) });
-    await api.save();
-    const save = JSON.parse(store.raw('save')!);
+    await api.save({ slot: 1 });
+    const save = JSON.parse(store.raw('save-1')!);
     expect(save.inventory).toEqual({ ...GEAR, pending: null });
     await api.discard({ itemId: 3 });
     await api.unequip({ slot: 'weapon' });
-    const r = await api.load();
+    const r = await api.load({ slot: 1 });
     expect(r.state.inventory.equipped.weapon!.id).toBe(1);
     expect(r.state.inventory.items.map((i) => i.id)).toEqual([4, 3]);
     expect(JSON.parse(store.raw('game')!).inventory).toEqual({ ...GEAR, pending: null });
@@ -425,7 +466,7 @@ describe('装備と所持品（ゲーム API）', () => {
 
     const boss = setupWith({ game: storedGame(bossState()) }, new SequenceRng(BOSS_KILL));
     await boss.api.battle({ command: 'attack' });
-    expect(JSON.parse(boss.store.raw('save')!).inventory.pending).toBeNull();
+    expect(JSON.parse(boss.store.raw('save-1')!).inventory.pending).toBeNull();
   });
 
   test('TC-0029-09 倒れても装備・所持品・nextId は同じ。startGame では装備なし・所持品 0・nextId 1', async () => {
@@ -494,12 +535,12 @@ describe('満杯の入れ替え（ゲーム API）', () => {
     expect(r.state.location).toBe('SWAP');
     expect(r.state.records).toMatchObject({ laps: 2, bossKills: 1 });
     expect(r.messages.some((m) => m.text === 'ダンジョンに 平和が もどった')).toBe(false);
-    expect(store.raw('save')).toBeNull();
+    expect(store.raw('save-1')).toBeNull();
     const done = await api.lootAbandon();
     expect(done.state.location).toBe('CLEARED');
     expect(done.messages.at(-1)!.text).toBe('ダンジョンに 平和が もどった');
     expect(done.state.records.laps).toBe(2);
-    const save = JSON.parse(store.raw('save')!);
+    const save = JSON.parse(store.raw('save-1')!);
     expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
     expect(save.inventory.pending).toBeNull();
     expect(save.level).toBe(12);
@@ -507,37 +548,73 @@ describe('満杯の入れ替え（ゲーム API）', () => {
 });
 
 describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
-  test('TC-0024-04 ボスを倒すと、セーブがクリア時点の値で上書きされる（Lv12・2584・LG の個体・pending null・laps 2・bossKills 1）。autoSaved は true', async () => {
-    const { api, store } = setupWith({ game: storedGame(bossState()), save: storedSave() }, new SequenceRng(BOSS_KILL));
+  test('TC-0024-04 ボスを倒すと、最後に使ったスロット（saveSlot 2 → save-2）がクリア時点の値で上書きされ、ほかのスロットは同じ。autoSaved は true', async () => {
+    const { api, store } = setupWith(
+      { game: storedGame(bossState({ saveSlot: 2 })), 'save-1': storedSave(), 'save-2': storedSave(), 'save-3': storedSave() },
+      new SequenceRng(BOSS_KILL),
+    );
+    const others = [store.raw('save-1'), store.raw('save-3')];
     const r = await api.battle({ command: 'attack' });
     expect(r.state.location).toBe('CLEARED');
-    const save = JSON.parse(store.raw('save')!);
+    const save = JSON.parse(store.raw('save-2')!);
     const game = JSON.parse(store.raw('game')!);
     expect(save).toMatchObject({ name: 'ゆうしゃ', level: 12, exp: 2584, hp: game.hp, maxHp: game.maxHp, mp: game.mp, maxMp: game.maxMp, attack: game.attack, defense: game.defense, speed: game.speed });
     expect(save.inventory.items.at(-1)).toMatchObject({ itemId: 'weapon8', rarity: 'LG' });
     expect(save.inventory.pending).toBeNull();
     expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
+    expect([store.raw('save-1'), store.raw('save-3')]).toEqual(others);
+    expect(r.state.clear).toEqual({ autoSaved: true });
     expect((await api.getGame()).state!.clear).toEqual({ autoSaved: true });
   });
 
-  test('TC-0024-06 ボスを倒す操作でセーブかプレイ中状態が書けないと 500 で、両方とも前のまま。入れ替えで CLEARED になるときも同じ', async () => {
-    for (const key of ['save', 'game']) {
-      const { api, store } = setupWith({ game: storedGame(bossState()), save: storedSave() }, new SequenceRng(BOSS_KILL));
+  test('TC-0024-06 ボスを倒す操作で書くスロットかプレイ中状態が書けないと 500 で、両方とも前のまま。入れ替えで CLEARED になるときも同じ', async () => {
+    for (const key of ['save-2', 'game']) {
+      const { api, store } = setupWith({ game: storedGame(bossState({ saveSlot: 2 })), 'save-2': storedSave() }, new SequenceRng(BOSS_KILL));
       store.failWrites.add(key);
-      const before = [store.raw('game'), store.raw('save')];
+      const before = [store.raw('game'), store.raw('save-1'), store.raw('save-2'), store.raw('save-3')];
       const err = await caught(api.battle({ command: 'attack' }));
       expect({ key, status: err.status, error: err.error }).toEqual({ key, status: 500, error: 'storage_error' });
-      expect([store.raw('game'), store.raw('save')]).toEqual(before);
+      expect([store.raw('game'), store.raw('save-1'), store.raw('save-2'), store.raw('save-3')]).toEqual(before);
     }
     const pending = { item: makeItem(70, 'weapon8', 'LG', 60), thenClear: true };
-    for (const [key, call] of [['save', (a: GameApi) => a.lootTake({ discardId: 1 })], ['game', (a: GameApi) => a.lootAbandon()]] as const) {
-      const swap = makeState('SWAP', { dungeon: null, inventory: { equipped: GEAR.equipped, items: fullItems(50), nextId: 71, pending } });
-      const { api, store } = setup({ game: storedGame(swap), save: storedSave() });
+    for (const [key, call] of [['save-1', (a: GameApi) => a.lootTake({ discardId: 1 })], ['game', (a: GameApi) => a.lootAbandon()]] as const) {
+      const swap = makeState('SWAP', { dungeon: null, saveSlot: 1, inventory: { equipped: GEAR.equipped, items: fullItems(50), nextId: 71, pending } });
+      const { api, store } = setup({ game: storedGame(swap), 'save-1': storedSave() });
       store.failWrites.add(key);
-      const before = [store.raw('game'), store.raw('save')];
+      const before = [store.raw('game'), store.raw('save-1')];
       expect((await caught(call(api))).error).toBe('storage_error');
-      expect([store.raw('game'), store.raw('save')]).toEqual(before);
+      expect([store.raw('game'), store.raw('save-1')]).toEqual(before);
     }
+  });
+
+  test('TC-0024-09 自動セーブのスロット：saveSlot 3 なら save-3。なければ最初の空き（save-2）で saveSlot 2 に。3 つとも埋まって saveSlot がなければ書かず autoSaved は false', async () => {
+    // saveSlot 3 → save-3
+    const s3 = setupWith({ game: storedGame(bossState({ saveSlot: 3 })) }, new SequenceRng(BOSS_KILL));
+    await s3.api.battle({ command: 'attack' });
+    expect(JSON.parse(s3.store.raw('save-3')!).level).toBe(12);
+    expect([s3.store.raw('save-1'), s3.store.raw('save-2')]).toEqual([null, null]);
+
+    // saveSlot なし・スロット 1 が埋まり 2 が空き → save-2、プレイ中の状態の saveSlot が 2
+    const s2 = setupWith({ game: storedGame(bossState()), 'save-1': storedSave() }, new SequenceRng(BOSS_KILL));
+    const first = s2.store.raw('save-1');
+    const r2 = await s2.api.battle({ command: 'attack' });
+    expect(JSON.parse(s2.store.raw('save-2')!).records).toMatchObject({ laps: 2, bossKills: 1 });
+    expect(s2.store.raw('save-1')).toBe(first);
+    expect(JSON.parse(s2.store.raw('game')!).saveSlot).toBe(2);
+    expect(r2.state).toMatchObject({ saveSlot: 2, clear: { autoSaved: true } });
+
+    // 3 つとも埋まっていて saveSlot がない → どのスロットも変わらず、プレイ中の状態だけ（CLEARED）。autoSaved は false
+    const full = setupWith(
+      { game: storedGame(bossState()), 'save-1': storedSave(), 'save-2': storedSave(), 'save-3': storedSave() },
+      new SequenceRng(BOSS_KILL),
+    );
+    const saves = () => [full.store.raw('save-1'), full.store.raw('save-2'), full.store.raw('save-3')];
+    const before = saves();
+    const r = await full.api.battle({ command: 'attack' });
+    expect(saves()).toEqual(before);
+    expect(JSON.parse(full.store.raw('game')!)).toMatchObject({ location: 'CLEARED', saveSlot: null });
+    expect(r.state.clear).toEqual({ autoSaved: false });
+    expect((await full.api.getGame()).state!.clear).toEqual({ autoSaved: false });
   });
 });
 
@@ -603,16 +680,16 @@ describe('迷宮の操作の引数と結果', () => {
 
 // 確認 ID のない、ゲーム API の決まり（仕様書 §21.5、§22.2）
 describe('ゲーム API の骨組み', () => {
-  test('getGame・getSave：なければ null となし、あれば GameView とセーブの要約', async () => {
+  test('getGame・getSaves：なければ null と空き 3 つ、あれば GameView とセーブの要約', async () => {
     const empty = setup();
     expect(await empty.api.getGame()).toEqual({ state: null });
-    expect(await empty.api.getSave()).toEqual({ exists: false, summary: null });
-    const { api } = setup({ game: storedGame(makeState('INN', { ...CHARACTER, inventory: { ...INVENTORY, pending: null } })), save: storedSave() });
+    expect(await empty.api.getSaves()).toEqual({ slots: [null, null, null] });
+    const { api } = setup({ game: storedGame(makeState('INN', { ...CHARACTER, inventory: { ...INVENTORY, pending: null } })), 'save-1': storedSave() });
     const g = (await api.getGame()).state!;
     expect(g.character).toMatchObject({ attack: 12, base: { attack: 9 }, bonus: { attack: 3 }, nextLevelExp: 240, expToNext: 90 });
     expect(g.inventory.items.map((i) => i.id)).toEqual([3, 2]);
     expect(g.inventory.equipped.weapon).toEqual({ id: 1, itemId: 'weapon2', name: 'スピア', slot: 'weapon', rarity: 'N', stat: 'attack', stats: ['attack'], value: 3 });
-    expect(await api.getSave()).toEqual({ exists: true, summary: { name: 'アルド', level: 4, savedAt: '2026-11-01T00:00:00.000Z' } });
+    expect(await api.getSaves()).toEqual({ slots: [{ slot: 1, name: 'アルド', level: 4, savedAt: '2026-11-01T00:00:00.000Z' }, null, null] });
   });
 
   test('rest は revision を 1 進めて書く。ゲームがなければ 404、書けなければ 500 storage_error で保存は変わらない', async () => {
@@ -644,7 +721,7 @@ describe('ゲーム API の骨組み', () => {
 
 // 速さ（TC-0037-01。TST-0001 §7：目標 100ms の 3 倍まで許す）
 describe('操作の速さ', () => {
-  test('TC-0037-01 どの操作も、所持品 50 個・踏破済みの多い 5F の重い状態で、呼び出しから結果まで 300ms 未満', async () => {
+  test('TC-0037-01 どの操作も、所持品 50 個・踏破済みの多い 5F・3 スロットとも埋まった重い状態で、呼び出しから結果まで 300ms 未満', async () => {
     const items = Array.from({ length: 50 }, (_, i) => makeItem(i + 10, 'weapon1', 'N', 1));
     const inventory = {
       equipped: { weapon: makeItem(1, 'weapon6', 'UR', 28), armor: makeItem(2, 'armor4', 'R', 10), shield: null, accessory: null },
@@ -660,15 +737,17 @@ describe('操作の速さ', () => {
     const deep = (overrides: Partial<GameStateData> = {}) => makeState('DUNGEON', { ...heavy, dungeon: map(5, { x: 5, y: 5 }), ...overrides });
     // セーブは、重い宿屋の状態から本物の save で作る
     const saver = setup({ game: storedGame(makeState('INN', heavy)) });
-    await saver.api.save();
-    const save = JSON.parse(saver.store.raw('save')!) as Record<string, unknown>;
+    await saver.api.save({ slot: 1 });
+    const save = JSON.parse(saver.store.raw('save-1')!) as Record<string, unknown>;
+    // 3 スロットとも埋まった保存（v1.14）
+    const saves = { 'save-1': save, 'save-2': save, 'save-3': save };
     const cases: [string, Record<string, unknown>, (a: GameApi) => Promise<unknown>][] = [
       ['startGame', {}, (a) => a.startGame({ name: 'ゆうしゃ' })],
-      ['getGame', { game: storedGame(deep()), save: save }, (a) => a.getGame()],
-      ['getSave', { save: save }, (a) => a.getSave()],
+      ['getGame', { game: storedGame(deep()), ...saves }, (a) => a.getGame()],
+      ['getSaves', saves, (a) => a.getSaves()],
       ['rest', { game: storedGame(makeState('INN', heavy)) }, (a) => a.rest()],
-      ['save', { game: storedGame(makeState('INN', heavy)) }, (a) => a.save()],
-      ['load', { save: save }, (a) => a.load()],
+      ['save', { game: storedGame(makeState('INN', heavy)), ...saves }, (a) => a.save({ slot: 2 })],
+      ['load', saves, (a) => a.load({ slot: 3 })],
       ['enterDungeon', { game: storedGame(makeState('INN', heavy)) }, (a) => a.enterDungeon()],
       ['move', { game: storedGame(deep()) }, (a) => a.move({ action: 'forward' })],
       ['stairs', { game: storedGame(deep({ dungeon: map(5, { x: 0, y: 9 }) })) }, (a) => a.stairs({ direction: 'up' })],

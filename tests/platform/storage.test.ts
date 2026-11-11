@@ -45,9 +45,55 @@ describe('localStorage の読み書き', () => {
     expect(mem.getItem('mini-wiz-game-save')).toBeNull();
   });
 
-  test('migrateStorage は版がなければ 1 を書く', () => {
+  test('migrateStorage は版がなければ 2 を書く。版 2 なら何もしない', () => {
     const mem = memoryStorage();
     createLocalStorage('mini-wiz-game', () => mem).migrateStorage();
-    expect(mem.getItem('mini-wiz-game-schema')).toBe('1');
+    expect(mem.getItem('mini-wiz-game-schema')).toBe('2');
+    mem.setItem('mini-wiz-game-save', '{"name":"x"}');
+    createLocalStorage('mini-wiz-game', () => mem).migrateStorage();
+    expect(mem.getItem('mini-wiz-game-save')).toBe('{"name":"x"}');
+    expect(mem.getItem('mini-wiz-game-save-1')).toBeNull();
+  });
+});
+
+describe('セーブを 3 つに移す', () => {
+  const SAVE = JSON.stringify({ schemaVersion: 3, name: 'アルド', level: 4, savedAt: '2026-11-01T00:00:00.000Z' });
+  const GAME = { schemaVersion: 5, revision: 7, name: 'アルド', level: 4, location: 'INN', updatedAt: '2026-11-01T00:00:00.000Z' };
+
+  test('TC-0009-12 版 1 の save を save-1 に同じ文字列で写し、プレイ中の状態に saveSlot: 1 を足して save を消し、版 2 にする。save がなければプレイ中の状態に触れない。途中で書けなければどれも前のまま版 1', () => {
+    // save とプレイ中の状態がある
+    const mem = memoryStorage();
+    mem.setItem('mini-wiz-game-schema', '1');
+    mem.setItem('mini-wiz-game-save', SAVE);
+    mem.setItem('mini-wiz-game-game', JSON.stringify(GAME));
+    createLocalStorage('mini-wiz-game', () => mem).migrateStorage();
+    expect(mem.getItem('mini-wiz-game-save-1')).toBe(SAVE);
+    expect(JSON.parse(mem.getItem('mini-wiz-game-game')!)).toEqual({ ...GAME, saveSlot: 1 });
+    expect(mem.getItem('mini-wiz-game-save')).toBeNull();
+    expect(mem.getItem('mini-wiz-game-schema')).toBe('2');
+
+    // save がない：プレイ中の状態に触れない（saveSlot は null として読む）
+    const noSave = memoryStorage();
+    noSave.setItem('mini-wiz-game-schema', '1');
+    noSave.setItem('mini-wiz-game-game', JSON.stringify(GAME));
+    const gameText = noSave.getItem('mini-wiz-game-game');
+    createLocalStorage('mini-wiz-game', () => noSave).migrateStorage();
+    expect(noSave.getItem('mini-wiz-game-game')).toBe(gameText);
+    expect(noSave.getItem('mini-wiz-game-save-1')).toBeNull();
+    expect(noSave.getItem('mini-wiz-game-schema')).toBe('2');
+
+    // 途中（プレイ中の状態）で書けない：どのキーも前のまま、版 1（次の起動でやり直す）
+    for (const failKey of ['mini-wiz-game-game', 'mini-wiz-game-save-1']) {
+      // 置いたあとで、そのキーの書き込みを失敗させる
+      const failKeys: string[] = [];
+      const fail = memoryStorage(failKeys);
+      fail.setItem('mini-wiz-game-schema', '1');
+      fail.setItem('mini-wiz-game-save', SAVE);
+      fail.setItem('mini-wiz-game-game', JSON.stringify(GAME));
+      failKeys.push(failKey);
+      const before = ['schema', 'save', 'save-1', 'game'].map((k) => fail.getItem(`mini-wiz-game-${k}`));
+      createLocalStorage('mini-wiz-game', () => fail).migrateStorage();
+      expect(['schema', 'save', 'save-1', 'game'].map((k) => fail.getItem(`mini-wiz-game-${k}`)), failKey).toEqual(before);
+    }
   });
 });

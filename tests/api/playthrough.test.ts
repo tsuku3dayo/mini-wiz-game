@@ -19,7 +19,9 @@ describe('通しプレイ（自動プレイヤー）', () => {
     // レベルは やすむ でだけ上がる（v1.14）。自動プレイヤーはボスに Lv9 以上で挑む
     expect(r.bossLevels[0]).toBeGreaterThanOrEqual(9);
     const game = JSON.parse(store.raw('game')!);
-    const save = JSON.parse(store.raw('save')!);
+    // 一度もセーブしていないので、自動セーブは最初の空き（スロット 1）に書く（v1.14）
+    expect(game.saveSlot).toBe(1);
+    const save = JSON.parse(store.raw('save-1')!);
     expect(save.records).toEqual(game.records);
     expect(save.level).toBe(game.level);
     expect(game.records).toMatchObject({ laps: 2, bossKills: 1 });

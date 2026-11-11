@@ -1,5 +1,5 @@
-// ストア：ゲームの状態とセーブの有無（仕様書 §11.10、§27.3）。メッセージは持たない
-import type { GameApi, GameView, SaveSummary } from '../api/types';
+// ストア：ゲームの状態とセーブの一覧（仕様書 §11.10、§27.3）。メッセージは持たない
+import type { GameApi, GameView, SaveSlotSummary } from '../api/types';
 
 export type LoadStatus = 'loading' | 'ready' | 'error';
 
@@ -8,14 +8,15 @@ export interface GameSlot {
   state: GameView | null;
 }
 
-export interface SaveSlot {
+/** セーブの一覧（v1.14 で 1 つから 3 スロットに。slots は getSaves() の 3 つ、空きは null） */
+export interface SaveState {
   status: LoadStatus;
-  summary: SaveSummary['summary'];
+  slots: (SaveSlotSummary | null)[];
 }
 
 export interface Store {
   readonly game: GameSlot;
-  readonly save: SaveSlot;
+  readonly save: SaveState;
   /** 操作の結果で置き換える（取り直さない）。タイトルへ戻るでは null */
   setGame(state: GameView | null): void;
   refetchGame(): Promise<void>;
@@ -23,6 +24,8 @@ export interface Store {
   /** 値が変わったら呼ぶ。戻り値で外す */
   subscribe(listener: () => void): () => void;
 }
+
+const EMPTY_SLOTS: (SaveSlotSummary | null)[] = [null, null, null];
 
 /** 取得の失敗は 1 回だけやり直す（v1.0 の retry: 1） */
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -33,9 +36,9 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export function createStore(api: Pick<GameApi, 'getGame' | 'getSave'>): Store {
+export function createStore(api: Pick<GameApi, 'getGame' | 'getSaves'>): Store {
   let game: GameSlot = { status: 'loading', state: null };
-  let save: SaveSlot = { status: 'loading', summary: null };
+  let save: SaveState = { status: 'loading', slots: EMPTY_SLOTS };
   const listeners = new Set<() => void>();
   const notify = () => listeners.forEach((l) => l());
 
@@ -61,10 +64,10 @@ export function createStore(api: Pick<GameApi, 'getGame' | 'getSave'>): Store {
 
     async refetchSave() {
       try {
-        const r = await withRetry(() => api.getSave());
-        save = { status: 'ready', summary: r.exists ? r.summary : null };
+        const r = await withRetry(() => api.getSaves());
+        save = { status: 'ready', slots: r.slots };
       } catch {
-        save = { status: 'error', summary: null };
+        save = { status: 'error', slots: EMPTY_SLOTS };
       }
       notify();
     },

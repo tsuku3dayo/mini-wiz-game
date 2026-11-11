@@ -44,6 +44,8 @@ describe('名前を付けてキャラクターを作る', () => {
       battle: null,
       inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: null }, items: [], nextId: 1, pending: null },
       records: { battles: 0, kills: 0, deaths: 0, laps: 1, bossKills: 0 },
+      // 最後に使ったスロットはない（v1.14）
+      saveSlot: null,
     });
     // createCharacter は乱数を受け取らない。空の SequenceRng が手つかずのまま
     rng.assertExhausted();

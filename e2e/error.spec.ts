@@ -115,16 +115,19 @@ test.describe('エラーの出し方', () => {
   test('TC-0012-07 タイトルで書き込みに失敗すると、ErrorPanel がメニューの下に出る', async ({ page }, info) => {
     await openDebug(page);
     await writeScene(page, { save: storedSave() });
-    const menu = page.getByRole('menu', { name: 'タイトル' });
-    await expect(menu.getByRole('menuitem').filter({ hasText: 'ゆうしゃ Lv1' })).toBeVisible();
-    // 書き込みを失敗させる
+    const press = (l: ReturnType<Page['locator']>) => (info.project.name === 'desktop' ? l.click() : l.tap());
+    // 「つづきから」でスロットの一覧を出し（v1.14）、書き込みを失敗させてからスロットを選ぶ
+    await press(page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: 'つづきから' }));
+    const list = page.getByRole('menu', { name: 'つづきから' });
+    await expect(list.getByRole('menuitem').filter({ hasText: 'ゆうしゃ Lv1' })).toBeVisible();
     await page.evaluate(() => {
       Storage.prototype.setItem = () => { throw new Error('QuotaExceededError'); };
     });
-    const cont = menu.getByRole('menuitem').filter({ hasText: 'つづきから' });
-    if (info.project.name === 'desktop') await cont.click();
-    else await cont.tap();
+    await press(list.getByRole('menuitem').filter({ hasText: 'スロット1' }));
 
+    // 一覧が閉じてタイトルのメニューに戻り、その下に ErrorPanel（v1.15）
+    const menu = page.getByRole('menu', { name: 'タイトル' });
+    await expect(list).toHaveCount(0);
     const panel = page.getByTestId('error-panel');
     await expect(panel).toBeVisible();
     await expect(panel).toHaveAttribute('data-variant', 'danger');

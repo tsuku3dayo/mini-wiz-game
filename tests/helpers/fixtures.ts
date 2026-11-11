@@ -35,6 +35,7 @@ export function makeState(location: Location = 'INN', overrides: Partial<GameSta
     battle: location === 'BATTLE' ? { enemy: { kind: 'slime', hp: 12 }, isBoss: false } : null,
     inventory,
     records: initialRecords(),
+    saveSlot: null,
     ...overrides,
   };
 }
