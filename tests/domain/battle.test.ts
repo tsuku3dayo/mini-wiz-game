@@ -33,11 +33,11 @@ describe('敵と戦う', () => {
     expect(r.messages[1].text).toMatch(/^スライムの こうげき！/);
   });
 
-  test('TC-0019-05 evadeChance(受ける側の速, 攻撃側の速, 受ける側のかいひ) は clamp(速の差 + かいひ, 0, 90)', () => {
-    const cases: [number, number, number, number][] = [
-      [50, 30, 0, 20], [10, 10, 0, 0], [11, 10, 0, 1], [5, 10, 0, 0], [5, 10, 12, 7], [20, 14, 6, 12], [100, 10, 0, 90], [10, 10, 95, 90],
+  test('TC-0019-05 evadeChance(受ける側のかいひ, 攻撃側の速) は clamp(かいひ − 速, 0, 90)', () => {
+    const cases: [number, number, number][] = [
+      [50, 30, 20], [10, 10, 0], [11, 10, 1], [5, 10, 0], [17, 10, 7], [26, 14, 12], [100, 10, 90], [105, 10, 90],
     ];
-    for (const [def, atk, eva, want] of cases) expect(evadeChance(def, atk, eva)).toBe(want);
+    for (const [eva, atk, want] of cases) expect(evadeChance(eva, atk)).toBe(want);
   });
 
   test('TC-0019-06 プレイヤーの攻撃が回避されると敵の HP は変わらず、ダメージの int(0,2) を引かない。次は敵の攻撃の回避の判定', () => {
@@ -65,23 +65,23 @@ describe('敵と戦う', () => {
     expect(r.messages.some((m) => m.text.startsWith('スライムの こうげき！'))).toBe(false);
   });
 
-  test('TC-0019-08 回避率 15%（受ける側の速 20・攻撃側の速 5・かいひ 0）で 10,000 回攻撃すると、回避の割合が 13.5%〜16.5%', () => {
-    expect(evadeChance(20, 5, 0)).toBe(15);
+  test('TC-0019-08 回避率 15%（受ける側のかいひ 20・攻撃側の速 5）で 10,000 回攻撃すると、回避の割合が 13.5%〜16.5%', () => {
+    expect(evadeChance(20, 5)).toBe(15);
     const rng = new SeededRng(2026);
     let evaded = 0;
     for (let i = 0; i < 10_000; i += 1) {
-      if (attack({ attack: 5, defense: 5, speed: 5, evasion: 0 }, { attack: 5, defense: 5, speed: 20, evasion: 0 }, rng).evaded) evaded += 1;
+      if (attack({ attack: 5, defense: 5, speed: 5, evasion: 5 }, { attack: 5, defense: 5, speed: 20, evasion: 20 }, rng).evaded) evaded += 1;
     }
     expect(evaded / 10_000).toBeGreaterThanOrEqual(0.135);
     expect(evaded / 10_000).toBeLessThanOrEqual(0.165);
   });
 
-  test('TC-0019-16 たて（かいひ +6）を付けた速 20 のプレイヤーは、ゴブリン（速 6）の攻撃を回避率 20 で判定する。ゴブリンの回避率は 0', () => {
+  test('TC-0019-16 たて（かいひ +6）を付けた速 20 のプレイヤー（かいひ 26）は、ゴブリン（速 6）の攻撃を回避率 20 で判定する。ゴブリンの回避率は 0。ダークナイト（かいひ 10）は速 5 の攻撃を 5% でよける', () => {
     const shield = makeItem(1, 'shield5', 'R', 6);
     const inventory = { equipped: { weapon: null, armor: null, shield, accessory: null }, items: [], nextId: 2, pending: null };
     const start = deepFreeze(battleState('goblin', 18, { speed: 20, inventory }));
-    // プレイヤーが先：ゴブリンの回避率 0 → 乱数 1 でも当たる（回避の乱数は 1 個引く）。ダメージ 0 → 5 − 1 = 4
-    // ゴブリンの攻撃：回避率 20 − 6 + 6 = 20 → 20 で回避
+    // プレイヤーが先：ゴブリンの回避率 かいひ 6 − 20 → 0。乱数 1 でも当たる（回避の乱数は 1 個引く）。ダメージ 0 → 5 − 1 = 4
+    // ゴブリンの攻撃：回避率 かいひ（20 + 6）− 6 = 20 → 20 で回避
     const evaded = new SequenceRng([1, 0, 20]);
     const r1 = resolveTurn(start, 'attack', evaded);
     evaded.assertExhausted();
@@ -91,6 +91,14 @@ describe('敵と戦う', () => {
     const r2 = resolveTurn(start, 'attack', hit);
     hit.assertExhausted();
     expect(r2.messages[1].text).toBe('ゴブリンの こうげき！ 4 の ダメージを うけた！');
+
+    // 敵の かいひ は素早さ（v1.16）：ダークナイト（速 10）は速 5 のプレイヤーの攻撃を 10 − 5 ＝ 5% でよける
+    // 敵が先（速 10 > 5）：敵の攻撃を 100 で外し・ダメージ 0 → プレイヤーの攻撃の回避 5 で回避、6 で当たる
+    const dk = deepFreeze(battleState('darkKnight', 70, { hp: 999, maxHp: 999 }));
+    const dodge = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 5]));
+    expect(dodge.messages.at(-1)!.text).toBe('ダークナイトは ひらりと みをかわした！');
+    const land = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 6, 0]));
+    expect(land.messages.at(-1)!.text).toMatch(/^ゆうしゃの こうげき！ ダークナイトに \d+ の ダメージ！$/);
   });
 });
 

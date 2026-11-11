@@ -16,7 +16,7 @@ async function pauseClock(page: Page) {
 }
 
 test.describe('戦闘の画面', () => {
-  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・見出し「コマンド」のメニュー（たたかう／ヒール／にげる。狭い画面はボタン）・メッセージ欄が出る', async ({ page }, info) => {
+  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・コマンド（たたかう／ヒール／にげる。狭い画面は枠なしのボタン、広い画面は見出し「コマンド」の中）・メッセージ欄が出る', async ({ page }, info) => {
     await startAt(page, 'BATTLE');
     // 狭い画面は横 1 列のボタン、広い画面は縦のメニュー（v1.14）
     const menu = page.getByRole('menu', { name: '戦闘' });
@@ -28,7 +28,9 @@ test.describe('戦闘の画面', () => {
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
     await expect(status.locator('.wiz-status-compact')).toContainText('ゆうしゃ');
-    await expect(page.locator('.battle-command .wiz-window-title')).toContainText('コマンド');
+    // 見出し「コマンド」は広い画面だけ（狭い画面は枠なし。v1.16）
+    if (info.project.name === 'desktop') await expect(page.locator('.battle-command .wiz-window-title')).toContainText('コマンド');
+    else await expect(page.locator('.wiz-window-title', { hasText: 'コマンド' })).toHaveCount(0);
     const labels = (await page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''));
     expect(labels).toEqual(['たたかう', 'ヒール', 'にげる']);
     await expect(page.getByRole('log')).toHaveCount(1);
@@ -106,7 +108,7 @@ test.describe('戦闘の画面', () => {
     expect((await page.evaluate(() => window.__wiz!.debugDungeon())).player).toEqual(before);
   });
 
-  test('TC-0019-14 狭い画面の戦闘のコマンドは横 1 列のボタン（たたかう・ヒール・にげる、幅 2：1：1、高さ 56px、▶ なし、初めのフォーカスは たたかう）。広い画面は縦の 3 行', async ({ page }, info) => {
+  test('TC-0019-14 狭い画面の戦闘のコマンドは横 1 列のボタン（たたかう・ヒール・にげる、幅 2：1：1、高さ 88px、枠なしでステータスと左右がそろう、▶ なし、初めのフォーカスは たたかう）。広い画面は縦の 3 行', async ({ page }, info) => {
     await startAt(page, 'BATTLE');
     const buttons = page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem');
     await expect(buttons).toHaveCount(3);
@@ -125,9 +127,16 @@ test.describe('戦闘の画面', () => {
     expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
     expect(boxes[0].left).toBeLessThan(boxes[1].left);
     expect(boxes[1].left).toBeLessThan(boxes[2].left);
-    // 幅 2：1：1（grid-template-columns: 2fr 1fr 1fr。たたかう ＝ ヒール ＋ にげる）、高さ 56px
+    // 幅 2：1：1（grid-template-columns: 2fr 1fr 1fr。たたかう ＝ ヒール ＋ にげる）、高さ 88px（v1.16）
     expect(Math.abs(boxes[0].width - (boxes[1].width + boxes[2].width))).toBeLessThanOrEqual(1);
-    for (const b of boxes) expect(Math.round(b.height)).toBe(56);
+    for (const b of boxes) expect(Math.round(b.height)).toBe(88);
+    // 枠なし：ボタンの箱の左右の端が、ステータスのウィンドウの左右の端と 1px 以内でそろう（v1.16）
+    const edges = async (sel: string) => page.locator(sel).first().evaluate((e) => { const r = e.getBoundingClientRect(); return [r.left, r.right]; });
+    const [bl, br] = await edges('.command-buttons');
+    const [sl, sr] = await edges('[data-testid="status-panel"]');
+    expect(Math.abs(bl - sl)).toBeLessThanOrEqual(1);
+    expect(Math.abs(br - sr)).toBeLessThanOrEqual(1);
+    await expect(page.locator('.battle-command')).toHaveCount(0);
     expect(boxes.some((b) => b.text.includes('▶'))).toBe(false);
     await expect(buttons.filter({ hasText: 'たたかう' })).toBeFocused();
   });

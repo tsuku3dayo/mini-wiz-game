@@ -167,13 +167,13 @@ test.describe('宿屋', () => {
     } else {
       await expect(status.locator('.wiz-window-title')).toContainText('ゆうしゃ');
     }
-    expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7', かいひ: '  0' });
+    expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7', かいひ: '  7' });
 
-    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」。たて（かいひ +6）は「  6」で「 (+n)」は付かない（v1.14）
+    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」。かいひ は すばやさ＋たて で「 13 (+6)」（v1.16）
     const life = { id: 1, itemId: 'accessory4', rarity: 'R', value: 15 };
     const shield = { id: 2, itemId: 'shield5', rarity: 'R', value: 6 };
     await startAt(page, 'INN', { state: { ...lv3, inventory: { equipped: { weapon: null, armor: null, shield, accessory: life }, items: [], nextId: 3, pending: null } } });
-    expect(await values()).toMatchObject({ HP: ' 25/ 61 (+15)', かいひ: '  6' });
+    expect(await values()).toMatchObject({ HP: ' 25/ 61 (+15)', かいひ: ' 13 (+6)' });
   });
 
   test('TC-0008-07 経験値 72・Lv1 で「やすむ」と、回復の行に続けてレベルアップの行が出て、演出と levelUp の音が出る。Lv「  3」・EXP「 72（つぎまで 72）」', async ({ page }, info) => {
@@ -228,7 +228,7 @@ test.describe('宿屋', () => {
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
     expect(await status.locator('dt').allTextContents()).toEqual(['なまえ', 'Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']);
-    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  0']);
+    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  7']);
     const rec = page.getByTestId('records-window');
     await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
     expect(await rec.locator('dd').allTextContents()).toEqual(['128 回', '120 体', '3 回', '2 周目', '1 回']);

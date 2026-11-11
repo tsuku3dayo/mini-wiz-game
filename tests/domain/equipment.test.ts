@@ -73,22 +73,31 @@ describe('付け替え・はずす・捨てる', () => {
     expect(equipmentBonus(unequip(on, 'accessory').state.inventory)).toMatchObject({ attack: 0, defense: 0 });
   });
 
-  test('TC-0028-15 たて 8 種は かいひ を上げる。effectiveStats の evasion は 0 ＋ たての補正だけ。名前・並び・文言・のうりょくの変化', () => {
+  test('TC-0028-15 たて 8 種は かいひ を上げる。effectiveStats の evasion は すばやさ＋たて。base・bonus。名前・並び・文言・のうりょくの変化（ウィンドブーツで 2 行）', () => {
     for (let tier = 1; tier <= 8; tier += 1) expect(ITEMS[`shield${tier}` as ItemId].stats).toEqual(['evasion']);
-    // ほかの部位（ガードリングは ぼうぎょ）の補正は evasion に入らない
+    // かいひ ＝ すばやさの実効値 ＋ たて（v1.16）。ぼうぎょ（ガードリング）の補正は evasion に入らない
     const shield = makeItem(1, 'shield5', 'R', 6);
     const guard = makeItem(2, 'accessory1', 'N', 3);
     const s = deepFreeze(makeState('INN', { inventory: inv([], { shield, accessory: guard }) }));
-    expect(effectiveStats(s)).toEqual({ attack: 5, defense: 8, speed: 5, evasion: 6, maxHp: 30, maxMp: 10 });
-    expect(effectiveStats(deepFreeze(makeState('INN'))).evasion).toBe(0);
+    expect(effectiveStats(s)).toEqual({ attack: 5, defense: 8, speed: 5, evasion: 11, maxHp: 30, maxMp: 10 });
+    expect(effectiveStats(deepFreeze(makeState('INN'))).evasion).toBe(5);
+    // すばやさの補正（ウィンドブーツ +3）も かいひ に入る
+    const boots = makeItem(3, 'accessory3', 'N', 3);
+    const fast = deepFreeze(makeState('INN', { inventory: inv([], { shield, accessory: boots }) }));
+    expect(effectiveStats(fast)).toMatchObject({ speed: 8, evasion: 14 });
+    // GameView：base.evasion ＝ すばやさの基礎値、bonus.evasion ＝ すばやさの補正 ＋ たて（base ＋ bonus ＝ 実効値）
+    expect(toGameView(fast).character).toMatchObject({ evasion: 14, base: { evasion: 5 }, bonus: { evasion: 9 } });
     expect(statName('evasion')).toBe('かいひ');
     expect(STAT_ORDER).toEqual(['attack', 'defense', 'speed', 'evasion', 'maxHp', 'maxMp']);
     expect(bonusTexts({ stats: ['evasion'], value: 6 })).toEqual(['かいひ +6']);
-    // 装備画面で たて の候補にカーソルを合わせると、かいひ の行だけが「  0 →   6 ↑」
+    // 装備画面で たて の候補にカーソルを合わせると、かいひ の行だけが「  5 →  11 ↑」
     const view = toGameView(deepFreeze(makeState('INN'))).character;
     const c = { effective: { attack: view.attack, defense: view.defense, speed: view.speed, evasion: view.evasion, maxHp: view.maxHp, maxMp: view.maxMp }, base: view.base, bonus: view.bonus };
     const rows = abilityRows(c, { current: null, candidate: toItemView(shield) });
-    expect(rows.filter((r) => r.change !== null).map((r) => [r.stat, r.text])).toEqual([['evasion', '  0 →   6 ↑']]);
+    expect(rows.filter((r) => r.change !== null).map((r) => [r.stat, r.text])).toEqual([['evasion', '  5 →  11 ↑']]);
+    // ウィンドブーツ（すばやさ +3）の候補では すばやさ と かいひ の 2 行が上がる
+    const bootRows = abilityRows(c, { current: null, candidate: toItemView(boots) });
+    expect(bootRows.filter((r) => r.change !== null).map((r) => [r.stat, r.text])).toEqual([['speed', '  5 →   8 ↑'], ['evasion', '  5 →   8 ↑']]);
   });
 
   test('TC-0029-07 装備中の個体の ID で捨てると「その もちものは ない」で、状態は変わらない', () => {

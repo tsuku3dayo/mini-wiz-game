@@ -29,6 +29,7 @@ export function toInventoryView(inv: InventoryData): InventoryView {
  */
 export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } = {}): GameView {
   const eff = effectiveStats(state);
+  const bonus = equipmentBonus(state.inventory);
   const nextLevelExp = expForLevel(state.level + 1);
   return {
     location: state.location,
@@ -42,8 +43,9 @@ export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } =
       hp: state.hp,
       mp: state.mp,
       ...eff,
-      base: { attack: state.attack, defense: state.defense, speed: state.speed, evasion: 0, maxHp: state.maxHp, maxMp: state.maxMp },
-      bonus: equipmentBonus(state.inventory),
+      // かいひ：基礎＝素早さの基礎値、補正＝素早さの補正＋たての補正（基礎＋補正＝実効値。v1.16）
+      base: { attack: state.attack, defense: state.defense, speed: state.speed, evasion: state.speed, maxHp: state.maxHp, maxMp: state.maxMp },
+      bonus: { ...bonus, evasion: bonus.speed + bonus.evasion },
     },
     inventory: toInventoryView(state.inventory),
     records: { ...state.records },

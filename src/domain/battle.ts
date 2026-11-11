@@ -21,7 +21,7 @@ export interface Combatant {
   attack: number;
   defense: number;
   speed: number;
-  evasion: number; // プレイヤーは装備込み（たての補正）、敵は 0（v1.14）
+  evasion: number; // プレイヤーは 素早さの実効値＋たての補正、敵は その敵の素早さ（v1.16）
 }
 
 /** 画面に返す戦闘の情報。敵の HP は含めない（キーはこの 5 つだけ） */
@@ -45,9 +45,9 @@ export function turnOrder(playerSpeed: number, enemySpeed: number): ('player' | 
   return playerSpeed >= enemySpeed ? ['player', 'enemy'] : ['enemy', 'player'];
 }
 
-/** 回避率（%）= clamp((受ける側の速 − 攻撃する側の速) + 受ける側のかいひ, 0, 90)（v1.14） */
-export function evadeChance(defenderSpeed: number, attackerSpeed: number, defenderEvasion: number): number {
-  return clamp(defenderSpeed - attackerSpeed + defenderEvasion, EVASION.min, EVASION.max);
+/** 回避率（%）= clamp(受ける側のかいひ − 攻撃する側の速, 0, 90)（v1.16。かいひ は素早さを含む） */
+export function evadeChance(defenderEvasion: number, attackerSpeed: number): number {
+  return clamp(defenderEvasion - attackerSpeed, EVASION.min, EVASION.max);
 }
 
 /** 逃走成功率（%）= clamp(50 + (プレイヤー − 敵) × 5, 10, 90) */
@@ -58,7 +58,7 @@ export function fleeChance(playerSpeed: number, enemySpeed: number): number {
 /** 攻撃 1 回：回避の int(1,100) → 当たったときだけダメージの int(0,2) */
 export function attack(attacker: Combatant, defender: Combatant, rng: Rng): { damage: number; evaded: boolean } {
   // 回避率 0% のときも、この乱数は 1 個引く（引く数をそろえる）
-  if (rng.int(1, 100) <= evadeChance(defender.speed, attacker.speed, defender.evasion)) return { damage: 0, evaded: true };
+  if (rng.int(1, 100) <= evadeChance(defender.evasion, attacker.speed)) return { damage: 0, evaded: true };
   return { damage: damage(attacker.attack, defender.defense, rng), evaded: false };
 }
 
@@ -135,7 +135,8 @@ export function resolveTurn(state: GameStateData, command: BattleCommand, rng: R
   // 装備は戦闘中に変わらないので、実効値はターンの最初に 1 回だけ計算する
   const eff = effectiveStats(state);
   const kind = battle.enemy.kind;
-  const enemy: EnemyStats & Combatant = { ...ENEMIES[kind], evasion: 0 };
+  // 敵の かいひ は、その敵の素早さ（v1.16）
+  const enemy: EnemyStats & Combatant = { ...ENEMIES[kind], evasion: ENEMIES[kind].speed };
   const player: Combatant = { attack: eff.attack, defense: eff.defense, speed: eff.speed, evasion: eff.evasion };
   const messages: Message[] = [];
   let cur = state;
