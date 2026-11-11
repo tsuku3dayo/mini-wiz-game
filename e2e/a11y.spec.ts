@@ -2,7 +2,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import {
-  battleOf, bossBattle, dungeonMap, logLines, openDebug, SEEDS, startAt, storedInventory, storedItem,
+  battleOf, bossBattle, dungeonMap, innLevelUp, logLines, openDebug, SEEDS, startAt, storedInventory, storedItem,
 } from './helpers';
 import { item, scenes } from './scenes';
 
@@ -233,11 +233,15 @@ test.describe('キーボードと読み上げ', () => {
       await press(page.getByRole('button', { name: '前進', exact: true }));
       await expectLine('encounter', /^スライムが あらわれた！$/);
 
-      // レベルアップと［UR］のドロップ、［LG］のドロップ
+      // レベルアップ（宿屋の やすむ。v1.14）
+      await startAt(page, 'INN', { state: innLevelUp() });
+      await press(item(page, '宿屋', 'やすむ'));
+      await expectLine('levelUp', /^レベルが あがった！ Lv\d+$/);
+
+      // ［UR］のドロップ、［LG］のドロップ
       const darkKnight = { hp: 999, maxHp: 999, battle: battleOf('darkKnight', 1) };
       await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
       await attack();
-      await expectLine('levelUp', /^レベルが あがった！ Lv\d+$/);
       await expectLine('rareDrop', /^ダークナイトは .+［UR］（.+）を おとした！$/);
       await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropLG });
       await attack();

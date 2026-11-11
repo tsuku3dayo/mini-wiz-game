@@ -78,7 +78,7 @@ test.describe('メッセージ欄', () => {
     const lines = await logLines(page);
     expect(lines.length).toBeGreaterThan(0);
     expect(lines.length).toBeLessThanOrEqual(wide ? 7 : 5);
-    expect(lines.at(-1)).toMatch(/^オークの こうげき！/);
+    expect(lines.at(-1)).toMatch(/^オークロードの こうげき！/);
     expect(await page.getByRole('log').evaluate((e) => e.scrollHeight <= e.clientHeight)).toBe(true);
     expect(await logHeight(page)).toBe(battleEmpty);
 
@@ -137,7 +137,7 @@ test.describe('メッセージ欄', () => {
     else await attackItem(page).tap({ force: true });
     await page.clock.runFor(2000);
     expect(await revision()).toBe(r0 + 1);
-    expect((await logLines(page)).at(-1)).toMatch(/^オークの こうげき！/);
+    expect((await logLines(page)).at(-1)).toMatch(/^オークロードの こうげき！/);
 
     // 応答待ちの間に 2 回押しても 1 ターンだけ
     await page.evaluate(() => window.__wiz!.setDelay(1000));
@@ -210,8 +210,8 @@ test.describe('メッセージ欄', () => {
       await pauseClock(page);
       await choose(page, info, attackItem(page));
       await expect.poll(() => logLines(page)).toHaveLength(1);
-      // 7 行目がドロップ（400 × 4 ＋ レベルアップ 1071 ＋ 400。v1.10）
-      await page.clock.runFor(3071);
+      // 5 行目がドロップ（400 × 4。v1.14 で間のレベルアップの行がなくなった）
+      await page.clock.runFor(1600);
       await expect(dropLine()).toBeVisible();
       await expect(dropLine()).toHaveCSS('color', s.color);
       expect(await blink()).toEqual({ duration: '0.4s', timing: 'steps(1)', count: s.count, running: 1 });

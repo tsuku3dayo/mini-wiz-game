@@ -35,7 +35,8 @@ test.describe('ステータス画面', () => {
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ゆうしゃ');
     const dds = await status.locator('dd').allTextContents();
-    expect(dds).toEqual(['  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7']);
+    expect(await status.locator('dt').allTextContents()).toEqual(['Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']);
+    expect(dds).toEqual(['  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  0']);
     const rec = page.getByTestId('records-window');
     await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
     await expect(rec).toContainText('このキャラクターの きろく');

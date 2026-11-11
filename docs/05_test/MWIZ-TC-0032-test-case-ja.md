@@ -3,8 +3,8 @@ id: MWIZ-TC-0032
 type: Test Case
 title: 効果音を鳴らす・切り替える
 status: stable
-version: 1.2
-updated: 2026-11-10
+version: 1.3
+updated: 2026-11-11
 sources:
   - MWIZ-US-0032（v1.3）
   - MWIZ-TST-0001（v1.2）
@@ -39,7 +39,7 @@ verified: null
 | TC-0032-13 | 10 | 演出中にメッセージ欄をクリック（`desktop` では Enter・Space も）すると、その時点で効果音の発振器の `stop()` が呼ばれる（`addInitScript` で `AudioScheduledSourceNode.prototype.stop` を包んで呼び出しを記録する） | E2E | `e2e/sound.spec.ts` |
 | TC-0032-14 | 11 | 音がオフのとき、遭遇・ボス出現・レベルアップ・ドロップ・ボス撃破・クリアのどれでも、`app:sound` は `muted: true` で出て、`AudioContext` の発振器は作られない（`addInitScript` で `OscillatorNode` の作成を数える） | E2E | `e2e/sound.spec.ts` |
 | TC-0032-15 | 12 | `globalThis.AudioContext`・`webkitAudioContext` がないとき、`audioContext()` が `null` を返し、`playSfx`・`stopSfx`・`sfxRemainingSec` が例外を出さない（残りは 0） | 単体 | `tests/audio/sound.test.ts` |
-| TC-0032-16 | 12 | `addInitScript` で `window.AudioContext`・`webkitAudioContext` を消して開き、音をオンにして遭遇・戦闘・レベルアップまで遊ぶ。`pageerror` が出ず、ErrorPanel も出ない | E2E | `e2e/sound.spec.ts` |
+| TC-0032-16 | 12 | `addInitScript` で `window.AudioContext`・`webkitAudioContext` を消して開き、音をオンにして遭遇・戦闘・レベルアップ（宿屋の やすむ。v1.3）まで遊ぶ。`pageerror` が出ず、ErrorPanel も出ない | E2E | `e2e/sound.spec.ts` |
 | TC-0032-22 | 12 | 偽の `AudioContext` に `createDynamicsCompressor` がないとき（または例外を投げるとき）、`playSfx` は例外を出さず、出来事ごとのローパスが `destination` に直接つながって鳴る（v1.2） | 単体 | `tests/audio/sound.test.ts` |
 | TC-0032-17 | 13 | 偽の `AudioContext` が `suspended` で作られると、`window` に capture で `pointerdown`・`pointerup`・`touchend`・`click`・`keydown` の受け手が付き、入力のたびに `resume()` が呼ばれる。`running` になったら受け手が外れ、以後は呼ばれない。Shift だけのキーで `running` にならなかったときは、次の入力でもう一度呼ばれる。初めから `running` なら呼ばれない | 単体 | `tests/audio/sound.test.ts` |
 | TC-0032-18 | 13 | iPhone 11 の Safari で、音をオンにして保存してから開き直し、最初のタップで音（タイトルの曲・そのあとの効果音）が出る | 手動 | 実機（iPhone 11） |
@@ -60,8 +60,8 @@ verified: null
 | TC-0032-07 | 音をオンにしてダンジョンへ →「メニュー」→「おと：オン」を選ぶ → メニュー（`role="menu"`）が見えたまま、項目が「おと：オフ」、メッセージ欄に「おとを オフにした」、`toggle` の記録が増えない |
 | TC-0032-08 | 次の前進で通常の敵に遭遇するシードにして ↑（タッチではボタン）→ 記録の順が「メッセージ欄が空 → `encounter` → あらわれたの行」。続けて「たたかう」→ `encounter` が増えない |
 | TC-0032-10 | 5F のボスのマスの手前で前進 → `encounter` がなく、`bossAppear` が 1 回 |
-| TC-0032-11 | 勝つとレベルアップして UR を落とす戦闘、LG を落とす戦闘、HP 1 のボス戦をそれぞれ作り、偽の時計で 100ms ずつ進め、行が出た時刻と `app:sound` の時刻が同じことを確かめる（演出の長さが v1.10 の値なので、行の出る時刻もそれに合わせる） |
-| TC-0032-13 | `stop` の記録を仕込んでおき、levelUp の演出が立った直後にメッセージ欄をクリック → クリックの後に `stop` の記録が増えている |
+| TC-0032-11 | UR を落とす戦闘、LG を落とす戦闘、HP 1 のボス戦、経験値のたまった宿屋（やすむ でレベルアップ。v1.3：仕様書 v1.14 で勝利ではレベルが上がらなくなった）をそれぞれ作り、偽の時計で 100ms ずつ進め、行が出た時刻と `app:sound` の時刻が同じことを確かめる（演出の長さが v1.10 の値なので、行の出る時刻もそれに合わせる） |
+| TC-0032-13 | `stop` の記録を仕込んでおき、経験値のたまった宿屋で やすむ → levelUp の演出が立った直後に（v1.3）メッセージ欄をクリック → クリックの後に `stop` の記録が増えている |
 | TC-0032-14 | 音がオフのまま TC-0032-08・10・11 と同じ操作をする |
 | TC-0032-16 | `addInitScript(() => { delete window.AudioContext; delete window.webkitAudioContext; })` → 音をオンにして TC-0032-08 のあと勝つまで遊ぶ |
 

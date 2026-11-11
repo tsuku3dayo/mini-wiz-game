@@ -177,6 +177,8 @@ body {
 }
 @media (max-width: 599px) {
   .wiz-window.compact.has-title { padding-top: 8px; padding-bottom: 6px; }
+  /* 宿屋・ステータス画面の StatusPanel(full)：かいひ の行が増えた分、414 × 715 でメニューを開いても収まるよう詰める（v1.14。GUI-0003 v1.2） */
+  .wiz-window.wiz-status.has-title:not(.compact) { padding-top: 8px; padding-bottom: 6px; }
 }
 .wiz-window-title {
   position: absolute;

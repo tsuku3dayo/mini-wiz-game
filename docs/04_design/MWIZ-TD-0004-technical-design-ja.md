@@ -9,7 +9,7 @@ sources:
   - MWIZ-TD-0003（v1.5）
   - MWIZ-GUI-0001（v1.2）
   - MWIZ-GUI-0002（v1.4）
-  - MWIZ-GUI-0003（v1.1）
+  - MWIZ-GUI-0003（v1.2）
   - MWIZ-GUI-0004（v1.0）
   - MWIZ-GUI-0005（v1.4）
   - MWIZ-GUI-0006（v1.1）

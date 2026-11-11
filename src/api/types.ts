@@ -6,7 +6,7 @@ export type MessageTone = 'normal' | 'success' | 'danger';
 export type MessageEffect = 'levelUp' | 'rareDrop' | 'bossAppear' | 'bossDefeat' | 'clear';
 export type Rarity = 'N' | 'R' | 'SR' | 'UR' | 'LG';
 export type Slot = 'weapon' | 'armor' | 'shield' | 'accessory';
-export type StatKey = 'attack' | 'defense' | 'speed' | 'maxHp' | 'maxMp';
+export type StatKey = 'attack' | 'defense' | 'speed' | 'evasion' | 'maxHp' | 'maxMp';
 export type Stats = Record<StatKey, number>;
 export type EnemyKind = 'slime' | 'goblin' | 'skeleton' | 'orc' | 'darkKnight' | 'necromancer';
 
@@ -56,6 +56,7 @@ export interface CharacterView {
   attack: number;
   defense: number;
   speed: number;
+  evasion: number; // たての補正そのもの（基礎値は 0。v1.14）
   base: Stats;
   bonus: Stats;
 }

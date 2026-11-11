@@ -7,7 +7,7 @@ describe('敵の表', () => {
     expect(stats('slime')).toEqual(['スライム', 12, 4, 2, 3, 4]);
     expect(stats('goblin')).toEqual(['ゴブリン', 18, 6, 3, 6, 10]);
     expect(stats('skeleton')).toEqual(['スケルトン', 26, 9, 6, 5, 18]);
-    expect(stats('orc')).toEqual(['オーク', 48, 16, 10, 5, 30]);
+    expect(stats('orc')).toEqual(['オークロード', 48, 16, 10, 5, 30]);
     expect(stats('darkKnight')).toEqual(['ダークナイト', 70, 24, 16, 10, 50]);
     expect(stats('necromancer')).toEqual(['暗黒のネクロマンサー', 260, 34, 20, 14, 1000]);
 

@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { discard, equip, equipmentBonus, unequip } from '../../src/domain/equipment';
+import { toGameView, toItemView } from '../../src/api/game-view';
+import { discard, effectiveStats, equip, equipmentBonus, unequip } from '../../src/domain/equipment';
 import { RuleViolationError } from '../../src/domain/errors';
 import type { InventoryData, ItemInstance } from '../../src/domain/game-state';
+import { ITEMS, statName, type ItemId } from '../../src/domain/items';
+import { bonusTexts, STAT_ORDER } from '../../src/logic/item-text';
+import { abilityRows } from '../../src/logic/stat-diff';
 import { deepFreeze } from '../helpers/deep-freeze';
 import { makeItem, makeState } from '../helpers/fixtures';
 
@@ -65,8 +69,26 @@ describe('付け替え・はずす・捨てる', () => {
     const s = deepFreeze(makeState('INN', { inventory: inv([ring]) }));
     expect(equipmentBonus(s.inventory)).toMatchObject({ attack: 0, defense: 0 });
     const on = equip(s, 1).state;
-    expect(equipmentBonus(on.inventory)).toEqual({ attack: 20, defense: 20, speed: 0, maxHp: 0, maxMp: 0 });
+    expect(equipmentBonus(on.inventory)).toEqual({ attack: 20, defense: 20, speed: 0, evasion: 0, maxHp: 0, maxMp: 0 });
     expect(equipmentBonus(unequip(on, 'accessory').state.inventory)).toMatchObject({ attack: 0, defense: 0 });
+  });
+
+  test('TC-0028-15 たて 8 種は かいひ を上げる。effectiveStats の evasion は 0 ＋ たての補正だけ。名前・並び・文言・のうりょくの変化', () => {
+    for (let tier = 1; tier <= 8; tier += 1) expect(ITEMS[`shield${tier}` as ItemId].stats).toEqual(['evasion']);
+    // ほかの部位（ガードリングは ぼうぎょ）の補正は evasion に入らない
+    const shield = makeItem(1, 'shield5', 'R', 6);
+    const guard = makeItem(2, 'accessory1', 'N', 3);
+    const s = deepFreeze(makeState('INN', { inventory: inv([], { shield, accessory: guard }) }));
+    expect(effectiveStats(s)).toEqual({ attack: 5, defense: 8, speed: 5, evasion: 6, maxHp: 30, maxMp: 10 });
+    expect(effectiveStats(deepFreeze(makeState('INN'))).evasion).toBe(0);
+    expect(statName('evasion')).toBe('かいひ');
+    expect(STAT_ORDER).toEqual(['attack', 'defense', 'speed', 'evasion', 'maxHp', 'maxMp']);
+    expect(bonusTexts({ stats: ['evasion'], value: 6 })).toEqual(['かいひ +6']);
+    // 装備画面で たて の候補にカーソルを合わせると、かいひ の行だけが「  0 →   6 ↑」
+    const view = toGameView(deepFreeze(makeState('INN'))).character;
+    const c = { effective: { attack: view.attack, defense: view.defense, speed: view.speed, evasion: view.evasion, maxHp: view.maxHp, maxMp: view.maxMp }, base: view.base, bonus: view.bonus };
+    const rows = abilityRows(c, { current: null, candidate: toItemView(shield) });
+    expect(rows.filter((r) => r.change !== null).map((r) => [r.stat, r.text])).toEqual([['evasion', '  0 →   6 ↑']]);
   });
 
   test('TC-0029-07 装備中の個体の ID で捨てると「その もちものは ない」で、状態は変わらない', () => {

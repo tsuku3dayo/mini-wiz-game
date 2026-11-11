@@ -12,10 +12,12 @@ function setup() {
 }
 
 describe('通しプレイ（自動プレイヤー）', () => {
-  test('TC-0024-05 シード 2026 からボスを倒すまで遊ぶと CLEARED。セーブの実績・Lv がプレイ中状態と同じ', async () => {
+  test('TC-0024-05 シード 2026 からボスを倒すまで遊ぶと CLEARED。セーブの実績・Lv がプレイ中状態と同じ（宿屋で やすむ ので育つ）', async () => {
     const { api, store } = setup();
     const r = await play(api, 'ゆうしゃ', { laps: 1 });
     expect(r.final.location).toBe('CLEARED');
+    // レベルは やすむ でだけ上がる（v1.14）。自動プレイヤーはボスに Lv9 以上で挑む
+    expect(r.bossLevels[0]).toBeGreaterThanOrEqual(9);
     const game = JSON.parse(store.raw('game')!);
     const save = JSON.parse(store.raw('save')!);
     expect(save.records).toEqual(game.records);

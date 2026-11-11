@@ -14,8 +14,8 @@ describe('装備の表示文字列', () => {
     expect(itemText(solomon)).toBe('ソロモンのゆびわ［LG］ こうげき +20 ぼうぎょ +20');
     expect(itemSpoken(solomon)).toBe('ソロモンのゆびわ、レジェンド、こうげき プラス 20、ぼうぎょ プラス 20');
 
-    const zero = { attack: 0, defense: 0, speed: 0, maxHp: 0, maxMp: 0 };
-    const base = { attack: 18, defense: 15, speed: 12, maxHp: 60, maxMp: 20 };
+    const zero = { attack: 0, defense: 0, speed: 0, evasion: 0, maxHp: 0, maxMp: 0 };
+    const base = { attack: 18, defense: 15, speed: 12, evasion: 0, maxHp: 60, maxMp: 20 };
     const rows = abilityRows({ effective: base, base, bonus: zero }, { current: null, candidate: solomon });
     expect(rows.filter((r) => r.change !== null).map((r) => [r.stat, r.change])).toEqual([['attack', 'up'], ['defense', 'up']]);
     expect(rows[0].text).toBe(' 18 →  38 ↑');

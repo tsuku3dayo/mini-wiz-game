@@ -331,8 +331,8 @@ const GEAR = {
 /** n 個の所持品（ショートソード［N］を先頭に、残りはクロースアーマー［N］） */
 const fullItems = (n: number) => Array.from({ length: n }, (_, i) => makeItem(i + 1, i === 0 ? 'weapon1' : 'armor1', 'N', 1));
 
-/** Lv12・累計 1584 で、残り HP 1 のボスを倒す乱数（成長 3 回分・ボスのドロップ：エクスカリバー［LG］） */
-const BOSS_KILL = [100, 0, ...Array.from({ length: 15 }, (_, i) => [8, 2, 1, 1, 1][i % 5]), 1, 0, 8, 1, 20];
+/** Lv12・累計 1584 で、残り HP 1 のボスを倒す乱数（ボスのドロップ：エクスカリバー［LG］。v1.14 から成長の乱数はない） */
+const BOSS_KILL = [100, 0, 1, 0, 8, 1, 20];
 const bossState = (overrides: Partial<GameStateData> = {}) =>
   battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, maxMp: 40, mp: 30, ...overrides });
 
@@ -502,18 +502,18 @@ describe('満杯の入れ替え（ゲーム API）', () => {
     const save = JSON.parse(store.raw('save')!);
     expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
     expect(save.inventory.pending).toBeNull();
-    expect(save.level).toBe(15);
+    expect(save.level).toBe(12);
   });
 });
 
 describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
-  test('TC-0024-04 ボスを倒すと、セーブがクリア時点の値で上書きされる（Lv15・2584・LG の個体・pending null・laps 2・bossKills 1）。autoSaved は true', async () => {
+  test('TC-0024-04 ボスを倒すと、セーブがクリア時点の値で上書きされる（Lv12・2584・LG の個体・pending null・laps 2・bossKills 1）。autoSaved は true', async () => {
     const { api, store } = setupWith({ game: storedGame(bossState()), save: storedSave() }, new SequenceRng(BOSS_KILL));
     const r = await api.battle({ command: 'attack' });
     expect(r.state.location).toBe('CLEARED');
     const save = JSON.parse(store.raw('save')!);
     const game = JSON.parse(store.raw('game')!);
-    expect(save).toMatchObject({ name: 'ゆうしゃ', level: 15, exp: 2584, hp: game.hp, maxHp: game.maxHp, mp: game.mp, maxMp: game.maxMp, attack: game.attack, defense: game.defense, speed: game.speed });
+    expect(save).toMatchObject({ name: 'ゆうしゃ', level: 12, exp: 2584, hp: game.hp, maxHp: game.maxHp, mp: game.mp, maxMp: game.maxMp, attack: game.attack, defense: game.defense, speed: game.speed });
     expect(save.inventory.items.at(-1)).toMatchObject({ itemId: 'weapon8', rarity: 'LG' });
     expect(save.inventory.pending).toBeNull();
     expect(save.records).toMatchObject({ laps: 2, bossKills: 1 });
@@ -544,10 +544,9 @@ describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
 describe('実績（ゲーム API）', () => {
   test('TC-0026-01 初期の実績で 5F のボスのマスに入り、1 戦目で倒すと { battles 1, kills 1, deaths 0, laps 2, bossKills 1 }', async () => {
     // こうげき 300・速さ 30 のキャラクター：先攻・回避 100（外れ）・ダメージ 0 → 290 ダメージで撃破。
-    // Lv1 → Lv9 の成長 8 回（40 個）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値の元 20）
+    // 経験値を足すだけ（成長の乱数なし。v1.14）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値の元 20）
     const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 300, speed: 30 });
-    const growth = Array.from({ length: 8 * 5 }, (_, i) => [8, 2, 1, 1, 1][i % 5]);
-    const { api } = setupWith({ game: storedGame(state) }, new SequenceRng([100, 0, ...growth, 1, 0, 8, 1, 20]));
+    const { api } = setupWith({ game: storedGame(state) }, new SequenceRng([100, 0, 1, 0, 8, 1, 20]));
     const met = await api.move({ action: 'forward' });
     expect(met.state.battle).toMatchObject({ isBoss: true });
     const r = await api.battle({ command: 'attack' });

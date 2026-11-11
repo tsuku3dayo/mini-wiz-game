@@ -2,10 +2,10 @@
 import type { ItemView, Rarity, Slot, StatKey } from '../api/types';
 
 export const STAT_NAMES: Readonly<Record<StatKey, string>> = {
-  attack: 'こうげき', defense: 'ぼうぎょ', speed: 'すばやさ', maxHp: 'さいだいHP', maxMp: 'さいだいMP',
+  attack: 'こうげき', defense: 'ぼうぎょ', speed: 'すばやさ', evasion: 'かいひ', maxHp: 'さいだいHP', maxMp: 'さいだいMP',
 };
-/** のうりょくの行の並び */
-export const STAT_ORDER: readonly StatKey[] = ['attack', 'defense', 'speed', 'maxHp', 'maxMp'];
+/** のうりょくの行の並び（v1.14 で かいひ を足した） */
+export const STAT_ORDER: readonly StatKey[] = ['attack', 'defense', 'speed', 'evasion', 'maxHp', 'maxMp'];
 
 export const SLOT_NAMES: Readonly<Record<Slot, string>> = {
   weapon: 'ぶき', armor: 'よろい', shield: 'たて', accessory: 'アクセ',

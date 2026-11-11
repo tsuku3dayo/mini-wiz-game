@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { cursorLabel, logLines, menuLabels, openDebug, startAt, storedSave, writeScene } from './helpers';
+import { audioEvents, cursorLabel, logLines, menuLabels, openDebug, recordAudio, startAt, storedSave, writeScene } from './helpers';
 
 const innMenu = (page: Page) => page.getByRole('menu', { name: '宿屋' });
 const innItem = (page: Page, text: string) => innMenu(page).getByRole('menuitem').filter({ hasText: text });
@@ -95,12 +95,52 @@ test.describe('宿屋', () => {
     } else {
       await expect(status.locator('.wiz-window-title')).toContainText('ゆうしゃ');
     }
-    expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7' });
+    expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7', かいひ: '  0' });
 
-    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」
+    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」。たて（かいひ +6）は「  6」で「 (+n)」は付かない（v1.14）
     const life = { id: 1, itemId: 'accessory4', rarity: 'R', value: 15 };
-    await startAt(page, 'INN', { state: { ...lv3, inventory: { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [], nextId: 2, pending: null } } });
-    expect((await values()).HP).toBe(' 25/ 61 (+15)');
+    const shield = { id: 2, itemId: 'shield5', rarity: 'R', value: 6 };
+    await startAt(page, 'INN', { state: { ...lv3, inventory: { equipped: { weapon: null, armor: null, shield, accessory: life }, items: [], nextId: 3, pending: null } } });
+    expect(await values()).toMatchObject({ HP: ' 25/ 61 (+15)', かいひ: '  6' });
+  });
+
+  test('TC-0008-07 経験値 72・Lv1 で「やすむ」と、回復の行に続けてレベルアップの行が出て、演出と levelUp の音が出る。Lv「  3」・EXP「 72（つぎまで 72）」', async ({ page }, info) => {
+    // 演出を見るので、動きを減らす設定を外す
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await recordAudio(page);
+    await startAt(page, 'INN', { state: { exp: 72, hp: 10 } });
+    await choose(page, info, innItem(page, 'やすむ'));
+    // 1 行目は回復の行。続く行は逐次に出る（メッセージ欄は折り返しのぶん古い行が見えなくなるので、最初と最後で確かめる）
+    await expect.poll(async () => (await logLines(page))[0]).toBe('HP と MP が かいふくした');
+    // レベルアップの行で StatusPanel が光る
+    await expect(page.getByTestId('status-panel')).toHaveClass(/level-up/);
+    await expect(page.getByRole('log')).toContainText('レベルが あがった！ Lv2');
+    const growth = /^HP \+\d+ MP \+\d+ こうげき \+\d+ ぼうぎょ \+\d+ すばやさ \+\d+$/;
+    await expect.poll(async () => (await logLines(page)).at(-1), { timeout: 10_000 }).toMatch(growth);
+    await expect.poll(async () => (await logLines(page)).at(-2), { timeout: 10_000 }).toBe('レベルが あがった！ Lv3');
+    expect((await audioEvents(page)).filter((e) => e.name === 'levelUp')).toHaveLength(2);
+    const status = page.getByTestId('status-panel');
+    const dd = (name: string) => status.locator('dt', { hasText: new RegExp(`^${name}$`) }).locator('xpath=following-sibling::dd[1]');
+    await expect(dd('Lv')).toHaveText('  3');
+    await expect(dd('EXP')).toHaveText(' 72（つぎまで 72）');
+  });
+
+  test('TC-0022-11 経験値が次のレベル以上なら EXP の行は「（やどで レベルアップ）」。やすむ と「（つぎまで …）」に戻る', async ({ page }, info) => {
+    // GameView の expToNext が 0 になること（max(0, …)）は単体テスト（TC-0022-12）で確かめている
+    await startAt(page, 'INN', { state: { exp: 30 } });
+    const status = page.getByTestId('status-panel');
+    const exp = status.locator('dt', { hasText: /^EXP$/ }).locator('xpath=following-sibling::dd[1]');
+    await expect(exp).toHaveText(' 30（やどで レベルアップ）');
+    // 狭い画面のステータス画面でも同じ
+    if (info.project.name !== 'desktop') {
+      await choose(page, info, innItem(page, 'メニュー'));
+      await choose(page, info, page.getByRole('menu', { name: 'メニュー' }).getByRole('menuitem').filter({ hasText: 'ステータス' }));
+      await expect(page.locator('dt', { hasText: /^EXP$/ }).locator('xpath=following-sibling::dd[1]')).toHaveText(' 30（やどで レベルアップ）');
+      await choose(page, info, page.getByRole('menu', { name: 'ステータス' }).getByRole('menuitem').filter({ hasText: 'もどる' }));
+    }
+    await choose(page, info, innItem(page, 'やすむ'));
+    // Lv2（24）に上がり、Lv3（72）まで 42
+    await expect(exp).toHaveText(' 30（つぎまで 42）');
   });
 
   test('TC-0026-06 広い画面の宿屋に「ステータス」（なまえ・補正つき）と「じっせき」が横に並び、メニューは もどる・そうび・もちもの・おと：オフ（ステータスなし）', async ({ page }, info) => {
@@ -115,8 +155,8 @@ test.describe('宿屋', () => {
     await startAt(page, 'INN', { state: { level: 3, exp: 80, hp: 25, maxHp: 46, mp: 10, maxMp: 16, attack: 7, defense: 7, speed: 7, records, inventory } });
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
-    expect(await status.locator('dt').allTextContents()).toEqual(['なまえ', 'Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ']);
-    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7']);
+    expect(await status.locator('dt').allTextContents()).toEqual(['なまえ', 'Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']);
+    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  0']);
     const rec = page.getByTestId('records-window');
     await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
     expect(await rec.locator('dd').allTextContents()).toEqual(['128 回', '120 体', '3 回', '2 周目', '1 回']);

@@ -74,7 +74,7 @@ describe('ドロップ', () => {
 
   test('TC-0027-08 ドロップの行の形（全角の括弧・「は」の後に半角スペース）、tone normal・rarity、UR・LG だけ rareDrop', () => {
     expect(dropMessage('スライム', { itemId: 'shield1', rarity: 'R', value: 1 }))
-      .toEqual({ text: 'スライムは ウッドシールド［R］（ぼうぎょ +1）を おとした！', tone: 'normal', rarity: 'R' });
+      .toEqual({ text: 'スライムは ウッドシールド［R］（かいひ +1）を おとした！', tone: 'normal', rarity: 'R' });
     expect(dropMessage('暗黒のネクロマンサー', { itemId: 'accessory8', rarity: 'LG', value: 20 }))
       .toEqual({ text: '暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +20 ぼうぎょ +20）を おとした！', tone: 'normal', rarity: 'LG', effect: 'rareDrop' });
     expect(dropMessage('ダークナイト', { itemId: 'weapon7', rarity: 'UR', value: 30 }).effect).toBe('rareDrop');
@@ -101,25 +101,26 @@ describe('ドロップ', () => {
 
 // 確認 ID のない、E2E で使うシードの前提（e2e/helpers.ts の SEEDS）
 describe('E2E のシード', () => {
-  test('slimeDropR（131）はスライムが R を、darkKnightDropLG（66）はダークナイトが LG を落とす', () => {
+  test('slimeDropR（131）はスライムが R を、darkKnightDropLG（12）はダークナイトが LG を落とす', () => {
     const slime = resolveTurn(deepFreeze(battleState('slime', 1)), 'attack', new SeededRng(131));
     expect(slime.messages.at(-1)).toMatchObject({ rarity: 'R' });
-    const dk = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(66));
+    const dk = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(12));
     expect(dk.outcome).toBe('victory');
     expect(dk.messages.at(-1)).toMatchObject({ rarity: 'LG', effect: 'rareDrop' });
   });
 
-  test('darkKnightDropUR（2）はレベルアップして UR を、darkKnightDropSR（5）は SR を、goblinDropN（5）は N を、bossWin（1）は Lv12 のプレイヤーが先攻でボスを倒し 3 回レベルアップして LG を落とす', () => {
-    const dk = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(2));
-    expect(dk.messages.map((m) => m.effect ?? null)).toEqual([null, null, null, null, 'levelUp', null, 'rareDrop']);
+  test('darkKnightDropUR（5）は UR を、darkKnightDropSR（4）は SR を、goblinDropN（5）は N を、bossWin（1）は Lv12 のプレイヤーが先攻でボスを倒し LG を落とす（勝利ではレベルが上がらない）', () => {
+    const dk = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
+    expect(dk.messages.map((m) => m.effect ?? null)).toEqual([null, null, null, null, 'rareDrop']);
     expect(dk.messages.at(-1)).toMatchObject({ rarity: 'UR' });
-    const sr = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
+    const sr = resolveTurn(deepFreeze(battleState('darkKnight', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(4));
     expect(sr.messages.at(-1)).toMatchObject({ rarity: 'SR' });
     expect(sr.messages.at(-1)?.effect).toBeUndefined();
     const n = resolveTurn(deepFreeze(battleState('goblin', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
     expect(n.messages.at(-1)).toMatchObject({ rarity: 'N' });
     const boss = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, dungeon: openMap({ x: 9, y: 0 }, {}, 5) })), 'attack', new SeededRng(1));
-    expect(boss.messages.map((m) => m.effect ?? null)).toEqual([null, 'bossDefeat', null, 'levelUp', null, 'levelUp', null, 'levelUp', null, 'rareDrop', 'clear']);
+    expect(boss.messages.map((m) => m.effect ?? null)).toEqual([null, 'bossDefeat', null, 'rareDrop', 'clear']);
+    expect(boss.state.level).toBe(12);
     expect(boss.messages.at(-2)).toMatchObject({ rarity: 'LG' });
   });
 });

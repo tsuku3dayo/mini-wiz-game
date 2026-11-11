@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { audioEvents, battleOf, bgmNames, bossBattle, clearAudio, dungeonMap, logLines, recordAudio, SEEDS, shortSwords, startAt, storedInventory } from './helpers';
+import { audioEvents, battleOf, bgmNames, bossBattle, clearAudio, dungeonMap, innLevelUp, logLines, recordAudio, SEEDS, shortSwords, startAt, storedInventory } from './helpers';
 
 // 効果音（仕様書 §12.1、§28、TC-0032）。鳴らす判断は window の app:sound（detail: { name, muted }）で見る
 
@@ -26,6 +26,7 @@ async function press(info: TestInfo, target: Locator) {
 }
 const titleItem = (page: Page, text: string) => page.getByRole('menu', { name: 'タイトル' }).getByRole('menuitem').filter({ hasText: text });
 const attackItem = (page: Page) => page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').filter({ hasText: 'たたかう' });
+const restItem = (page: Page) => page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'やすむ' });
 const forward = (page: Page) => page.getByRole('button', { name: '前進', exact: true });
 const darkKnight = { hp: 999, maxHp: 999, battle: battleOf('darkKnight', 1) };
 const bossFront = { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) };
@@ -39,6 +40,14 @@ async function openDungeonMenu(page: Page, info: TestInfo) {
 async function attackPaused(page: Page, info: TestInfo): Promise<number> {
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await press(info, attackItem(page));
+  await expect.poll(() => logLines(page)).toHaveLength(1);
+  return page.evaluate(() => Date.now());
+}
+
+/** 時計を止めて宿屋の「やすむ」を押し、1 行目が出た時刻を返す（レベルは やすむ で上がる。v1.14） */
+async function restPaused(page: Page, info: TestInfo): Promise<number> {
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await press(info, restItem(page));
   await expect.poll(() => logLines(page)).toHaveLength(1);
   return page.evaluate(() => Date.now());
 }
@@ -131,15 +140,17 @@ test.describe('効果音と音の設定', () => {
     await soundOnAtStart(page);
     await recordSounds(page);
     await page.clock.install();
-    const scenes: { state: Record<string, unknown>; seed: number; expected: [string, number][] }[] = [
-      // 1 行目のあと 400ms ごと。演出の行のあとはその長さ（v1.10：levelUp 1071・bossDefeat 1000）
-      { state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['levelUp', 1600], ['rareDrop', 3071]] },
-      { state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['levelUp', 1600], ['rareDropLG', 3071]] },
-      { state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['levelUp', 1800], ['levelUp', 3271], ['levelUp', 4742], ['rareDropLG', 6213], ['clear', 7413]] },
+    const scenes: { at: 'BATTLE' | 'INN'; state: Record<string, unknown>; seed: number; expected: [string, number][] }[] = [
+      // 1 行目のあと 400ms ごと。演出の行のあとはその長さ（v1.10：levelUp 1071・bossDefeat 1000）。
+      // v1.14：勝利ではレベルが上がらず、レベルアップは宿屋の やすむ で鳴る
+      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['rareDrop', 1600]] },
+      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['rareDropLG', 1600]] },
+      { at: 'BATTLE', state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['rareDropLG', 1800], ['clear', 3000]] },
+      { at: 'INN', state: innLevelUp(), seed: SEEDS.noEncounter, expected: [['levelUp', 400], ['levelUp', 1871], ['levelUp', 3342]] },
     ];
     for (const s of scenes) {
-      await startAt(page, 'BATTLE', { state: s.state, seed: s.seed });
-      const t0 = await attackPaused(page, info);
+      await startAt(page, s.at, { state: s.state, seed: s.seed });
+      const t0 = s.at === 'INN' ? await restPaused(page, info) : await attackPaused(page, info);
       const before = (await heard(page)).length;
       // 最初の演出の行の時刻ちょうどで、行と音がそろって出ている
       const [firstName, firstAt] = s.expected[0];
@@ -170,9 +181,10 @@ test.describe('効果音と音の設定', () => {
     await page.clock.install();
     const ways = info.project.name === 'desktop' ? ['click', 'Enter', ' '] : ['tap'];
     for (const way of ways) {
-      await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
-      await attackPaused(page, info);
-      await page.clock.runFor(1600);
+      // レベルアップの音は宿屋の やすむ で鳴る（v1.14）。2 行目が levelUp
+      await startAt(page, 'INN', { state: innLevelUp() });
+      await restPaused(page, info);
+      await page.clock.runFor(400);
       await expect(page.getByTestId('status-panel')).toHaveClass(/level-up/);
       // levelUp の音を予約したとき（v1.10 は 6 つの出来事）、それぞれの終わりの stop を 1 回ずつ呼んでいる
       const before = await stops();
@@ -212,13 +224,18 @@ test.describe('効果音と音の設定', () => {
     await forward(page).click();
     await expect(page.locator('#effect-layer')).toHaveAttribute('data-effect', 'bossAppear');
     await check();
-    // レベルアップと UR・LG のドロップ、ボス撃破とクリア（メッセージ欄を押して進める）
+    // UR・LG のドロップ、ボス撃破とクリア
     for (const [state, seed, end] of [[darkKnight, SEEDS.darkKnightDropUR, 'rareDrop'], [darkKnight, SEEDS.darkKnightDropLG, 'rareDropLG'], [bossBattle(), SEEDS.bossWin, 'clear']] as const) {
       await startAt(page, 'BATTLE', { state, seed });
       await press(info, attackItem(page));
       await expect.poll(async () => (await heard(page)).some((h) => h.name === end), { timeout: 15_000 }).toBe(true);
       await check();
     }
+    // レベルアップ（宿屋の やすむ。v1.14）
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await press(info, restItem(page));
+    await expect.poll(async () => (await heard(page)).some((h) => h.name === 'levelUp'), { timeout: 15_000 }).toBe(true);
+    await check();
     expect([...names].sort()).toEqual(['bossAppear', 'bossDefeat', 'clear', 'encounter', 'levelUp', 'rareDrop', 'rareDropLG']);
   });
 
@@ -244,7 +261,12 @@ test.describe('効果音と音の設定', () => {
     await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
     await press(info, attackItem(page));
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon', { timeout: 10_000 });
-    expect(await names()).toEqual(['levelUp', 'rareDrop']);
+    expect(await names()).toEqual(['rareDrop']);
+    // レベルアップは宿屋の やすむ で鳴る（v1.14）
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await press(info, restItem(page));
+    await expect.poll(async () => (await logLines(page)).at(-2), { timeout: 10_000 }).toBe('レベルが あがった！ Lv15');
+    expect(await names()).toEqual(['levelUp', 'levelUp', 'levelUp']);
     expect(await page.evaluate(() => typeof (window as unknown as Record<string, unknown>).AudioContext)).toBe('undefined');
     await expect(page.getByTestId('error-panel')).toHaveCount(0);
     expect(errors).toEqual([]);

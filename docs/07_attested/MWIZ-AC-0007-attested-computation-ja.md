@@ -20,7 +20,7 @@ sources:
   - MWIZ-TD-0003（v1.5）
   - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0002（v1.4）
-  - MWIZ-GUI-0003（v1.1）
+  - MWIZ-GUI-0003（v1.2）
 verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
