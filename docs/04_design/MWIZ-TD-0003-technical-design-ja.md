@@ -3,10 +3,10 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.4
-updated: 2026-11-06
+version: 1.5
+updated: 2026-11-11
 sources:
-  - MWIZ-TD-0001（v1.1）
+  - MWIZ-TD-0001（v1.2）
   - MWIZ-GUI-0001（v1.2）
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0012（v1.1）
@@ -22,7 +22,7 @@ verified: null
 
 | モジュール | 持つもの | 決まり |
 | --- | --- | --- |
-| `ui/store.ts` | `game`・`save`（仕様書 §27.3）、`subscribe(listener)` | メッセージは持たない。値が変わったら購読者に知らせる |
+| `ui/store.ts` | `game`・`save`（仕様書 §27.3。v1.5 から `save` は `{ status, slots }`。`slots` は `getSaves()` の 3 つ）、`subscribe(listener)` | メッセージは持たない。値が変わったら購読者に知らせる |
 | `ui/router.ts` | 今の画面・LocationGuard・`hashchange` | 画面を替える手順は仕様書 §27.4 の 1〜5。遷移の保留中（`queue.holdNavigation`）は替えない。替えるときは前の画面の `destroy()` を呼ぶ |
 | `ui/command.ts` | `run`・`isPending`・`locked`・`fatal`・`retry` | 仕様書 §11.10。成功時の扱い（遭遇なら `queue.clear()` と遭遇の音 → 足元の案内を足して enqueue → `store.setGame`）。失敗時は TD-0001 §4 |
 
@@ -68,6 +68,8 @@ verified: null
 | `item-list` | 高さは部品の中で `fitItemList`（§6）を呼んで決める（v1.2。v1.1 では画面が `maxHeight` を渡すとしていた。もちもの・入れ替えの両方で同じ合わせ方をするため、部品に持たせた） | §11.7 |
 | `equipment-panel`・`inventory-panel` | `{ store, api, command, onClose }` を受け、操作（`command.run`）・取り直しの反映・一番下の `errorPanel` まで部品の中で行う（v1.2。宿屋とダンジョンの両方から同じ形で開くため） | §11.7、§11.9 |
 | `enemy-image` | なし（256×256 の絵を 256px で出す。拡大しない。読めなければ消す。v1.4） | §13.2 |
+| `command-buttons`（v1.5。仕様書 v1.14） | 狭い画面の戦闘のコマンドのボタン。`commandMenu` と同じ形の引数（`label`・`items`（`label`・`disabled`・`disabledReason`・`span`）・`onSelect`・`onDisabledSelect`・`disabled`・`autoFocus`）と `update`。`logic/menu-model.ts` のカーソルの動き（端で止まる）を使い、← ↑ を前、→ ↓ を次にする。外の箱 `role="menu"`、ボタン `<button role="menuitem">`（`aria-disabled`。`disabled` 属性は付けない）、ロービング tabindex。押す要素を作り直さない（§7 の決まり） | §11.5 |
+| `save-slot-menu`（v1.5。仕様書 v1.14） | スロットの一覧。`{ title: 'つづきから' \| 'セーブ', slots, mode: 'load' \| 'save', initialSlot, onPick(slot), onBack, disabled }`。`gameWindow`（見出し）の中に `commandMenu`（もどる／スロット1〜3、`autoFocus`・`trapFocus`・Esc＝もどる）。`load` では空きを無効（理由なし）。行の文は `logic/save-slots.ts` | §11.5 |
 | `error-panel` | なし（置き場所は画面が決める。TD-0004） | §11.9 |
 
 ## 5. 狭い画面と広い画面（CSS と `ui/dom.ts`）

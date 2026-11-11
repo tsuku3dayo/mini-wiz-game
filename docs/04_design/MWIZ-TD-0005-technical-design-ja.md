@@ -3,10 +3,10 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.12
-updated: 2026-11-10
+version: 1.13
+updated: 2026-11-11
 sources:
-  - MWIZ-TD-0001（v1.1）
+  - MWIZ-TD-0001（v1.2）
   - MWIZ-TS-0001（v1.4）
   - MWIZ-ADR-0008（v1.1）
   - MWIZ-ADR-0009（v1.1）
@@ -80,7 +80,7 @@ verified: null
 | `app:sound`・`app:bgm` イベント | `audio/sound.ts`・`audio/bgm-director.ts` が `window.dispatchEvent`（常に） |
 | `window.__wiz.debugDungeon()` | `api.debugDungeon()`（ゲーム API の中で、保存の状態から今の階の全マスを返す） |
 | `window.__wiz.useSeed(seed)` | `SwappableRng` の中身を `SeededRng(seed)` に替える（組み立ては `platform/math-rng.ts` の `createDebugRng()`。v1.3） |
-| `window.__wiz.writeState(stored)`・`writeSave(stored)` | `storage.write` で直接書き、`store.refresh()` |
+| `window.__wiz.writeState(stored)`・`writeSave(stored, slot = 1)` | `storage.write` で直接書き（セーブは `save-{slot}`。v1.13）、`store.refresh()` |
 | `window.__wiz.setDelay(ms)` | ゲーム API に渡す待つ関数 `delay` の待ち時間を替える（TD-0002 §3.1。v1.3） |
 | `window.__wiz.showUpdateBanner()` | `update-banner` を出す |
 

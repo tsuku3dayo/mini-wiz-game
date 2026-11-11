@@ -3,13 +3,13 @@ id: MWIZ-TC-0004
 type: Test Case
 title: 新しい版に更新する
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0004（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0004（v1.4）
-  - MWIZ-TD-0005（v1.12）
+  - MWIZ-TD-0004（v1.5）
+  - MWIZ-TD-0005（v1.13）
   - MWIZ-GUI-0007（v1.1）
   - docs/specification-ja.md (v1.14) §11.12、§16.6、§27.4、§28、§30.1、§30.3
 verified: null
@@ -26,8 +26,8 @@ verified: null
 | --- | --- | --- | --- | --- |
 | TC-0004-01 | 1 | `__wiz.showUpdateBanner()` のあと、タイトル画面と宿屋の画面で `#update-banner` が見え、「新しい版があります」と `#update-button`（「更新」）が出る。帯は画面の上端に固定（`position: fixed`、`getBoundingClientRect().top` が安全領域の内側） | E2E | `e2e/pwa.spec.ts` |
 | TC-0004-02 | 2 | 帯を出した状態で、ダンジョン・戦闘・入れ替え・ゲームクリアの画面と名前入力では `#update-banner` が見えない。宿屋 →「ダンジョンへ」で消え、1F の入口から宿屋へ戻るとまた出る | E2E | `e2e/pwa.spec.ts` |
-| TC-0004-03 | 3 | 帯を出して 30 秒（偽の時計）たっても、ページが読み込み直されない（`framenavigated` が起きない）。プレイ中の状態とセーブ（`localStorage` の `mini-wiz-game-game`・`mini-wiz-game-save`）がそのまま | E2E | `e2e/pwa.spec.ts` |
-| TC-0004-04 | 3 | 新しい版を公開したあと、iPhone 11 のホーム画面のアプリで宿屋の画面に帯が出て、「更新」を押すと新しい版に切り替わる。切り替わったあとも、プレイ中の状態（場所・HP・所持品）とセーブ（タイトルの「つづきから」の「{名前} Lv{n}」）が残っている。押すまでは切り替わらない | 手動 | 実機（iPhone 11） |
+| TC-0004-03 | 3 | 帯を出して 30 秒（偽の時計）たっても、ページが読み込み直されない（`framenavigated` が起きない）。プレイ中の状態とセーブ（`localStorage` の `mini-wiz-game-game`・`mini-wiz-game-save-1`）がそのまま | E2E | `e2e/pwa.spec.ts` |
+| TC-0004-04 | 3 | 新しい版を公開したあと、iPhone 11 のホーム画面のアプリで宿屋の画面に帯が出て、「更新」を押すと新しい版に切り替わる。切り替わったあとも、プレイ中の状態（場所・HP・所持品）とセーブ（タイトルの「つづきから」のスロットの一覧の「スロット1　{名前} Lv{n}」）が残っている。押すまでは切り替わらない | 手動 | 実機（iPhone 11） |
 
 ## 2. 準備
 

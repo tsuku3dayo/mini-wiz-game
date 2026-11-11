@@ -3,12 +3,12 @@ id: MWIZ-TC-0003
 type: Test Case
 title: 通信なしで遊ぶ
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0003（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0005（v1.12）
+  - MWIZ-TD-0005（v1.13）
   - docs/specification-ja.md (v1.14) §1.3、§11.12、§13.1、§14、§16.6、§30.1
 verified: null
 ---
@@ -22,7 +22,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0003-01 | 1 | 一度開いて Service Worker が動き出したあと、通信を切って読み込み直すと、タイトル画面が出る。はじめから → 宿屋で「セーブ」（「セーブしました」）→ 「ダンジョンへ」→ 戦闘でスライムの絵（`naturalWidth` が 256）が出る → 読み込み直してもその画面のまま → 宿屋で「タイトルへ戻る」→「つづきから」で宿屋に戻る（「{名前}は 宿屋で めをさました」） | E2E | `e2e/pwa.spec.ts` |
+| TC-0003-01 | 1 | 一度開いて Service Worker が動き出したあと、通信を切って読み込み直すと、タイトル画面が出る。はじめから → 宿屋で「セーブ」→「スロット1」（「スロット1に セーブしました」）→ 「ダンジョンへ」→ 戦闘でスライムの絵（`naturalWidth` が 256）が出る → 読み込み直してもその画面のまま → 宿屋で「タイトルへ戻る」→「つづきから」→「スロット1」で宿屋に戻る（「{名前}は 宿屋で めをさました」） | E2E | `e2e/pwa.spec.ts` |
 | TC-0003-02 | 2 | 一度開いたあと、Service Worker の事前キャッシュ（`caches`）に `index.html`・`manifest.webmanifest`・ビルドの `.js`・`.css` と、`enemies/` の 6 枚（`slime.png`・`goblin.png`・`skeleton.png`・`orc.png`・`darkKnight.png`・`necromancer.png`）が入っている | E2E | `e2e/pwa.spec.ts` |
 | TC-0003-03 | 1 | iPhone 11 のホーム画面のアプリと Safari の両方で、機内モードにして起動・ダンジョンの探索・戦闘（敵の絵が出る）・宿屋でセーブ・つづきから ができる | 手動 | 実機（iPhone 11） |
 

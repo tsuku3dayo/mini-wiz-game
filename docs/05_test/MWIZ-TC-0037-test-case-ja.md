@@ -3,13 +3,13 @@ id: MWIZ-TC-0037
 type: Test Case
 title: すばやく反応する
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0037（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0005（v1.12）
+  - MWIZ-TD-0002（v1.8）
+  - MWIZ-TD-0005（v1.13）
   - docs/specification-ja.md (v1.14) §14、§16.2
 verified: null
 ---
@@ -23,7 +23,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0037-01 | 1 | ゲーム API の各操作（startGame・rest・save・load・enterDungeon・move・stairs・returnToInn・heal・battle・equip・unequip・discard・lootTake・lootAbandon・continueGame・getGame・getSave）の呼び出しから結果が返るまでを `performance.now()` で測り、どれも 300ms 未満（目標 100ms 未満の 3 倍）。所持品 50 個・踏破済みの多い 5F など重い状態で測る | 単体 | `tests/api/game-api.test.ts` |
+| TC-0037-01 | 1 | ゲーム API の各操作（startGame・rest・save・load・enterDungeon・move・stairs・returnToInn・heal・battle・equip・unequip・discard・lootTake・lootAbandon・continueGame・getGame・getSaves）の呼び出しから結果が返るまでを `performance.now()` で測り、どれも 300ms 未満（目標 100ms 未満の 3 倍）。所持品 50 個・踏破済みの多い 5F・3 スロットとも埋まった状態など重い状態で測る（v1.1） | 単体 | `tests/api/game-api.test.ts` |
 | TC-0037-02 | 1 | 画面の更新まで：ダンジョンで「↑ 前進」を押してから、階と向きの表示・疑似3D の線が変わるまで、戦闘で「たたかう」を押してから最初の行がメッセージ欄に出るまでが、どちらも 300ms 未満（目標 100ms の 3 倍。`page.evaluate` の中で `performance.now()` と `MutationObserver` で測る） | E2E | `e2e/dungeon.spec.ts` |
 | TC-0037-03 | 2 | iPhone 11 のホーム画面のアプリと Safari で、2 回目以降の起動から、タイトル画面のメニューが見えるまでが 1 秒以内 | 手動 | 実機（iPhone 11） |
 | TC-0037-04 | 3 | 偽の `AudioContext` で `playSfx('encounter')` を呼ぶと、最初の発振器の `start` が `currentTime` と同じ時刻（遅れ 0）で、頭は休符でない。最後の `stop` は `currentTime + 0.68`（1 秒以内） | 単体 | `tests/audio/sound.test.ts` |

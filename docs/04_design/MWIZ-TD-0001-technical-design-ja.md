@@ -3,8 +3,8 @@ id: MWIZ-TD-0001
 type: Technical Design
 title: 詳細設計 全体（層・モジュール・依存・起動・エラーの流れ）
 status: stable
-version: 1.1
-updated: 2026-11-02
+version: 1.2
+updated: 2026-11-11
 sources:
   - MWIZ-SA-0001（v1.1）
   - MWIZ-TS-0001（v1.4）
@@ -79,7 +79,7 @@ const debug = new URLSearchParams(location.search).has('debug');
 const debugRng = debug ? createDebugRng() : null;      // platform/math-rng（SwappableRng を包む。v1.1）
 const api = createGameApi({ store: storage, rng: debugRng?.rng ?? new MathRandomRng(), now: clock.nowIso, delay });
 const sound = createSoundSetting(storage);           // audio/sound-setting
-const store = createStore(api);                       // ui/store（getGame・getSave を読み始める）
+const store = createStore(api);                       // ui/store（getGame・getSaves を読み始める。v1.2 で getSave から）
 const queue = createMessageQueue({ reducedMotion, sound });
 mountLowHpFrame(store); mountEffectLayer(queue); createBgmDirector({ store, queue, sound, router });
 const router = createRouter({ store, queue, api, sound });

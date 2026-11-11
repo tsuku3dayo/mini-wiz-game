@@ -3,13 +3,13 @@ id: MWIZ-TC-0035
 type: Test Case
 title: スマートフォンの画面で快適に遊ぶ
 status: stable
-version: 1.1
-updated: 2026-11-10
+version: 1.2
+updated: 2026-11-11
 sources:
   - MWIZ-US-0035（v1.2）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0003（v1.4）
-  - MWIZ-TD-0004（v1.4）
+  - MWIZ-TD-0003（v1.5）
+  - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0001（v1.2）
   - docs/specification-ja.md (v1.14) §1.3、§11.1、§11.3、§11.11、§11.12、§14、§15.4、§16.4、§16.6
 verified: null
@@ -17,7 +17,7 @@ verified: null
 
 # TC-0035 スマートフォンの画面で快適に遊ぶ
 
-- 対象：[US-0035](../02_requirements/MWIZ-US-0035-user-story-ja.md)（受け入れ条件 6 つ）
+- 対象：[US-0035](../02_requirements/MWIZ-US-0035-user-story-ja.md)（受け入れ条件 7 つ）
 - 方法の分け方・置き場所の決まりは [TST-0001](MWIZ-TST-0001-test-strategy-ja.md)。
 - 「どの画面も」は、タイトル・名前入力・クレジット・宿屋・ダンジョン・戦闘・ゲームクリア・入れ替え・そうび・もちもの・ステータスの 11 画面と、宿屋・ダンジョンのメニュー（GameMenu）・確認（ConfirmMenu）・ErrorPanel（タイトル・宿屋・ダンジョン・戦闘）を出した状態をいう（`e2e/scenes.ts`）。v1.1（仕様書 v1.12）でクレジットと、タイトルの ErrorPanel を足した（タイトルのメニューが 4 行になり、エラーの枠が出たときの高さがいちばん厳しいため）。
 
@@ -25,7 +25,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0035-01 | 1 | タップ（`page.tap`）だけで、タイトル →「はじめから」→ 名前入力 → 宿屋（やすむ・セーブ・メニュー・そうび・もちもの・ステータス）→ ダンジョン（移動ボタン・階段・宿屋へ戻る・ヒール）→ 戦闘（たたかう・ヒール・にげる）→ 入れ替え → ゲームクリア →「宿屋へ」まで進められる。逐次表示の途中はメッセージ欄のタップで残りが出る。キー操作を 1 回も使わない | E2E（タッチ） | `e2e/layout.spec.ts` |
+| TC-0035-01 | 1 | タップ（`page.tap`）だけで、タイトル →「はじめから」→ 名前入力 → 宿屋（やすむ・メニュー・そうび・もちもの・ステータス・セーブ（スロットを選ぶ・上書きの確認））→ ダンジョン（移動ボタン・階段・宿屋へ戻る・ヒール）→ 戦闘（横 1 列のボタンの たたかう・ヒール・にげる）→ 入れ替え → ゲームクリア →「宿屋へ」→ タイトルへ戻る →「つづきから」（スロットを選ぶ）まで進められる。逐次表示の途中はメッセージ欄のタップで残りが出る。キー操作を 1 回も使わない（v1.2） | E2E（タッチ） | `e2e/layout.spec.ts` |
 | TC-0035-02 | 1 | `pixel7`（412×839）・`small`（375×667）で、どの画面も `documentElement.scrollWidth − innerWidth` が 0 以下（横にはみ出さない） | E2E（タッチ） | `e2e/layout.spec.ts` |
 | TC-0035-03 | 1 | `pixel7`・`small` で、どの画面も、見えているボタン（`.wiz-button`・移動ボタン・メニューボタン）の `getBoundingClientRect` が幅・高さとも 48px 以上、メニューの行（`role="menuitem"`）の高さが 44px 以上。`desktop`（マウス）では、メニューの行の高さが 25.6px | E2E | `e2e/layout.spec.ts` |
 | TC-0035-04 | 1 | `setViewportSize({ width: 414, height: 715 })` にして、どの画面も `documentElement.scrollHeight − innerHeight` が 0 以下（1 画面に収まる）、横のはみ出しも 0 以下 | E2E（タッチ） | `e2e/layout.spec.ts` |
@@ -33,10 +33,11 @@ verified: null
 | TC-0035-06 | 2 | `meta[name="viewport"]` の `content` に `viewport-fit=cover` がある。画面の外枠（GameFrame の `<main>`・タイトルとクリアの `<main>`）と更新の帯（`#update-banner`）のスタイルに `env(safe-area-inset-top)`・`-bottom`・`-left`・`-right` を使った値が入っている（`document.styleSheets` の規則の文字で確かめる）。安全領域がない Chromium では、外枠の余白が 8px | E2E | `e2e/layout.spec.ts` |
 | TC-0035-07 | 2 | iPhone 11 のホーム画面のアプリとして開いたときと Safari で開いたときに、どの画面も、ノッチ・ステータスバー・ホームバーに文字・ボタン・線が入り込まない（更新の帯を含む） | 手動 | 実機（iPhone 11） |
 | TC-0035-08 | 3 | 操作するとき、指で疑似3D・メッセージ欄・ステータスなど大事な表示が隠れない | 手動 | 実機（iPhone 11） |
-| TC-0035-09 | 4 | `meta[name="viewport"]` の `content` が `width=device-width, initial-scale=1, viewport-fit=cover` で、`user-scalable=no`・`maximum-scale` を含まない。`html`・`body` の `touch-action` が `none` でない | E2E | `e2e/layout.spec.ts` |
-| TC-0035-10 | 5 | `body` の `font-size` が 16px・`line-height` が 1.6 倍（25.6px）・文字色 `rgb(232, 220, 192)`（`#E8DCC0`）・背景 `rgb(11, 10, 15)`（`#0B0A0F`）。`font-family` の先頭が `"MS Gothic"` で、Web フォント（`.woff`・`.woff2`・`.ttf`・`.otf`）の通信が 1 つもない。StatusPanel の数字の要素の `font-variant-numeric` が `tabular-nums` で、値が 3 桁右揃え（例「HP 25/ 46」「MP 10/ 16」） | E2E | `e2e/layout.spec.ts` |
-| TC-0035-11 | 5 | iPhone 11 で、どの画面の文字も読める大きさ・色で出て、ステータス（宿屋の full・ダンジョンと戦闘の 1 行）の数字の桁がそろって見える | 手動 | 実機（iPhone 11） |
-| TC-0035-12 | 6 | `desktop`（1280×800）と、`setViewportSize` で 1366×657 にしたとき、どの画面も横・縦のはみ出しが 0 以下。外枠の幅が 800px 以下で中央にある（左右の余白の差が 1px 以内）。宿屋・ダンジョン・戦闘で `[data-testid="column-left"]` と `"column-right"` が横に並ぶ（右の列の `left` が左の列の `right` 以上、上端がそろう） | E2E | `e2e/layout.spec.ts` |
+| TC-0035-09 | 5 | `meta[name="viewport"]` の `content` が `width=device-width, initial-scale=1, viewport-fit=cover` で、`user-scalable=no`・`maximum-scale` を含まない。`html`・`body` の `touch-action` が `none` でない | E2E | `e2e/layout.spec.ts` |
+| TC-0035-10 | 6 | `body` の `font-size` が 16px・`line-height` が 1.6 倍（25.6px）・文字色 `rgb(232, 220, 192)`（`#E8DCC0`）・背景 `rgb(11, 10, 15)`（`#0B0A0F`）。`font-family` の先頭が `"MS Gothic"` で、Web フォント（`.woff`・`.woff2`・`.ttf`・`.otf`）の通信が 1 つもない。StatusPanel の数字の要素の `font-variant-numeric` が `tabular-nums` で、値が 3 桁右揃え（例「HP 25/ 46」「MP 10/ 16」） | E2E | `e2e/layout.spec.ts` |
+| TC-0035-11 | 6 | iPhone 11 で、どの画面の文字も読める大きさ・色で出て、ステータス（宿屋の full・ダンジョンと戦闘の 1 行）の数字の桁がそろって見える | 手動 | 実機（iPhone 11） |
+| TC-0035-12 | 7 | `desktop`（1280×800）と、`setViewportSize` で 1366×657 にしたとき、どの画面も横・縦のはみ出しが 0 以下。外枠の幅が 800px 以下で中央にある（左右の余白の差が 1px 以内）。宿屋・ダンジョン・戦闘で `[data-testid="column-left"]` と `"column-right"` が横に並ぶ（右の列の `left` が左の列の `right` 以上、上端がそろう） | E2E | `e2e/layout.spec.ts` |
+| TC-0035-13 | 4 | 戦闘（`pixel7`・`small`）のコマンドのボタンが高さ 56px・横 1 列で、親指で押す下の方にある（ボタンの下端が画面の下端から 160px 以内、または縦にスクロールして届く）。414 × 715 で戦闘画面が縦にはみ出さない。375 × 667 の縦のはみ出しが v1.1（47px）より小さい（v1.2。測った値を AC に書く） | E2E（タッチ） | `e2e/layout.spec.ts` |
 
 ## 2. 準備
 

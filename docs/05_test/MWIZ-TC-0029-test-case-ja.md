@@ -3,13 +3,13 @@ id: MWIZ-TC-0029
 type: Test Case
 title: もちものを見て捨てる
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-11
 sources:
   - MWIZ-US-0029（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.7）
-  - MWIZ-TD-0004（v1.4）
+  - MWIZ-TD-0002（v1.8）
+  - MWIZ-TD-0004（v1.5）
   - MWIZ-GUI-0006（v1.1）
   - docs/specification-ja.md (v1.14) §8.5、§8.6、§8.7、§11.7、§16.3
 verified: null
@@ -31,7 +31,7 @@ verified: null
 | TC-0029-05 | 3 | 一覧にフォーカスがあるとき、→ キーで次、← キーで前のしぼりこみに循環する | E2E（キー、`desktop`） | `e2e/inventory.spec.ts` |
 | TC-0029-06 | 4 | 個体を選ぶとウィンドウが「かくにん」に替わり、「ショートソード［R］を すてますか？」と はい／いいえ（初めのカーソルは いいえ）が出る。はい で一覧に戻り、その個体が消えて「もちもの 22／50」になる。いいえ・Esc で一覧に戻り、カーソルが同じ個体にある。画面を閉じると、元の画面のメッセージ欄に「ショートソード［R］を すてた」が出る | E2E | `e2e/inventory.spec.ts` |
 | TC-0029-07 | 5 | 装備中の個体の ID で `discard` すると `RuleViolationError`（409 `rule_violation`「その もちものは ない」）で、状態は変わらない | 単体 | `tests/domain/equipment.test.ts` |
-| TC-0029-08 | 6 | 宿屋で `save()` するとセーブに装備中 4 枠・所持品・`nextId` が入る。所持品を変えてから `load()` すると、装備・所持品・`nextId` がセーブした時点に戻る。入れ替え待ちのあるプレイ中状態から作ったセーブ（`toSaveData`）とクリア時の自動セーブは `pending` が null | 単体 | `tests/api/game-api.test.ts` |
+| TC-0029-08 | 6 | 宿屋で `save({ slot: 1 })` するとセーブに装備中 4 枠・所持品・`nextId` が入る。所持品を変えてから `load({ slot: 1 })` すると、装備・所持品・`nextId` がセーブした時点に戻る。入れ替え待ちのあるプレイ中状態から作ったセーブ（`toSaveData`）とクリア時の自動セーブは `pending` が null（v1.1） | 単体 | `tests/api/game-api.test.ts` |
 | TC-0029-09 | 7 | 戦闘で倒れて宿屋に戻っても、装備中 4 枠・所持品・`nextId` が倒れる前と同じ。`startGame()` で始めると、装備はすべて null・所持品 0 個・`nextId` 1 | 単体 | `tests/api/game-api.test.ts` |
 | TC-0029-10 | 8 | `conformItem` が乱数を使わずに個体を直す：ロングソード（段階 4）の［N］value 8 → ［R］value 9（`floor(8 × 12 ÷ 10)`）。ショートソードの［LG］value 30 → ［R］value 2（`floor(30 × 12 ÷ 30)` = 12 を R の範囲 1〜2 に切り詰め）。範囲の外の value は範囲に切り詰める。直した結果にもう一度通しても同じ | 単体 | `tests/domain/items.test.ts` |
 | TC-0029-11 | 8 | 保存に itemId `'weapon9'` の個体（装備中・所持品・入れ替え待ち）があると、読み込みで取り除かれ、`console.warn` が呼ばれる。id・value が整数でない、rarity が 5 種以外の個体は警告なしで捨てられる。所持品が null なら空の所持品として読む。`nextId` は取り除いた個体を含む各 id + 1 より小さくならない | 単体 | `tests/api/game-api.test.ts` |
