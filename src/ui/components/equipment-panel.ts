@@ -22,7 +22,7 @@ export interface PanelDeps extends Pick<ScreenContext, 'store' | 'api' | 'comman
 
 type Preview = { current: ItemView | null; candidate: ItemView | null } | null;
 
-const effectiveOf = (c: CharacterView): Stats => ({ attack: c.attack, defense: c.defense, speed: c.speed, maxHp: c.maxHp, maxMp: c.maxMp });
+const effectiveOf = (c: CharacterView): Stats => ({ attack: c.attack, defense: c.defense, speed: c.speed, evasion: c.evasion, maxHp: c.maxHp, maxMp: c.maxMp });
 
 export function equipmentPanel(deps: PanelDeps): { el: HTMLElement; destroy(): void } {
   const { store, api, command } = deps;

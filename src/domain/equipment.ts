@@ -7,7 +7,7 @@ export type Stats = Record<StatKey, number>;
 
 /** 4 枠それぞれについて、その種類の stats の各能力に value を足した合計 */
 export function equipmentBonus(inv: InventoryData): Stats {
-  const bonus: Stats = { attack: 0, defense: 0, speed: 0, maxHp: 0, maxMp: 0 };
+  const bonus: Stats = { attack: 0, defense: 0, speed: 0, evasion: 0, maxHp: 0, maxMp: 0 };
   for (const slot of SLOTS) {
     const it = inv.equipped[slot];
     if (!it) continue;
@@ -16,13 +16,14 @@ export function equipmentBonus(inv: InventoryData): Stats {
   return bonus;
 }
 
-/** 実効値 = 基礎値 + 装備の補正 */
+/** 実効値 = 基礎値 + 装備の補正（かいひ の基礎値はいつも 0。v1.14） */
 export function effectiveStats(state: GameStateData): Stats {
   const b = equipmentBonus(state.inventory);
   return {
     attack: state.attack + b.attack,
     defense: state.defense + b.defense,
     speed: state.speed + b.speed,
+    evasion: 0 + b.evasion,
     maxHp: state.maxHp + b.maxHp,
     maxMp: state.maxMp + b.maxMp,
   };

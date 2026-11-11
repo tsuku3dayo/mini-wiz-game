@@ -63,9 +63,17 @@ export function expForLevel(n: number): number {
   return EXP_FACTOR * n * (n - 1);
 }
 
-/** 経験値を加え、届いた分だけレベルを上げる。1 レベルにつき乱数を 5 個（最大HP → 最大MP → こうげき → ぼうぎょ → すばやさ） */
-export function applyExp(state: GameStateData, gained: number, rng: Rng): StepResult {
-  let next: GameStateData = { ...state, exp: state.exp + gained };
+/** 経験値を加えるだけ（勝利のとき）。レベルは上がらない。乱数・メッセージなし（v1.14） */
+export function gainExp(state: GameStateData, gained: number): GameStateData {
+  return { ...state, exp: state.exp + gained };
+}
+
+/**
+ * たまった経験値で、届いた分だけレベルを上げる（宿屋の やすむ でだけ呼ぶ。v1.14）。
+ * 1 レベルにつき乱数を 5 個（最大HP → 最大MP → こうげき → ぼうぎょ → すばやさ）。上がらなければ引かない
+ */
+export function levelUp(state: GameStateData, rng: Rng): StepResult {
+  let next: GameStateData = state;
   const messages: Message[] = [];
   while (next.exp >= expForLevel(next.level + 1)) {
     const g = {
@@ -98,13 +106,14 @@ export function applyExp(state: GameStateData, gained: number, rng: Rng): StepRe
   return { state: next, messages };
 }
 
-/** 宿屋の「やすむ」：HP・MP を装備込みの最大値まで回復する。INN のみ。乱数を使わない */
-export function rest(state: GameStateData): StepResult {
+/** 宿屋の「やすむ」：HP・MP を装備込みの最大値まで回復し、たまった経験値でレベルを上げる（§7.2。v1.14）。INN のみ */
+export function rest(state: GameStateData, rng: Rng): StepResult {
   assertLocation(state, 'INN');
   const eff = effectiveStats(state);
+  const grown = levelUp({ ...state, hp: eff.maxHp, mp: eff.maxMp }, rng);
   return {
-    state: { ...state, hp: eff.maxHp, mp: eff.maxMp },
-    messages: [{ text: 'HP と MP が かいふくした', tone: 'success' }],
+    state: grown.state,
+    messages: [{ text: 'HP と MP が かいふくした', tone: 'success' }, ...grown.messages],
   };
 }
 

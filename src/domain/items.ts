@@ -2,7 +2,7 @@
 import type { ItemInstance } from './game-state';
 
 export type Slot = 'weapon' | 'armor' | 'shield' | 'accessory';
-export type StatKey = 'attack' | 'defense' | 'speed' | 'maxHp' | 'maxMp';
+export type StatKey = 'attack' | 'defense' | 'speed' | 'evasion' | 'maxHp' | 'maxMp';
 export type Rarity = 'N' | 'R' | 'SR' | 'UR' | 'LG';
 type Tier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type ItemId = `${Slot}${Tier}`;
@@ -52,14 +52,14 @@ export const ITEMS: Readonly<Record<ItemId, ItemMaster>> = {
   armor6: item('armor', 6, 'ミスリルメイル', ['defense'], 10, 14),
   armor7: item('armor', 7, 'ドラゴンメイル', ['defense'], 13, 17),
   armor8: item('armor', 8, 'オリハルコンアーマー', ['defense'], 17, 22),
-  shield1: item('shield', 1, 'ウッドシールド', ['defense'], 1, 2),
-  shield2: item('shield', 2, 'レザーシールド', ['defense'], 2, 3),
-  shield3: item('shield', 3, 'アイアンシールド', ['defense'], 3, 4),
-  shield4: item('shield', 4, 'カイトシールド', ['defense'], 4, 6),
-  shield5: item('shield', 5, 'ナイトシールド', ['defense'], 5, 7),
-  shield6: item('shield', 6, 'ミスリルシールド', ['defense'], 7, 9),
-  shield7: item('shield', 7, 'ドラゴンシールド', ['defense'], 8, 11),
-  shield8: item('shield', 8, 'イージス', ['defense'], 11, 14),
+  shield1: item('shield', 1, 'ウッドシールド', ['evasion'], 1, 2),
+  shield2: item('shield', 2, 'レザーシールド', ['evasion'], 2, 3),
+  shield3: item('shield', 3, 'アイアンシールド', ['evasion'], 3, 4),
+  shield4: item('shield', 4, 'カイトシールド', ['evasion'], 4, 6),
+  shield5: item('shield', 5, 'ナイトシールド', ['evasion'], 5, 7),
+  shield6: item('shield', 6, 'ミスリルシールド', ['evasion'], 7, 9),
+  shield7: item('shield', 7, 'ドラゴンシールド', ['evasion'], 8, 11),
+  shield8: item('shield', 8, 'イージス', ['evasion'], 11, 14),
   accessory1: item('accessory', 1, 'ガードリング', ['defense'], 1, 3),
   accessory2: item('accessory', 2, 'パワーリング', ['attack'], 1, 3),
   accessory3: item('accessory', 3, 'ウィンドブーツ', ['speed'], 2, 4),
@@ -72,7 +72,7 @@ export const ITEMS: Readonly<Record<ItemId, ItemMaster>> = {
 };
 
 const STAT_NAMES: Readonly<Record<StatKey, string>> = {
-  attack: 'こうげき', defense: 'ぼうぎょ', speed: 'すばやさ', maxHp: 'さいだいHP', maxMp: 'さいだいMP',
+  attack: 'こうげき', defense: 'ぼうぎょ', speed: 'すばやさ', evasion: 'かいひ', maxHp: 'さいだいHP', maxMp: 'さいだいMP',
 };
 
 export function statName(stat: StatKey): string {

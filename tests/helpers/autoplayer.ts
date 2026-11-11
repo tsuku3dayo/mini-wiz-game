@@ -1,6 +1,7 @@
 // 自動プレイヤー（仕様書 §29.2）：ゲーム API だけで遊ぶ。乱数を引かない（ゲーム API に渡した Rng だけで結果が決まる）
 // - 今の階の全マスを debugDungeon で取り、幅優先探索で道を選ぶ（ボスのマスは、ボスに挑むとき以外は通らない）
 // - HP 50% 未満で帰還（ダンジョンのヒールが使えれば先に使う）、戦闘中は 30% 未満でヒール
+// - 経験値がたまったら（expToNext 0）宿屋へ帰って やすむ（レベルは やすむ でだけ上がる。v1.14）
 // - レベルで降りる階を決める（2F:Lv2、3F:Lv4、4F:Lv5、5F:Lv7、ボスは Lv9）
 // - 拾った装備を部位ごとに強い方へ付け替え、満杯なら最弱と入れ替える
 import type { DebugDungeon, Facing, GameApi, GameView, ItemView, MoveAction } from '../../src/api/types';
@@ -103,7 +104,8 @@ export async function play(api: GameApi, name: string, opts: { laps: number; max
     const c = state.character;
     switch (state.location) {
       case 'INN':
-        if (c.hp < c.maxHp || c.mp < c.maxMp) await call(() => api.rest());
+        // レベルは宿屋の やすむ でだけ上がる（v1.14）。減っているか、経験値がたまっていれば やすむ
+        if (c.hp < c.maxHp || c.mp < c.maxMp || c.expToNext === 0) await call(() => api.rest());
         await call(() => api.enterDungeon());
         roam = 'down';
         break;
@@ -133,12 +135,14 @@ export async function play(api: GameApi, name: string, opts: { laps: number; max
         }
         const d = await api.debugDungeon();
         const level = c.level;
-        const low = hpRate() < 0.5;
-        if (low && state.canHeal) {
+        const hurt = hpRate() < 0.5;
+        if (hurt && state.canHeal) {
           await call(() => api.heal());
           break;
         }
-        // 目的地：弱っていたら上り階段（1F は入口）、ボスに挑めるならボス、深く行けるなら下り階段、そうでなければ上と下を行き来する
+        // 弱っているか、経験値がたまってレベルが上げられるときは宿屋へ帰る（v1.14）
+        const low = hurt || c.expToNext === 0;
+        // 目的地：帰るなら上り階段（1F は入口）、ボスに挑めるならボス、深く行けるなら下り階段、そうでなければ上と下を行き来する
         let target: { x: number; y: number };
         let goBoss = false;
         if (low) {

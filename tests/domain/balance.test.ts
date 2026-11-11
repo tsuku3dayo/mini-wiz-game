@@ -37,7 +37,7 @@ const winRate = (start: GameStateData) => {
 };
 
 describe('ボスの強さの釣り合い', () => {
-  test('TC-0024-08 装備なしの Lv12（平均の成長）はボスに勝つ割合が 20% 以下。weapon5・armor5・shield5・accessory4 を装備した Lv10 は 80% 以上', () => {
+  test('TC-0024-08 装備なしの Lv12（平均の成長）はボスに勝つ割合が 20% 以下。weapon5・armor5・shield5・accessory4 を装備した Lv11 は 80% 以上（v1.14 で Lv10 から Lv11 に）', () => {
     const bare = battleState('necromancer', 260, averageCharacter(12));
     const geared: InventoryData = {
       equipped: {
@@ -50,11 +50,11 @@ describe('ボスの強さの釣り合い', () => {
       nextId: 5,
       pending: null,
     };
-    const lv10 = averageCharacter(10);
-    const equipped = battleState('necromancer', 260, { ...lv10, inventory: geared, hp: (lv10.maxHp ?? 0) + 15 });
+    const lv11 = averageCharacter(11);
+    const equipped = battleState('necromancer', 260, { ...lv11, inventory: geared, hp: (lv11.maxHp ?? 0) + 15 });
     const bareRate = winRate(bare);
     const gearedRate = winRate(equipped);
     expect(bareRate, `装備なし Lv12：${bareRate}`).toBeLessThanOrEqual(0.2);
-    expect(gearedRate, `装備あり Lv10：${gearedRate}`).toBeGreaterThanOrEqual(0.8);
+    expect(gearedRate, `装備あり Lv11：${gearedRate}`).toBeGreaterThanOrEqual(0.8);
   });
 });

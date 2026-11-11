@@ -30,7 +30,7 @@ test.describe('戦闘の画面', () => {
     await expect(page.getByRole('log')).toHaveCount(1);
   });
 
-  test('TC-0022-10 ステータスは見出し「ステータス」の 1 行（名前・Lv・HP・MP）。レベルが上がると Lv が変わる', async ({ page }, info) => {
+  test('TC-0022-10 ステータスは見出し「ステータス」の 1 行（名前・Lv・HP・MP）。経験値がたまって勝っても Lv は変わらない（v1.14）', async ({ page }, info) => {
     const lv3 = { level: 3, exp: 80, hp: 25, maxHp: 46, mp: 10, maxMp: 16, attack: 7, defense: 7, speed: 7 };
     await startAt(page, 'DUNGEON', { state: lv3 });
     const line = page.getByTestId('status-panel').locator('.wiz-status-compact');
@@ -38,10 +38,12 @@ test.describe('戦闘の画面', () => {
     await expect(line).toHaveText(/ゆうしゃ\s*Lv\s{2}3\s*HP 25\/ 46\s*MP 10\/ 16/);
     expect(await line.textContent()).not.toMatch(/EXP|こうげき/);
 
+    // v1.14：経験値が次のレベルを超えても、勝っただけでは Lv は変わらない（宿屋の やすむ で上がる）
     await startAt(page, 'BATTLE', { state: { exp: 23, battle: battleOf('slime', 1) }, seed: SEEDS.hits });
     await expect(line).toContainText('Lv  1');
     await choose(page, info, commandItem(page, 'たたかう'));
-    await expect(line).toContainText('Lv  2');
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
+    await expect(page.getByTestId('status-panel').locator('.wiz-status-compact')).toContainText('Lv  1');
   });
 
   test('TC-0018-06 遭遇すると、それまでの行が消えて「スライムが あらわれた！」の 1 行だけになり、戦闘の画面になる', async ({ page }, info) => {
@@ -101,7 +103,7 @@ test.describe('戦闘の画面', () => {
   });
 
   test.describe('敵の絵', () => {
-  const KINDS = [['slime', 'スライム'], ['goblin', 'ゴブリン'], ['skeleton', 'スケルトン'], ['orc', 'オーク'], ['darkKnight', 'ダークナイト'], ['necromancer', '暗黒のネクロマンサー']] as const;
+  const KINDS = [['slime', 'スライム'], ['goblin', 'ゴブリン'], ['skeleton', 'スケルトン'], ['orc', 'オークロード'], ['darkKnight', 'ダークナイト'], ['necromancer', '暗黒のネクロマンサー']] as const;
   const frame = (page: Page) => page.getByTestId('enemy-window').getByTestId('enemy-image-frame');
   const img = (page: Page) => frame(page).locator('img');
   /** 絵が読めるまで待つ */

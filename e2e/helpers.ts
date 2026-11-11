@@ -55,20 +55,31 @@ export const SEEDS = {
   hits: 1,
   /** HP 1 のスライムを先攻で倒し、［R］を落とす（tests/domain/loot.test.ts で確かめている） */
   slimeDropR: 131,
-  /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、特例で段階 8・［LG］を落とす（同上） */
-  darkKnightDropLG: 66,
-  /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、レベルアップして［UR］を落とす（7 行。5 行目が levelUp、7 行目が rareDrop） */
-  darkKnightDropUR: 2,
-  /** 同じ形で［SR］を落とす（演出なし） */
-  darkKnightDropSR: 5,
+  /** HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、特例で段階 8・［LG］を落とす（同上。v1.14 で 66 から） */
+  darkKnightDropLG: 12,
+  /**
+   * HP 1 のダークナイトに先に攻撃されたあと倒し（プレイヤーは HP 999）、［UR］を落とす（5 行。5 行目が rareDrop）。
+   * v1.14 で 2 から（勝利でレベルが上がらなくなり、間の levelUp の行がなくなった）
+   */
+  darkKnightDropUR: 5,
+  /** 同じ形で［SR］を落とす（演出なし。v1.14 で 5 から） */
+  darkKnightDropSR: 4,
   /** HP 1 のゴブリンを倒し（プレイヤーは HP 999）、［N］を落とす（5 行目がドロップ） */
   goblinDropN: 5,
   /**
    * HP 1 のボスを先攻で倒す（Lv12・EXP 1584・すばやさ 30。bossBattle）。
-   * 11 行：攻撃 → bossDefeat → 経験値 → （levelUp → 成長）× 3 → rareDrop（LG）→ clear
+   * 5 行：攻撃 → bossDefeat → 経験値 → rareDrop（LG）→ clear（v1.14 でレベルアップの 6 行がなくなった。Lv12 のまま）
    */
   bossWin: 1,
 } as const;
+
+/**
+ * 宿屋で「やすむ」と 3 回レベルアップする状態（Lv12・累計 2584＝ボスを倒したあと。Lv15 になる）。
+ * 7 行：かいふく → （levelUp → 成長）× 3。2 行目（400ms）・4 行目（1871ms）・6 行目（3342ms）が levelUp（v1.14）
+ */
+export function innLevelUp(): Record<string, unknown> {
+  return { level: 12, exp: 2584, hp: 50, maxHp: 120, mp: 10, maxMp: 40 };
+}
 
 /** HP 1 のボスとの戦闘（5F のボスのマス）。SEEDS.bossWin で倒す */
 export function bossBattle(): Record<string, unknown> {

@@ -113,7 +113,7 @@ export function createGameApi(deps: GameApiDeps): GameApi {
       return { state: toGameView(state), messages: [{ text: `${state.name}は 宿屋で めをさました`, tone: 'normal' }] };
     }),
 
-    rest: () => run(rest),
+    rest: () => run((state) => rest(state, deps.rng)),
 
     continueGame: () => run(continueToInn),
 

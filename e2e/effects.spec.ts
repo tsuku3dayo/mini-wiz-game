@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { battleOf, bossBattle, dungeonMap, logLines, SEEDS, startAt } from './helpers';
+import { battleOf, bossBattle, dungeonMap, innLevelUp, logLines, SEEDS, startAt } from './helpers';
 
 // 演出（仕様書 §11.8「演出」、TC-0031）。時間は偽の時計で進める（install → pauseAt → runFor）
 
@@ -8,6 +8,7 @@ const status = (page: Page) => page.getByTestId('status-panel');
 const heading = (page: Page) => page.locator('.clear-heading');
 const line = (page: Page, text: RegExp) => page.locator('[role="log"] .wiz-line').filter({ hasText: text }).last();
 const attackItem = (page: Page) => page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').filter({ hasText: 'たたかう' });
+const restItem = (page: Page) => page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'やすむ' });
 /** ダークナイト（HP 1）。プレイヤーは HP 999 で倒れない */
 const darkKnight = { hp: 999, maxHp: 999, battle: battleOf('darkKnight', 1) };
 
@@ -20,6 +21,13 @@ async function press(info: TestInfo, target: Locator) {
 async function attackPaused(page: Page, info: TestInfo) {
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await press(info, attackItem(page));
+  await expect.poll(() => logLines(page)).toHaveLength(1);
+}
+
+/** 時計を止め、宿屋の「やすむ」を押す（1 行目「HP と MP が かいふくした」がすぐ出る）。レベルは やすむ で上がる（v1.14） */
+async function restPaused(page: Page, info: TestInfo) {
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await press(info, restItem(page));
   await expect.poll(() => logLines(page)).toHaveLength(1);
 }
 
@@ -71,11 +79,11 @@ test.describe('演出', () => {
 
   test('TC-0031-01 レベルアップの行が出ると、StatusPanel の外側が 1000ms で 2 回光り、行は secondary・太字で 600ms ease-out の拡大', async ({ page }, info) => {
     await page.clock.install();
-    await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
-    await attackPaused(page, info);
-    // 1 行目のあと 400ms ごと：5 行目が「レベルが あがった！」
-    await page.clock.runFor(1600);
-    const levelLine = line(page, /レベルが あがった！ Lv2/);
+    // レベルは宿屋の やすむ で上がる（v1.14）。1 行目「HP と MP が かいふくした」の 400ms あと、2 行目が「レベルが あがった！」
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await restPaused(page, info);
+    await page.clock.runFor(400);
+    const levelLine = line(page, /レベルが あがった！ Lv13/);
     await expect(levelLine).toBeVisible();
     await expect(status(page)).toHaveClass(/level-up/);
     expect(await cssAnimation(status(page))).toMatchObject({ duration: '1s', count: '1', running: 1 });
@@ -105,8 +113,8 @@ test.describe('演出', () => {
     for (const s of scenes) {
       await startAt(page, 'BATTLE', { state: darkKnight, seed: s.seed });
       await attackPaused(page, info);
-      // 7 行目（1 行目から 400 × 4 ＋ レベルアップ 1071 ＋ 400。v1.10）
-      await page.clock.runFor(3071);
+      // 5 行目（1 行目から 400 × 4。v1.14 で間のレベルアップの行がなくなった）
+      await page.clock.runFor(1600);
       const drop = line(page, /おとした！/);
       await expect(drop).toBeVisible();
       await expect(layer(page)).toHaveAttribute('data-effect', 'rareDrop');
@@ -173,25 +181,33 @@ test.describe('演出', () => {
     expect((await cssAnimation(heading(page))).running).toBe(0);
   });
 
-  test('TC-0031-07 1 つの応答の bossDefeat・levelUp・rareDrop（LG）は、行の順に 1 つずつ立ち、2 つ同時に立たない', async ({ page }, info) => {
+  test('TC-0031-07 1 つの応答の演出（ボス撃破の bossDefeat・rareDrop（LG）・clear、やすむ の levelUp × 3）は、行の順に 1 つずつ立ち、2 つ同時に立たない', async ({ page }, info) => {
+    /** 100ms ずつ進め、立っている演出の移り変わりを集める（同時に 2 つ立たないことも確かめる） */
+    const watch = async (until: number) => {
+      const seen: string[] = [];
+      for (let t = 0; t <= until; t += 100) {
+        const now = await page.evaluate(() => {
+          const l = document.getElementById('effect-layer')?.dataset.effect ?? null;
+          const s = document.querySelector('[data-testid="status-panel"].level-up') ? 'levelUp' : null;
+          const c = document.querySelector('.clear-heading.rising') ? 'clear' : null;
+          return [l, s, c].filter(Boolean) as string[];
+        });
+        expect(now.length, `${t}ms：${now.join('・')}`).toBeLessThanOrEqual(1);
+        const label = now[0] ?? 'なし';
+        if (seen.at(-1) !== label) seen.push(label);
+        await page.clock.runFor(100);
+      }
+      return seen;
+    };
     await page.clock.install();
+    // ボス撃破：clear の演出（5833ms、v1.10）が終わるまで見る。v1.14 から勝利でレベルは上がらない
     await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
     await attackPaused(page, info);
-    const seen: string[] = [];
-    // clear の演出（5833ms、v1.10）が終わるまで見る
-    for (let t = 0; t <= 14000; t += 100) {
-      const now = await page.evaluate(() => {
-        const l = document.getElementById('effect-layer')?.dataset.effect ?? null;
-        const s = document.querySelector('[data-testid="status-panel"].level-up') ? 'levelUp' : null;
-        const c = document.querySelector('.clear-heading.rising') ? 'clear' : null;
-        return [l, s, c].filter(Boolean) as string[];
-      });
-      expect(now.length, `${t}ms：${now.join('・')}`).toBeLessThanOrEqual(1);
-      const label = now[0] ?? 'なし';
-      if (seen.at(-1) !== label) seen.push(label);
-      await page.clock.runFor(100);
-    }
-    expect(seen).toEqual(['なし', 'bossDefeat', 'なし', 'levelUp', 'なし', 'levelUp', 'なし', 'levelUp', 'なし', 'rareDrop', 'clear', 'なし']);
+    expect(await watch(10000)).toEqual(['なし', 'bossDefeat', 'なし', 'rareDrop', 'clear', 'なし']);
+    // 宿屋の やすむ で 3 回レベルアップ：levelUp が 1 つずつ立つ
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await restPaused(page, info);
+    expect(await watch(6000)).toEqual(['なし', 'levelUp', 'なし', 'levelUp', 'なし', 'levelUp', 'なし']);
   });
 
   test('TC-0031-08 演出中にメッセージ欄を押すと残りの行が全部出て、演出が終わり、data-busy が true でなくなる。desktop では Enter でも同じで、メニューに届かない', async ({ page }, info) => {
@@ -199,19 +215,21 @@ test.describe('演出', () => {
     const ways = info.project.name === 'desktop' ? ['click', 'enter'] : ['tap'];
     await page.clock.install();
     for (const way of ways) {
-      await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
-      await attackPaused(page, info);
-      await page.clock.runFor(1600);
+      // レベルアップの演出は宿屋の やすむ で立つ（v1.14）
+      await startAt(page, 'INN', { state: innLevelUp() });
+      await restPaused(page, info);
+      await page.clock.runFor(400);
       await expect(status(page)).toHaveClass(/level-up/);
       await expect(page.locator('body')).toHaveAttribute('data-busy', 'true');
       const r0 = await revision();
       if (way === 'enter') {
-        await expect(attackItem(page)).toBeFocused();
+        await expect(restItem(page)).toBeFocused();
         await page.keyboard.press('Enter');
       } else {
         await press(info, page.getByTestId('message-window'));
       }
-      await expect.poll(async () => (await logLines(page)).at(-1), way).toMatch(/おとした！$/);
+      await expect.poll(async () => (await logLines(page)).at(-1), way).toMatch(/^HP \+\d+ MP \+\d+ /);
+      expect(await logLines(page), way).toContain('レベルが あがった！ Lv15');
       await expect(page.locator('body')).not.toHaveAttribute('data-busy', 'true');
       await expect(layer(page)).not.toHaveAttribute('data-effect', /./);
       await expect(status(page)).not.toHaveClass(/level-up/);
@@ -236,13 +254,19 @@ test.describe('演出', () => {
     expect(await page.locator('[role="log"] .wiz-line').evaluateAll((list) => list.reduce((n, e) => n + e.getAnimations().length, 0))).toBe(0);
     expect((await cssAnimation(status(page))).running).toBe(0);
 
-    // レベルアップが最後の演出のとき（その後にドロップがない）も、StatusPanel は動かない
+    // clear が最後の演出のとき：クリアの見出しも動かない
     await startAt(page, 'BATTLE', { state: bossBattle(), seed: SEEDS.bossWin });
     await press(info, attackItem(page));
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'clear');
     await expect(heading(page)).toHaveClass(/rising/);
     expect((await cssAnimation(heading(page))).running).toBe(0);
     await expect(layer(page)).not.toHaveAttribute('data-effect', /./);
+
+    // レベルアップが最後の演出のとき（宿屋の やすむ。v1.14）も、StatusPanel は動かない
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await press(info, restItem(page));
+    await expect.poll(async () => (await logLines(page)).at(-2)).toBe('レベルが あがった！ Lv15');
+    expect((await cssAnimation(status(page))).running).toBe(0);
   });
 
   test('TC-0031-11 どの演出も、明るさの山は 1 秒の区間に 3 回以下', async ({ page }, info) => {
@@ -253,13 +277,17 @@ test.describe('演出', () => {
       expect(maxPerSecond(times), name).toBeLessThanOrEqual(3);
     };
     await page.clock.install();
-    // levelUp と rareDrop（UR・LG）
+    // levelUp（宿屋の やすむ。v1.14）
+    await startAt(page, 'INN', { state: innLevelUp() });
+    await restPaused(page, info);
+    await page.clock.runFor(400);
+    await expect(status(page)).toHaveClass(/level-up/);
+    await check('levelUp', status(page));
+    // rareDrop（UR・LG）：5 行目
     for (const [name, seed] of [['rareDrop UR', SEEDS.darkKnightDropUR], ['rareDrop LG', SEEDS.darkKnightDropLG]] as const) {
       await startAt(page, 'BATTLE', { state: darkKnight, seed });
       await attackPaused(page, info);
       await page.clock.runFor(1600);
-      if (name === 'rareDrop UR') await check('levelUp', status(page));
-      await page.clock.runFor(1471);
       await expect(layer(page)).toHaveAttribute('data-effect', 'rareDrop');
       await check(name, layer(page));
     }

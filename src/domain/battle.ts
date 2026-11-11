@@ -1,7 +1,7 @@
 // 戦闘（仕様書 §5、§9.1）：ダメージ・行動順・回避・逃走・1 ターンの解決・勝利・敗北
 // ボスに勝ったときの処理（§9.1）は、1 ターンの解決が勝利まで返す決まりなので TASK-0010 で作った（確かめは TASK-0012）
-import { applyExp } from './character';
-import { ENEMIES, EVASION, FLEE, HEAL, type EnemyKind } from './constants';
+import { gainExp } from './character';
+import { ENEMIES, EVASION, FLEE, HEAL, type EnemyKind, type EnemyStats } from './constants';
 import { effectiveStats } from './equipment';
 import { InvalidStateError } from './errors';
 import { assertLocation, type GameStateData, type Message, type StepResult } from './game-state';
@@ -21,6 +21,7 @@ export interface Combatant {
   attack: number;
   defense: number;
   speed: number;
+  evasion: number; // プレイヤーは装備込み（たての補正）、敵は 0（v1.14）
 }
 
 /** 画面に返す戦闘の情報。敵の HP は含めない（キーはこの 5 つだけ） */
@@ -44,9 +45,9 @@ export function turnOrder(playerSpeed: number, enemySpeed: number): ('player' | 
   return playerSpeed >= enemySpeed ? ['player', 'enemy'] : ['enemy', 'player'];
 }
 
-/** 回避率（%）= clamp(5 + (受ける側 − 攻撃する側) × 2, 5, 30) */
-export function evadeChance(defenderSpeed: number, attackerSpeed: number): number {
-  return clamp(EVASION.base + (defenderSpeed - attackerSpeed) * EVASION.perSpeed, EVASION.min, EVASION.max);
+/** 回避率（%）= clamp((受ける側の速 − 攻撃する側の速) + 受ける側のかいひ, 0, 90)（v1.14） */
+export function evadeChance(defenderSpeed: number, attackerSpeed: number, defenderEvasion: number): number {
+  return clamp(defenderSpeed - attackerSpeed + defenderEvasion, EVASION.min, EVASION.max);
 }
 
 /** 逃走成功率（%）= clamp(50 + (プレイヤー − 敵) × 5, 10, 90) */
@@ -56,7 +57,8 @@ export function fleeChance(playerSpeed: number, enemySpeed: number): number {
 
 /** 攻撃 1 回：回避の int(1,100) → 当たったときだけダメージの int(0,2) */
 export function attack(attacker: Combatant, defender: Combatant, rng: Rng): { damage: number; evaded: boolean } {
-  if (rng.int(1, 100) <= evadeChance(defender.speed, attacker.speed)) return { damage: 0, evaded: true };
+  // 回避率 0% のときも、この乱数は 1 個引く（引く数をそろえる）
+  if (rng.int(1, 100) <= evadeChance(defender.speed, attacker.speed, defender.evasion)) return { damage: 0, evaded: true };
   return { damage: damage(attacker.attack, defender.defense, rng), evaded: false };
 }
 
@@ -99,7 +101,7 @@ export function onDefeat(state: GameStateData, messages: Message[]): TurnResult 
   };
 }
 
-/** 勝利：通常の敵は「たおした → 経験値 → レベルアップ → ドロップ」、ボスはさらに「平和が もどった」（§5.5、§9.1） */
+/** 勝利：通常の敵は「たおした → 経験値 → ドロップ」、ボスはさらに「平和が もどった」（§5.5、§9.1）。レベルは宿屋の やすむ で上がる（v1.14） */
 function onVictory(state: GameStateData, kind: EnemyKind, messages: Message[], rng: Rng): TurnResult {
   const enemy = ENEMIES[kind];
   const isBoss = kind === 'necromancer';
@@ -113,10 +115,8 @@ function onVictory(state: GameStateData, kind: EnemyKind, messages: Message[], r
   const base: GameStateData = isBoss
     ? { ...state, dungeon: null, battle: null, records: countBossKill(state.records) }
     : { ...state, battle: null, records: countKill(state.records) };
-  // 乱数を引く順：成長 → ドロップ
-  const grown = applyExp(base, enemy.exp, rng);
-  out.push(...grown.messages);
-  const dropped = applyDrop(grown.state, enemy.name, rollDrop(kind, rng), isBoss ? 'CLEARED' : 'DUNGEON');
+  // 経験値を足すだけ（乱数を引かない）→ ドロップ
+  const dropped = applyDrop(gainExp(base, enemy.exp),enemy.name, rollDrop(kind, rng), isBoss ? 'CLEARED' : 'DUNGEON');
   out.push(...dropped.messages);
   // 満杯で入れ替え待ちになったときは、クリアの行は入れ替えのあとで出す
   if (isBoss && dropped.state.location === 'CLEARED') out.push({ text: 'ダンジョンに 平和が もどった', tone: 'success', effect: 'clear' });
@@ -135,8 +135,8 @@ export function resolveTurn(state: GameStateData, command: BattleCommand, rng: R
   // 装備は戦闘中に変わらないので、実効値はターンの最初に 1 回だけ計算する
   const eff = effectiveStats(state);
   const kind = battle.enemy.kind;
-  const enemy = ENEMIES[kind];
-  const player: Combatant = { attack: eff.attack, defense: eff.defense, speed: eff.speed };
+  const enemy: EnemyStats & Combatant = { ...ENEMIES[kind], evasion: 0 };
+  const player: Combatant = { attack: eff.attack, defense: eff.defense, speed: eff.speed, evasion: eff.evasion };
   const messages: Message[] = [];
   let cur = state;
   let enemyHp = battle.enemy.hp;

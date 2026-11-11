@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { applyExp, continueToInn, createCharacter, expForLevel, isValidName, rest, validateName } from '../../src/domain/character';
+import { continueToInn, createCharacter, expForLevel, gainExp, isValidName, levelUp, rest, validateName } from '../../src/domain/character';
+import { noRng } from '../helpers/maps';
 import { InvalidStateError, ValidationError } from '../../src/domain/errors';
 import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
@@ -95,7 +96,7 @@ describe('宿屋で休む', () => {
     const rng = new SequenceRng([]);
     let s = before;
     for (let i = 0; i < 3; i += 1) {
-      const r = rest(s);
+      const r = rest(s, rng);
       expect(r.messages).toEqual([{ text: 'HP と MP が かいふくした', tone: 'success' }]);
       s = r.state;
     }
@@ -105,9 +106,9 @@ describe('宿屋で休む', () => {
 
     for (const location of ['DUNGEON', 'BATTLE', 'SWAP', 'CLEARED'] as const) {
       const other = deepFreeze(makeState(location));
-      expect(() => rest(other)).toThrow(InvalidStateError);
+      expect(() => rest(other, rng)).toThrow(InvalidStateError);
       try {
-        rest(other);
+        rest(other, rng);
       } catch (e) {
         const err = e as InvalidStateError;
         expect(err.status).toBe(409);
@@ -125,10 +126,10 @@ describe('経験値とレベルアップ・周回', () => {
     for (const [n, exp] of table) expect(expForLevel(n)).toBe(exp);
   });
 
-  test('Lv1・経験値 0 に 72 を加えると Lv3。成長が最小なら最大 HP 46、乱数 10 個・メッセージ 4 行', () => {
-    const before = deepFreeze(makeState('BATTLE'));
+  test('Lv1・経験値 72 で levelUp すると Lv3。成長が最小なら最大 HP 46、乱数 10 個・メッセージ 4 行', () => {
+    const before = deepFreeze(makeState('BATTLE', { exp: 72 }));
     const rng = new SequenceRng([8, 2, 1, 1, 1, 8, 2, 1, 1, 1]);
-    const r = applyExp(before, 72, rng);
+    const r = levelUp(before, rng);
     rng.assertExhausted();
     expect(r.state).toMatchObject({ level: 3, exp: 72, maxHp: 46, hp: 46, maxMp: 14, mp: 14, attack: 7, defense: 7, speed: 7 });
     expect(r.messages).toEqual([
@@ -140,11 +141,11 @@ describe('経験値とレベルアップ・周回', () => {
   });
 
   test('レベルアップで全回復しない（今の HP・MP は増えた分だけ増える）。上がらなければ乱数を引かない', () => {
-    const hurt = deepFreeze(makeState('BATTLE', { hp: 5, mp: 0, exp: 20 }));
-    const r = applyExp(hurt, 4, new SequenceRng([12, 4, 2, 2, 2]));
+    const hurt = deepFreeze(makeState('BATTLE', { hp: 5, mp: 0, exp: 24 }));
+    const r = levelUp(hurt, new SequenceRng([12, 4, 2, 2, 2]));
     expect(r.state).toMatchObject({ level: 2, hp: 17, maxHp: 42, mp: 4, maxMp: 14 });
     const none = new SequenceRng([]);
-    expect(applyExp(hurt, 3, none).messages).toEqual([]);
+    expect(levelUp(deepFreeze({ ...hurt, exp: 23 }), none).messages).toEqual([]);
     none.assertExhausted();
   });
 
@@ -162,12 +163,32 @@ describe('宿屋で休む（装備込み）', () => {
     const life = makeItem(1, 'accessory4', 'R', 15);
     const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [], nextId: 2, pending: null };
     const s = deepFreeze(makeState('INN', { level: 3, exp: 72, hp: 10, maxHp: 46, mp: 1, maxMp: 16, inventory }));
-    const r = rest(s);
+    const r = rest(s, new SequenceRng([]));
     expect(r.state).toMatchObject({ hp: 61, mp: 16, maxHp: 46 });
     expect(r.messages).toEqual([{ text: 'HP と MP が かいふくした', tone: 'success' }]);
-    const again = rest(deepFreeze(r.state));
+    const again = rest(deepFreeze(r.state), new SequenceRng([]));
     expect(again.state).toMatchObject({ hp: 61, mp: 16 });
     expect(again.messages).toHaveLength(1);
+  });
+
+  test('TC-0008-06 rest は全回復してからレベルを上げる（経験値 72 で Lv3・HP 46 の満タン、メッセージは回復 → 4 行）。経験値 23 なら乱数を引かない', () => {
+    const inventory = { equipped: { weapon: makeItem(1, 'weapon1', 'N', 2), armor: null, shield: null, accessory: null }, items: [makeItem(2, 'armor1', 'N', 1)], nextId: 3, pending: null };
+    const records = { battles: 9, kills: 8, deaths: 1, laps: 1, bossKills: 0 };
+    const s = deepFreeze(makeState('INN', { exp: 72, hp: 10, mp: 2, inventory, records }));
+    const rng = new SequenceRng([8, 2, 1, 1, 1, 8, 2, 1, 1, 1]);
+    const r = rest(s, rng);
+    rng.assertExhausted();
+    expect(r.state).toEqual({ ...s, level: 3, maxHp: 46, hp: 46, maxMp: 14, mp: 14, attack: 7, defense: 7, speed: 7 });
+    expect(r.messages.map((m) => m.text)).toEqual([
+      'HP と MP が かいふくした',
+      'レベルが あがった！ Lv2', 'HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1',
+      'レベルが あがった！ Lv3', 'HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1',
+    ]);
+    // 経験値 23 では上がらない。乱数を引くと例外になる Rng で、1 個も引かないことを確かめる
+    const low = deepFreeze(makeState('INN', { exp: 23, hp: 10, inventory, records }));
+    const r2 = rest(low, noRng());
+    expect(r2.state).toEqual({ ...low, hp: 30, mp: 10 });
+    expect(r2.messages).toHaveLength(1);
   });
 });
 
@@ -178,31 +199,34 @@ describe('経験値を得て強くなる', () => {
     expect([2, 3, 4, 5, 10, 100].map(expForLevel)).toEqual([24, 72, 144, 240, 1080, 118800]);
   });
 
-  test('TC-0022-03 23 を加えても Lv1 のまま（乱数 0 個・0 行）。24 で Lv2 になり、乱数をちょうど 5 個引く', () => {
+  test('TC-0022-03 経験値 23 の levelUp は Lv1 のまま（乱数 0 個・0 行）。24 で Lv2 になり、乱数をちょうど 5 個引く。gainExp は経験値だけを足す', () => {
     const none = recordingRng();
-    const r1 = applyExp(deepFreeze(makeState('DUNGEON')), 23, none);
+    const r1 = levelUp(deepFreeze(makeState('DUNGEON', { exp: 23 })), none);
     expect(r1.state.level).toBe(1);
     expect(none.calls).toHaveLength(0);
     expect(r1.messages).toEqual([]);
     const five = recordingRng();
-    expect(applyExp(deepFreeze(makeState('DUNGEON')), 24, five).state.level).toBe(2);
+    expect(levelUp(deepFreeze(makeState('DUNGEON', { exp: 24 })), five).state.level).toBe(2);
     expect(five.calls.map(({ min, max }) => [min, max])).toEqual([[8, 12], [2, 4], [1, 2], [1, 2], [1, 2]]);
+    // gainExp：経験値だけを足す（レベル・ほかの値は同じ。乱数を受け取らず、メッセージも返さない）
+    const before = deepFreeze(makeState('DUNGEON'));
+    expect(gainExp(before, 24)).toEqual({ ...before, exp: 24 });
   });
 
-  test('TC-0022-04 72 を加えると Lv3・4 行。成長が最小（8,2,1,1,1 × 2）なら最大 HP 46', () => {
-    const r = applyExp(deepFreeze(makeState('DUNGEON')), 72, new SequenceRng([8, 2, 1, 1, 1, 8, 2, 1, 1, 1]));
+  test('TC-0022-04 経験値 72 の levelUp で Lv3・4 行。成長が最小（8,2,1,1,1 × 2）なら最大 HP 46', () => {
+    const r = levelUp(deepFreeze(makeState('DUNGEON', { exp: 72 })), new SequenceRng([8, 2, 1, 1, 1, 8, 2, 1, 1, 1]));
     expect(r.state).toMatchObject({ level: 3, maxHp: 46 });
     expect(r.messages.map((m) => m.text)).toEqual(['レベルが あがった！ Lv2', growthLine(8, 2, 1, 1, 1), 'レベルが あがった！ Lv3', growthLine(8, 2, 1, 1, 1)]);
   });
 
   test('TC-0022-05 成長は 最大HP → 最大MP → こうげき → ぼうぎょ → すばやさ の順に引く', () => {
-    const r = applyExp(deepFreeze(makeState('DUNGEON')), 24, new SequenceRng([12, 4, 2, 1, 2]));
+    const r = levelUp(deepFreeze(makeState('DUNGEON', { exp: 24 })), new SequenceRng([12, 4, 2, 1, 2]));
     expect(r.state).toMatchObject({ maxHp: 42, maxMp: 14, attack: 7, defense: 6, speed: 7 });
     expect(r.messages[1].text).toBe(growthLine(12, 4, 2, 1, 2));
   });
 
   test('TC-0022-06 HP 20/30・MP 5/10 で Lv2（成長 8,2,1,1,1）なら HP 28/38・MP 7/12（全回復しない）', () => {
-    const r = applyExp(deepFreeze(makeState('DUNGEON', { hp: 20, mp: 5 })), 24, new SequenceRng([8, 2, 1, 1, 1]));
+    const r = levelUp(deepFreeze(makeState('DUNGEON', { hp: 20, mp: 5, exp: 24 })), new SequenceRng([8, 2, 1, 1, 1]));
     expect(r.state).toMatchObject({ hp: 28, maxHp: 38, mp: 7, maxMp: 12 });
   });
 
@@ -213,7 +237,7 @@ describe('経験値を得て強くなる', () => {
     let state = makeState('DUNGEON');
     for (let i = 0; i < 10_000; i += 1) {
       const before = state;
-      state = applyExp(before, expForLevel(before.level + 1) - before.exp, rng).state;
+      state = levelUp(gainExp(before, expForLevel(before.level + 1) - before.exp), rng).state;
       for (const k of Object.keys(seen) as Grown[]) seen[k].add(state[k] - before[k]);
     }
     expect([...seen.maxHp].sort((a, b) => a - b)).toEqual([8, 9, 10, 11, 12]);

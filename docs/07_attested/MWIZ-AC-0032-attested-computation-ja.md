@@ -8,9 +8,9 @@ updated: 2026-11-10
 sources:
   - MWIZ-TASK-0032（v1.0）
   - MWIZ-TC-0011（v1.2）
-  - MWIZ-TC-0031（v1.1）
-  - MWIZ-TC-0032（v1.2）
-  - MWIZ-TC-0034（v1.4）
+  - MWIZ-TC-0031（v1.2）
+  - MWIZ-TC-0032（v1.3）
+  - MWIZ-TC-0034（v1.5）
   - MWIZ-TD-0005（v1.13）
 verified: { by: "tsuku3dayo", at: "2026-11-10T15:04:36+09:00" }
 ---

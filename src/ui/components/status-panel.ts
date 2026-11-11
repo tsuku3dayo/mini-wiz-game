@@ -22,6 +22,8 @@ export interface StatusPanel {
 const pad3 = (n: number) => String(n).padStart(3, ' ');
 const plus = (n: number) => (n > 0 ? ` (+${n})` : '');
 const lowHp = (c: CharacterView) => isHpWarning(c.hp, c.maxHp);
+/** EXP の行の後ろ：「（つぎまで n）」。0 なら やすめばレベルが上がるので「（やどで レベルアップ）」（v1.14） */
+export const expNote = (expToNext: number) => (expToNext > 0 ? `（つぎまで ${expToNext}）` : '（やどで レベルアップ）');
 
 function row(name: string, value: string, attrs: Record<string, string | null> = {}): Node[] {
   return [el('dt', {}, name), el('dd', { ...attrs }, value)];
@@ -32,12 +34,14 @@ function fullBody(c: CharacterView, wide: boolean): HTMLElement {
   return el('dl', { class: 'wiz-status-full' },
     ...(wide ? [el('dt', {}, 'なまえ'), el('dd', { class: 'wiz-status-name' }, c.name)] : []),
     ...row('Lv', pad3(c.level)),
-    ...row('EXP', `${pad3(c.exp)}（つぎまで ${c.expToNext}）`),
+    ...row('EXP', `${pad3(c.exp)}${expNote(c.expToNext)}`),
     ...row('HP', `${pad3(c.hp)}/${pad3(c.maxHp)}${warn ? '！' : ''}${plus(c.bonus.maxHp)}`, { 'data-warning': warn ? 'true' : null, 'data-testid': 'status-hp' }),
     ...row('MP', `${pad3(c.mp)}/${pad3(c.maxMp)}${plus(c.bonus.maxMp)}`),
     ...row('こうげき', `${pad3(c.attack)}${plus(c.bonus.attack)}`),
     ...row('ぼうぎょ', `${pad3(c.defense)}${plus(c.bonus.defense)}`),
     ...row('すばやさ', `${pad3(c.speed)}${plus(c.bonus.speed)}`),
+    // かいひ は値が補正そのものなので「 (+n)」を付けない（v1.14）
+    ...row('かいひ', pad3(c.evasion)),
   );
 }
 

@@ -208,6 +208,7 @@ describe('敵に遭遇する', () => {
     expect([pick(3, 30), pick(3, 31), pick(3, 80), pick(3, 81)]).toEqual(['goblin', 'skeleton', 'skeleton', 'orc']);
     expect([pick(4, 30), pick(4, 31), pick(4, 80), pick(4, 81)]).toEqual(['skeleton', 'orc', 'orc', 'darkKnight']);
     expect([pick(5, 40), pick(5, 41)]).toEqual(['orc', 'darkKnight']);
+    expect(ENEMIES[pick(5, 40)].name).toBe('オークロード');
   });
 });
 

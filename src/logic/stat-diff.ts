@@ -37,7 +37,7 @@ export interface AbilityRow {
 }
 
 /**
- * のうりょくの 5 行。preview が null（「もどる」・枠の一覧）なら内訳だけ。
+ * のうりょくの 6 行（v1.14 で かいひ を足した）。preview が null（「もどる」・枠の一覧）なら内訳だけ。
  * preview があれば、値が変わる能力だけ変化の形にする
  */
 export function abilityRows(
