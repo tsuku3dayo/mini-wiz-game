@@ -3,13 +3,13 @@ id: MWIZ-TC-0035
 type: Test Case
 title: スマートフォンの画面で快適に遊ぶ
 status: stable
-version: 1.2
+version: 1.3
 updated: 2026-11-11
 sources:
   - MWIZ-US-0035（v1.3）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0003（v1.5）
-  - MWIZ-TD-0004（v1.6）
+  - MWIZ-TD-0003（v1.6）
+  - MWIZ-TD-0004（v1.7）
   - MWIZ-GUI-0001（v1.3）
   - docs/specification-ja.md (v1.16) §1.3、§11.1、§11.3、§11.11、§11.12、§14、§15.4、§16.4、§16.6
 verified: null
@@ -37,7 +37,7 @@ verified: null
 | TC-0035-10 | 6 | `body` の `font-size` が 16px・`line-height` が 1.6 倍（25.6px）・文字色 `rgb(232, 220, 192)`（`#E8DCC0`）・背景 `rgb(11, 10, 15)`（`#0B0A0F`）。`font-family` の先頭が `"MS Gothic"` で、Web フォント（`.woff`・`.woff2`・`.ttf`・`.otf`）の通信が 1 つもない。StatusPanel の数字の要素の `font-variant-numeric` が `tabular-nums` で、値が 3 桁右揃え（例「HP 25/ 46」「MP 10/ 16」） | E2E | `e2e/layout.spec.ts` |
 | TC-0035-11 | 6 | iPhone 11 で、どの画面の文字も読める大きさ・色で出て、ステータス（宿屋の full・ダンジョンと戦闘の 1 行）の数字の桁がそろって見える | 手動 | 実機（iPhone 11） |
 | TC-0035-12 | 7 | `desktop`（1280×800）と、`setViewportSize` で 1366×657 にしたとき、どの画面も横・縦のはみ出しが 0 以下。外枠の幅が 800px 以下で中央にある（左右の余白の差が 1px 以内）。宿屋・ダンジョン・戦闘で `[data-testid="column-left"]` と `"column-right"` が横に並ぶ（右の列の `left` が左の列の `right` 以上、上端がそろう） | E2E | `e2e/layout.spec.ts` |
-| TC-0035-13 | 4 | 戦闘（`pixel7`・`small`）のコマンドのボタンが高さ 56px・横 1 列で、親指で押す下の方にある（ボタンの下端が画面の下端から 160px 以内、または縦にスクロールして届く）。414 × 715 で戦闘画面が縦にはみ出さない。375 × 667 の縦のはみ出しが v1.1（47px）より小さい（v1.2。測った値を AC に書く） | E2E（タッチ） | `e2e/layout.spec.ts` |
+| TC-0035-13 | 4 | 戦闘（`pixel7`・`small`）のコマンドのボタンが高さ 88px（v1.3。仕様書 v1.16。枠なし）・横 1 列で、親指で押す下の方にある（ボタンの下端が画面の下端から 160px 以内、または縦にスクロールして届く）。414 × 715 で戦闘画面が縦にはみ出さない。375 × 667 の縦のはみ出しが v1.1（47px）より小さい（v1.2。測った値を AC に書く） | E2E（タッチ） | `e2e/layout.spec.ts` |
 
 ## 2. 準備
 
