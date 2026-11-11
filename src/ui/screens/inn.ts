@@ -18,7 +18,8 @@ import type { ScreenContext } from '../router';
 
 type Mode = 'menu' | 'gameMenu' | 'confirm' | 'status' | 'equip' | 'items';
 
-const INDEX_MENU = 2;
+// 項目の並び（v1.14）：やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る
+const INDEX_MENU = 1;
 const INDEX_QUIT = 4;
 
 export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): void } {
@@ -81,9 +82,10 @@ export function mountInn(root: HTMLElement, ctx: ScreenContext): { destroy(): vo
         label: '宿屋',
         items: [
           { label: 'やすむ', onSelect: () => void command.run(() => api.rest()) },
-          { label: 'セーブ', onSelect: () => void command.run(() => api.save(), { refetchSave: true }) },
           { label: 'メニュー', onSelect: () => setMode('gameMenu', INDEX_MENU) },
           { label: 'ダンジョンへ', onSelect: () => void command.run(() => api.enterDungeon()) },
+          // TASK-0037 でスロットの一覧に替える
+          { label: 'セーブ', onSelect: () => void command.run(() => api.save(), { refetchSave: true }) },
           { label: 'タイトルへ戻る', onSelect: () => setMode('confirm', INDEX_QUIT) },
         ],
         initialIndex: cursor ?? 0,

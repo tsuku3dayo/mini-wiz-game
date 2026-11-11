@@ -17,13 +17,14 @@ test.describe('宿屋', () => {
     await startAt(page, 'INN');
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ゆうしゃ');
-    for (const name of ['Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ']) {
+    for (const name of ['Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']) {
       await expect(status.locator('dt', { hasText: name }).first()).toBeVisible();
     }
     const tops = await Promise.all([status, page.getByRole('log'), innMenu(page)].map((l) => l.evaluate((el) => el.getBoundingClientRect().top)));
     expect(tops[0]).toBeLessThan(tops[1]);
     expect(tops[1]).toBeLessThan(tops[2]);
-    expect(await menuLabels(page, '宿屋')).toEqual(['やすむ', 'セーブ', 'メニュー', 'ダンジョンへ', 'タイトルへ戻る']);
+    // 並び（v1.14）
+    expect(await menuLabels(page, '宿屋')).toEqual(['やすむ', 'メニュー', 'ダンジョンへ', 'セーブ', 'タイトルへ戻る']);
     expect(await cursorLabel(page, '宿屋')).toBe('やすむ');
   });
 

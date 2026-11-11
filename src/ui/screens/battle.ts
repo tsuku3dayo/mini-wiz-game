@@ -1,8 +1,9 @@
 // 戦闘（#/battle。仕様書 §11.5「戦闘」、GUI-0005 §1、TD-0004 §5）
-// 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）
+// 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド（横 1 列のボタン。v1.14）。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）
 // 敵の絵（256×256）は名前の上。敵の種類が変わったら作り直す（仕様書 §13.2）
 import type { BattleView } from '../../api/types';
-import { commandMenu, type CommandMenu, type MenuItem } from '../components/command-menu';
+import { commandButtons } from '../components/command-buttons';
+import { commandMenu, type MenuItem } from '../components/command-menu';
 import { enemyImage } from '../components/enemy-image';
 import { errorPanel } from '../components/error-panel';
 import { columns, gameFrame } from '../components/game-frame';
@@ -18,7 +19,8 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
 
   let parts: { destroy(): void }[] = [];
   let status: StatusPanel | null = null;
-  let menu: CommandMenu | null = null;
+  /** コマンド：狭い画面は横 1 列のボタン、広い画面は縦の CommandMenu（v1.14。同じ形の update を持つ） */
+  let menu: { el: HTMLElement; update(next: { items?: MenuItem[]; disabled?: boolean }): void; focus(): void } | null = null;
   let enemyBox: HTMLElement | null = null;
   let enemyName: HTMLElement | null = null;
   let image: { el: HTMLElement; destroy(): void } | null = null;
@@ -61,7 +63,8 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
     imageKind = null;
     const enemyWin = gameWindow({ testId: 'enemy-window', className: 'battle-enemy-window' }, enemyBox);
     status = statusPanel({ variant: 'compact', character: state.character });
-    menu = commandMenu({ label: '戦闘', items: items(shown), autoFocus: !locked(), disabled: locked(), onDisabledSelect: showReason });
+    const menuOpts = { label: '戦闘', items: items(shown), autoFocus: !locked(), disabled: locked(), onDisabledSelect: showReason };
+    menu = wide ? commandMenu(menuOpts) : commandButtons(menuOpts);
     drawnKey = `${shown.canHeal}|${shown.canFlee}`;
     const commandWin = gameWindow({ title: 'コマンド', className: 'battle-command' }, menu.el);
     const log = messageLog({ queue, command, rows: wide ? 7 : 5 });

@@ -49,10 +49,14 @@ test.describe('キーボードと読み上げ', () => {
     await expect.poll(() => focused(page)).toBe('やすむ');
     await key('Enter');
     await expect.poll(() => lastLine(page)).toBe('HP と MP が かいふくした');
-    await key('ArrowDown');
+    // 並び（v1.14）：やすむ／メニュー／ダンジョンへ／セーブ／タイトルへ戻る
+    for (let i = 0; i < 3; i += 1) await key('ArrowDown');
+    await expect.poll(() => focused(page)).toBe('セーブ');
     await key('Enter');
     await expect.poll(() => lastLine(page)).toBe('セーブしました');
-    await key('ArrowDown');
+    await key('ArrowUp');
+    await key('ArrowUp');
+    await expect.poll(() => focused(page)).toBe('メニュー');
     for (const [down, name] of [[0, 'そうび'], [1, 'もちもの']] as const) {
       await key('Enter');
       for (let i = 0; i < down; i += 1) await key('ArrowDown');
