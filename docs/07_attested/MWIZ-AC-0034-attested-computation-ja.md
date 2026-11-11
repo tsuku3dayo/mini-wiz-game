@@ -2,7 +2,7 @@
 id: MWIZ-AC-0034
 type: Attested Computation
 title: クレジット画面の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-11
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0034（v1.4）
   - MWIZ-TC-0035（v1.1）
   - MWIZ-TC-0036（v1.1）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-11T11:07:13+09:00" }
 ---
 
 # AC-0034 クレジット画面の実施記録
@@ -51,7 +51,7 @@ verified: null
 | TC-0040-07 | E2E（3 端末） | OK（`app:bgm` は最初の `title` の 1 回だけ） |
 | TC-0040-08 | E2E（3 端末） | OK |
 | TC-0040-09 | E2E（3 端末） | OK（余白を詰めたあと。詰める前は 375 × 667 で 22px・1366 × 657 で 9px はみ出して失敗した → 変更の依頼 v1.13） |
-| TC-0040-10 | 手動（iPhone・PC） | iPhone：OK（見え方・「← もどる」で戻れた・曲が途切れない。気になったことなし。2026-11-11 オーナー）。PC：未確認（下の 3.） |
+| TC-0040-10 | 手動（iPhone・PC） | iPhone：OK（見え方・「← もどる」で戻れた・曲が途切れない。気になったことなし。2026-11-11 オーナー）。PC の Chrome：OK（見え方・「← もどる」と Esc で戻れた・曲が途切れない。気になったことなし。2026-11-11 オーナー） |
 | TC-0006-01・06・07 | E2E（3 端末） | OK |
 | TC-0034-01 | 単体 | OK |
 | TC-0036-10 | E2E（3 端末。`e2e/scenes.ts` の全場面） | OK |
@@ -68,7 +68,6 @@ verified: null
 
 ## 3. 確認できなかったこと
 
-- 実機（TC-0040-10）のうち **PC の Chrome**（見え方・「← もどる」と Esc で戻れるか・曲）は、オーナーからの結果をまだいただいていない。PC の見え方と Esc で戻ることは E2E の `desktop`（1280 × 800 の Chromium）で確かめてある。
 - Android の実機はない（E2E の `pixel7` で代わりに確かめた）。
 - 安全領域（ノッチ）のある端末で、高さ 680px 以下のときの余白（`max(16px, 安全領域)`）が正しいかは、Chromium では安全領域が 0 なので確かめられない。
 
@@ -85,4 +84,4 @@ verified: null
 - [x] AC-0034（draft）に自動テストの結果を書き、同じ PR に入れた（PR #111）
 - [x] PR の CI が緑（PR #111：changes・check・e2e）
 - [x] マージされた（マージ = 公開。2026-11-10 18:06。main の test・pages の build・deploy が緑。公開中の `index-BPauEpWr.js` に「クレジット」がある）
-- [x] 公開したらすぐ実機の確認を案内し、結果を書いて review にした（iPhone は OK。PC は未確認）
+- [x] 公開したらすぐ実機の確認を案内し、結果を書いて review にした（iPhone・PC とも OK。2026-11-11）
