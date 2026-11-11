@@ -3,16 +3,16 @@ id: MWIZ-TC-0006
 type: Test Case
 title: タイトル画面から始める
 status: stable
-version: 1.4
+version: 1.5
 updated: 2026-11-11
 sources:
   - MWIZ-US-0006（v1.4）
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0002（v1.8）
   - MWIZ-TD-0003（v1.5）
-  - MWIZ-TD-0004（v1.5）
-  - MWIZ-GUI-0002（v1.4）
-  - docs/specification-ja.md (v1.14) §10.1、§11.2、§11.4、§11.5、§16.4、§19.1、§27.4
+  - MWIZ-TD-0004（v1.6）
+  - MWIZ-GUI-0002（v1.5）
+  - docs/specification-ja.md (v1.15) §10.1、§11.2、§11.4、§11.5、§16.4、§19.1、§27.4
 verified: null
 ---
 
@@ -37,7 +37,7 @@ verified: null
 | TC-0006-11 | 1 | 画像を読めなくすると（`page.route` で `title/title.png` を止める）、`<img>` が消え、`<h1>` の文字が「WIZミニ」、その下に「～ 死霊術師の迷宮 ～」が出る。エラーの表示は出ない | E2E | `e2e/title.spec.ts` |
 | TC-0006-12 | 1 | `public/title/title.png` があり、PNG の署名・`IHDR`・幅 1080・高さ 720、MD5 が仕様書 §13.6 の値（`36dd93edda255751560af6e4bcfb1aab`。v1.2 で v2 の画像に）と同じ | 単体 | `tests/assets/title-image.test.ts` |
 | TC-0006-13 | 1 | iPhone 11 で、タイトル画像がぼやけず、文字（「WIZミニ」「～死霊術師の迷宮～」）が読め、メニューと重ならずに 1 画面に収まる。PC でも同じ | 手動 | 実機（iPhone 11・PC） |
-| TC-0006-14 | 2 | 「つづきから」のスロットの一覧（見出し「つづきから」）を出し、続けられないエラーの ErrorPanel も出した状態で、375 × 667・414 × 715（`pixel7`・`small`）、1366 × 657（`desktop`）のどれでも縦にはみ出さない（`documentElement.scrollHeight − innerHeight` が 0 以下。v1.4） | E2E | `e2e/title.spec.ts` |
+| TC-0006-14 | 2 | 「つづきから」のスロットの一覧（見出し「つづきから」）を出しても、375 × 667・414 × 715（`pixel7`・`small`）、1366 × 657（`desktop`）のどれでも縦にはみ出さない。書き込みを失敗させてスロットを選ぶと、一覧が閉じてタイトルのメニュー（カーソルは「つづきから」）に戻り、その下に ErrorPanel が出て、やはりはみ出さない（`documentElement.scrollHeight − innerHeight` が 0 以下。v1.5：仕様書 v1.15） | E2E | `e2e/title.spec.ts` |
 | TC-0006-08 | 5 | プレイ中のゲームがある（INN）とき、`#/nothing` を開くと `#/` を経て `#/inn` になり、宿屋の画面が出る | E2E | `e2e/title.spec.ts` |
 
 ## 2. 準備
