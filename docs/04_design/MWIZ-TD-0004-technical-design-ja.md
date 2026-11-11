@@ -3,10 +3,10 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.6
+version: 1.7
 updated: 2026-11-11
 sources:
-  - MWIZ-TD-0003（v1.5）
+  - MWIZ-TD-0003（v1.6）
   - MWIZ-GUI-0001（v1.3）
   - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0003（v1.3）
@@ -70,12 +70,12 @@ verified: null
 
 | 画面 | 並び |
 | --- | --- |
-| 狭い画面 | `gameFrame(hideNameOnNarrow)` → 敵のウィンドウ［`enemyImage`（256px）・敵の名前］→ `messageLog(5)` → `statusPanel(compact)` → `gameWindow`（コマンド）［`commandButtons`（v1.5。横 1 列、`grid-template-columns: 2fr 1fr 1fr`、間 8px、高さ 56px）］ |
+| 狭い画面 | `gameFrame(hideNameOnNarrow)` → 敵のウィンドウ［`enemyImage`（256px）・敵の名前］→ `messageLog(5)` → `statusPanel(compact)` → `commandButtons`（v1.5。横 1 列、`grid-template-columns: 2fr 1fr 1fr`、間 8px。v1.7（仕様書 v1.16）：`gameWindow`（コマンド）で包まず、`.battle-command-buttons` の箱に直接置く。高さ 88px。箱の左右の端はほかのウィンドウの外枠の端にそろう（GameFrame の中身の幅いっぱい）） |
 | 広い画面 | 敵のウィンドウ、下：`messageLog(7)`｜［`statusPanel(compact)`・コマンド］ |
 
 - 敵の種類が変わったら `enemyImage` を作り直す。遷移の保留中は直前の敵を出し続ける。
 - ダメージの行で HP の値を 200ms 点滅（`ui/effects.ts`）。
-- （v1.5）狭い画面と広い画面でコマンドの部品が違う（`commandButtons`／`commandMenu`）。`onWideChange` で作り直す。項目・無効・理由・`onSelect` は同じ値（`battleItems(game)`）から作る。狭い画面の高さは、3 行（44 × 3）が 1 行（56）になるので低くなる。実装のあと 375 × 667・414 × 715 で測り、GUI-0005 の高さの記述を直す
+- （v1.5）狭い画面と広い画面でコマンドの部品が違う（`commandButtons`／`commandMenu`）。`onWideChange` で作り直す。項目・無効・理由・`onSelect` は同じ値（`battleItems(game)`）から作る。狭い画面の高さは、3 行（44 × 3）が 1 行（56）になるので低くなる。実装のあと 375 × 667・414 × 715 で測り、GUI-0005 の高さの記述を直す。v1.7（仕様書 v1.16）：枠なし・88px を CSS で仮に作って測ると、画面の高さは 638px → 634px、375 × 667・414 × 715 とも縦にはみ出さず、ボタンの下端から画面の下端まで 41px・89px、ボタンの箱の左右は 8px・画面の幅 − 8px でステータスのウィンドウとそろう（2026-11-11。ふつう・所持品 50 個・ボス戦の 3 場面で同じ値）
 - iPhone 11 の Safari（414 × 715）で 1 画面に収まる高さ（714px）は、敵の絵と名前の間 0・名前の行の高さ 1.1・1 行のステータスの余白（上 8・下 6）で作る（GUI-0001 §7.4）。
 
 ## 6. ゲームクリア・入れ替え
@@ -93,7 +93,7 @@ verified: null
 | もちもの | `inventoryPanel`（`itemList`・捨てる確認） | 狭い画面は `fitItemList`（TD-0003 §6）。**メッセージ欄なし** |
 | ステータス（狭い画面だけ） | `statusPanel(full)`・`recordsWindow`・`commandMenu`（もどる） | 縦。**メッセージ欄なし** |
 
-- （v1.5）`statusPanel(full)` と ステータス画面の能力に「かいひ」の行（値 3 桁、` (+n)` なし）。EXP の行は `expToNext` が 0 なら「{累計}（やどで レベルアップ）」
+- （v1.5）`statusPanel(full)` と ステータス画面の能力に「かいひ」の行（値 3 桁）。v1.7（仕様書 v1.16）：ほかの能力と同じく `bonus.evasion` が 0 より大きければ ` (+n)` を付ける。EXP の行は `expToNext` が 0 なら「{累計}（やどで レベルアップ）」
 
 - 付け替え・はずす・捨てるの結果の文は `queue.enqueue` する（元の画面に戻ると見える。仕様書 §11.7）。
 - エラー：その画面の一番下に `errorPanel`（仕様書 §11.9）。

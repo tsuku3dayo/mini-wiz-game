@@ -11,12 +11,12 @@ sources:
   - MWIZ-TC-0006（v1.5）
   - MWIZ-TC-0009（v1.1）
   - MWIZ-TC-0012（v1.2）
-  - MWIZ-TC-0028（v1.1）
+  - MWIZ-TC-0028（v1.2）
   - MWIZ-TC-0029（v1.1）
   - MWIZ-TC-0030（v1.0）
   - MWIZ-TC-0038（v1.1）
-  - MWIZ-TD-0003（v1.5）
-  - MWIZ-TD-0004（v1.6）
+  - MWIZ-TD-0003（v1.6）
+  - MWIZ-TD-0004（v1.7）
 verified: null
 ---
 

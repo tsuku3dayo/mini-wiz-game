@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.8
+version: 1.9
 updated: 2026-11-11
 sources:
   - MWIZ-TD-0001（v1.2）
@@ -34,11 +34,11 @@ verified: null
 | `floors.ts` | 5 階層の生成、1 階分の不変条件 | §3.4、§3.5 |
 | `explore.ts` | 出発、移動＋踏破記録＋遭遇判定、階段、帰還、敵の選択 | §4 |
 | `view.ts` | 視界（`toFirstPersonView`）・地図（`toAutoMapView`）・階段の種類 | §4.7、§4.10 |
-| `battle.ts` | ダメージ・行動順・回避（`evadeChance(受ける側の速, 攻撃側の速, 受ける側のかいひ)`）・逃走・1 ターンの解決・敗北・`toBattleView` | §5 |
+| `battle.ts` | ダメージ・行動順・回避（`evadeChance(受ける側のかいひ, 攻撃側の速)`。v1.9）・逃走・1 ターンの解決・敗北・`toBattleView` | §5 |
 | `heal.ts` | ヒール（戦闘・ダンジョン共通） | §7.1 |
 | `items.ts` | 装備のマスタ 32 種（たては `stats: ['evasion']`）・`StatKey`（`evasion` を含む 6 つ）・レアリティ・補正値の範囲・`conformItem` | §8.2、§8.3 |
 | `loot.ts` | ドロップの抽選・所持品への追加・入れ替え・ドロップの行 | §8.4、§8.5 |
-| `equipment.ts` | 実効値（`evasion` の基礎値は 0）・付け替え・はずす・捨てる | §8.5 |
+| `equipment.ts` | 実効値（`evasion` ＝ 素早さの実効値 ＋ たての補正。v1.9）・付け替え・はずす・捨てる | §8.5 |
 | `records.ts` | 実績の数え方と補正 | §9.4 |
 
 ### 1.2 決まり
@@ -68,17 +68,28 @@ verified: null
 
 ### 1.7 仕様書 v1.14 で変えること（v1.8。WS-0019）
 
+かいひ・回避の行は、v1.9（仕様書 v1.16）の §1.8 で替えた。
+
 章の番号を変えないよう、ここに足した。
 
 | 項目 | 作り |
 | --- | --- |
 | かいひ | `StatKey` に `'evasion'` を足す（`domain/items.ts`・`api/types.ts`）。キャラクターの保存の形（`Character`）には足さない（基礎値はいつも 0）。`effectiveStats(state)` は `evasion: 0 + bonus.evasion` を返す。`equipmentBonus` は 6 つの能力を 0 から足す。たて 8 種の `stats` を `['evasion']` にする（名前・幅・段階は同じ） |
-| 回避 | `evadeChance(defenderSpeed, attackerSpeed, defenderEvasion)` = `clamp(defenderSpeed − attackerSpeed + defenderEvasion, EVASION.min, EVASION.max)`。`Combatant` に `evasion` を足す。プレイヤーは `effectiveStats`、敵は `{ ...ENEMIES[kind], evasion: 0 }`。回避の乱数 `int(1,100)` は回避率 0 でも引く（いまの `attack` の作りのまま） |
+| 回避 | `evadeChance(defenderSpeed, attackerSpeed, defenderEvasion)` = `clamp(defenderSpeed − attackerSpeed + defenderEvasion, EVASION.min, EVASION.max)`（v1.8。v1.9 で下の表の形に替えた）。`Combatant` に `evasion` を足す。プレイヤーは `effectiveStats`、敵は `{ ...ENEMIES[kind], evasion: 0 }`。回避の乱数 `int(1,100)` は回避率 0 でも引く（いまの `attack` の作りのまま） |
 | 経験値とレベルアップ | `applyExp` を 2 つに分ける：`gainExp(state, gained)`（`exp` を足すだけ。乱数なし・メッセージなし）と `levelUp(state, rng)`（たまった `exp` で繰り返し上げる。成長の乱数の順・メッセージは v1.13 の `applyExp` と同じ）。勝利（`battle.ts` の通常の敵・ボス）は `gainExp` だけを呼び、すぐ `rollDrop` へ進む |
 | やすむ | `rest(state, rng)`：① HP・MP を実効値の最大に ② メッセージ「HP と MP が かいふくした」③ `levelUp(state, rng)` のメッセージを続ける。ゲーム API の `rest` は `run(s => rest(s, rng))` |
 | EXP の表示 | `toGameView` の `expToNext = max(0, nextLevelExp − exp)`。0 なら画面は「（やどで レベルアップ）」 |
 | 最後に使ったスロット | `GameStateData.saveSlot: SaveSlot \| null`。`createCharacter` は null。`fromSaveData(save, slot)` は `saveSlot = slot`。`migrateGameState` は版 6 で 1〜3 ならその値、それ以外は null（版 5 以下は null。移し替えで 1 を書き足したものは版 5 のまま `saveSlot: 1` を持つので、版 5 でも 1〜3 の値があれば採る）。`GAME_SCHEMA_VERSION = 6` |
 | GameView | `character.evasion`・`base.evasion`（0）・`bonus.evasion`、`saveSlot`、`clear.autoSaved = 保存の版（移行前）≥ 3 かつ saveSlot が null でない`（操作の応答も同じ式） |
+
+### 1.8 仕様書 v1.16 で変えること（v1.9。WS-0020）
+
+| 項目 | 作り |
+| --- | --- |
+| かいひ | `effectiveStats(state)` の `evasion` ＝ `speed`（実効値）＋ たての補正（`equipmentBonus` の `evasion`）。`equipmentBonus` はいまのまま（`evasion` にはたての補正だけが入る）。保存の形には足さない |
+| 回避 | `evadeChance(defenderEvasion, attackerSpeed)` ＝ `clamp(defenderEvasion − attackerSpeed, EVASION.min, EVASION.max)`。`attack` は `evadeChance(defender.evasion, attacker.speed)`。プレイヤーの `Combatant` は `effectiveStats` の `evasion`、敵は `{ ...ENEMIES[kind], evasion: ENEMIES[kind].speed }`。乱数を引く順・数はいまと同じ（計算の結果も v1.8 と同じ） |
+| GameView | `character.evasion` ＝ `effectiveStats` の `evasion`。`base.evasion` ＝ 素早さの基礎値（`state.speed`）。`bonus.evasion` ＝ 素早さの補正 ＋ たての補正（`base + bonus = 実効値` がほかの能力と同じに成り立つ） |
+| 装備画面の変化 | `logic/stat-diff.ts` の `statDiff`：候補・今の枠の個体の `stats` に `speed` があれば、`evasion` にも同じ値を足し引きする（ウィンドブーツで すばやさ と かいひ の 2 行が変わる）。たて（`evasion`）は かいひ の行だけ |
 
 ## 2. 表示の計算（`src/logic/`）
 
