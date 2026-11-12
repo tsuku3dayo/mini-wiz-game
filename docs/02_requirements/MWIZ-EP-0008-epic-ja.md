@@ -2,13 +2,13 @@
 id: MWIZ-EP-0008
 type: Epic
 title: 敵の姿を見る
-status: review
+status: stable
 version: 1.6
 updated: 2026-11-12
 sources:
   - MWIZ-PB-0001（v1.10）
   - docs/specification-ja.md (v1.19) §13、§16.5
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-12T13:05:16+09:00" }
 ---
 
 # EP-0008 敵の姿を見る
