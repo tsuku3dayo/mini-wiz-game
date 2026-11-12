@@ -7,7 +7,7 @@ version: 1.1
 updated: 2026-10-30
 sources:
   - MWIZ-PB-0001（v1.9）§2、§5、§9
-  - docs/specification-ja.md (v1.17) §1.3、§11.1、§11.11、§11.12、§14
+  - docs/specification-ja.md (v1.18) §1.3、§11.1、§11.11、§11.12、§14
   - docs/requests/2026-10-26-serverless-pwa.md §4（オーナーの回答）
   - docs/SDD-PROCESS_v3.md §4.1「03 の試作」（v1.0 では docs/workflow.txt「03 の試作」）
 verified: { by: "tsuku3dayo", at: "2026-10-30T17:09:03+09:00" }
