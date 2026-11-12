@@ -33,7 +33,7 @@ verified: null
 - `src/ui/style.css`：広い画面でボタンの箱を右の列の残りいっぱいに伸ばし、ボタンを `min-height: 88px` で箱の高さにする。`.battle-command` の規則を消す（TD-0004 §5）
 - テスト：下の表。**遭遇した直後に操作している E2E**（前進で遭遇してすぐ「たたかう」、ボスの手前から前進してすぐメッセージ欄をクリックする、など）は 510ms・2906ms 待たないと進まなくなるので、探して直す（`encounter`・`bossAppear`・`あらわれた`・`SEEDS` の遭遇のシード・`bossBattle` でない「ボスの手前」の場面で grep する。偽の時計なら `runFor`、本物の時計なら `body[data-busy]` が `false` になるのを待つ）。`startAt('BATTLE')` で始める戦闘は遭遇の操作を通らないので止まらない。広い画面の「コマンド」の見出し・縦のメニュー（`▶`・`commandMenu`）に頼る E2E も直す（ふりかえり ws-19 の T：`battle-command`・`コマンド` で grep する）
 - スクリーンショット：1280 × 800・800 × 600・600 × 800・375 × 667 で戦闘（ふつう・MP 2・ボス）。広い画面の高さ（581px）とボタンの高さ（130px・104px）を、GUI-0005 の仮の値と比べる
-- `docs/reproduction-specification.md`：第 1 部を仕様書 v1.17 に合わせ、第 2 部を実装に合わせる
+- `docs/reproduction-specification.md`：第 1 部を仕様書 v1.18 に合わせ、第 2 部を実装に合わせる
 - 依頼書の影響の一覧の「結果」を埋める
 - コミットの前に `git status` で入るファイルを見る（オーナーの `docs/screenshot/` を入れない）
 

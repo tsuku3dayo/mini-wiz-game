@@ -9,15 +9,16 @@ sources:
   - MWIZ-US-0011（v1.2）
   - MWIZ-US-0018（v1.1）
   - MWIZ-US-0019（v1.3）
+  - MWIZ-US-0034（v1.3）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.17) §11.4、§11.5、§11.8、§11.11、§12、§15.4、§16.4、§16.5
+  - docs/specification-ja.md (v1.18) §11.4、§11.5、§11.8、§11.11、§12、§15.4、§16.4、§16.5
 verified: null
 ---
 
 # WS-0021 PC の戦闘のボタンをスマートフォンに合わせ、遭遇のジングルの間は入力を止める
 
 - 実施の順：21 / 21（完了のあとの変更の依頼 `docs/requests/2026-11-12-spec-1.17-pc-battle-buttons-encounter-lock.md` の修正用の WS）
-- ユーザーストーリー：US-0011・US-0018・US-0019
+- ユーザーストーリー：US-0011・US-0018・US-0019・US-0034（v1.18 の直し漏れの分）
 
 ## 目的
 
@@ -55,4 +56,4 @@ verified: null
 - [ ] 手動テストの結果を AC-0039 に書き、オーナーに承認された
 - [ ] ふりかえり（`docs/retrospectives/ws-21.md`）を書いた
 - [ ] 依頼の影響の一覧の「結果」がすべて埋まった
-- [ ] 再現開発仕様書（`docs/reproduction-specification.md`）を v1.17 に合わせた
+- [ ] 再現開発仕様書（`docs/reproduction-specification.md`）を v1.18 に合わせた
