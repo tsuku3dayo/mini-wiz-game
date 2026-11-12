@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-10
 sources:
   - MWIZ-WS-0017（v1.0）
-  - MWIZ-TC-0033（v1.4）
+  - MWIZ-TC-0033（v1.5）
 verified: null
 ---
 

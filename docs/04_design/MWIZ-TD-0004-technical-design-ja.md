@@ -3,7 +3,7 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.8
+version: 1.9
 updated: 2026-11-12
 sources:
   - MWIZ-TD-0003（v1.7）
@@ -79,6 +79,7 @@ verified: null
 - （v1.8。仕様書 v1.17）広い画面も `commandButtons` にする。狭い画面と広い画面で部品は同じになるが、`onWideChange` で作り直すのはそのまま（メッセージ欄の行数と 2 カラムが替わるため）。`battle.ts` から `commandMenu` と `gameWindow({ title: 'コマンド' })` を使う分岐を消す。
 - （v1.8）広い画面のボタンの高さ：CSS で `@media (min-width: 600px)` のとき `.wiz-columns.stretch > .wiz-column > .battle-command-buttons { flex: 1 1 auto }`・`.battle-command-buttons > .command-buttons { height: 100% }`・`.battle-command-buttons .command-button { height: auto; min-height: 88px }`。右の列（`.wiz-column`、2 カラムは `stretch` で高さをそろえる）の残りを箱が埋め、ボタンが箱の高さに伸びる。v1.16 の `.battle-command`（ウィンドウ）の `flex: 1 1 auto` は使わなくなるので消す。依頼の時に仮に作って測った値（2026-11-12、GUI-0005 §1.1）：幅 800px の枠でボタン 130px（たたかう 186・ヒール／にげる 93px）、幅 600px の枠で 104px（136・68px）、画面の高さ 581px（1280 × 800）、ボタンの下端がメッセージ欄の下端とそろう。
 - （v1.8）遭遇の入力止めの間は `command.locked` が真なので、`commandButtons` の `disabled` が真（外の箱に `aria-disabled="true"`、ボタンは disabled 色）。いまの逐次表示中・演出中と同じ仕組みで扱う：画面は `command.subscribe` で変化を受け、`update({ disabled })` する（ボタンを作り直さない。TD-0003 §7）。`autoFocus` は作ったときに無効なら付けず、無効が解けたときに（フォーカスが画面の外なら）カーソルのボタンにフォーカスを移す（`battle.ts` の今の作りのまま。キーだけで遊ぶ人が、解けたあとすぐ Enter で決められる）。`queue.lock` の解除で `notify()` が呼ばれれば、`command.ts` は `queue.subscribe` で受けているので、`body[data-busy]` と画面に届く。
+- （v1.9。仕様書 v1.19）敵のウィンドウ（`gameWindow({ testId: 'enemy-window', className: 'battle-enemy-window' })`）の中の背景を真っ黒にする：`ui/theme.css` の `:root` に `--wiz-color-enemy-background: #000000` を足し、`style.css` に `.battle-enemy-window { background: var(--wiz-color-enemy-background); }` を足す（部品に Hex を直書きしない。仕様書 §11.3）。`.wiz-window` の `background` より後に書くか、詳しさで勝つ書き方にする。二重線・内余白・敵の名前は変えない。依頼の時に仮に当てて測った値（2026-11-12）：画面の高さは変わらない（狭い画面 634px・1280 × 800 で 581px）。`low-hp` の赤い枠（線の色を変える）とも重ならない。
 - iPhone 11 の Safari（414 × 715）で 1 画面に収まる高さ（714px）は、敵の絵と名前の間 0・名前の行の高さ 1.1・1 行のステータスの余白（上 8・下 6）で作る（GUI-0001 §7.4）。
 
 ## 6. ゲームクリア・入れ替え
