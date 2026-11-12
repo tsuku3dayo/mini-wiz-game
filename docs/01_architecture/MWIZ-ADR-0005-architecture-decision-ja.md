@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-10-26
 sources:
   - MWIZ-PB-0001（v1.10）§4.2、§5
-  - docs/specification-ja.md (v1.19) §11.2、§11.5、§11.11、§27
+  - docs/specification-ja.md (v1.20) §11.2、§11.5、§11.11、§27
 verified: { by: "tsuku3dayo", at: "2026-10-26T17:16:59+09:00" }
 ---
 

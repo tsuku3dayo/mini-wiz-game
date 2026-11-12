@@ -2,13 +2,13 @@
 id: MWIZ-US-0025
 type: User Story
 title: 次の周へ進む
-status: stable
-version: 1.0
-updated: 2026-10-26
+status: review
+version: 1.1
+updated: 2026-11-12
 sources:
   - MWIZ-EP-0005（v1.0）
-  - docs/specification-ja.md (v1.19) §9.3、§11.5、§16.1
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
+  - docs/specification-ja.md (v1.20) §9.3、§11.5、§16.1
+verified: null
 ---
 
 # US-0025 次の周へ進む
@@ -24,7 +24,7 @@ verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
 
 - [ ] 「宿屋へ」で INN・ダンジョンなし・HP/MP/実績は変わらず、メッセージ「`<名前>`は 宿屋に もどった」。2 回目は 409（§16.1）
 - [ ] 次に出発するとダンジョンが新しく作られ、5F にボスがまた現れる（§9.3）
-- [ ] 周回数 9 でもボスの HP は 260（周回で敵が強くならない）（§16.1）
+- [ ] 周回数 9 でもボスの HP は 800（周回で敵が強くならない）（§16.1。v1.1：仕様書 v1.20 でボスの HP を 260 から 800 にした）
 
 ## 確かめ方
 
