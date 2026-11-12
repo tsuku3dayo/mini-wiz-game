@@ -329,6 +329,35 @@ test.describe('戦闘の画面', () => {
     }
   });
 
+  test('TC-0033-07 敵のウィンドウの中は真っ黒で、ほかのウィンドウと画面は #0b0a0f のまま。二重線は同じ。絵の 4 隅は不透明の真っ黒（四角の境目が見えない。v1.19）', async ({ page }) => {
+    const style = (sel: string) => page.locator(sel).first().evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { bg: s.backgroundColor, border: s.borderTopColor, outline: s.outlineColor };
+    });
+    for (const [kind] of KINDS) {
+      await startAt(page, 'BATTLE', { state: { battle: battleOf(kind, 5) } });
+      await loaded(page);
+      const enemy = await style('[data-testid="enemy-window"]');
+      const log = await style('[data-testid="message-window"]');
+      const status = await style('[data-testid="status-panel"]');
+      expect(enemy.bg, kind).toBe('rgb(0, 0, 0)');
+      expect(log.bg, kind).toBe('rgb(11, 10, 15)');
+      expect(status.bg, kind).toBe('rgb(11, 10, 15)');
+      expect((await style('body')).bg, kind).toBe('rgb(11, 10, 15)');
+      expect([enemy.border, enemy.outline], kind).toEqual([log.border, log.outline]);
+      // 読み込んだ絵を canvas に描いて 4 隅の点を読む（同じオリジンの絵なので読める）
+      const corners = await img(page).evaluate((e) => {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const g = c.getContext('2d')!;
+        g.drawImage(e as HTMLImageElement, 0, 0);
+        return [[0, 0], [255, 0], [0, 255], [255, 255]].map(([x, y]) => [...g.getImageData(x, y, 1, 1).data]);
+      });
+      for (const px of corners) expect(px, kind).toEqual([0, 0, 0, 255]);
+    }
+  });
+
   test.describe('絵が読めないとき', () => {
     // Service Worker が持っている絵を出すと、止めたつもりの読み込みが止まらないので、Service Worker を使わない
     test.use({ serviceWorkers: 'block' });

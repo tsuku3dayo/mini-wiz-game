@@ -353,6 +353,9 @@ body {
 
 /* 戦闘（仕様書 §11.5「戦闘」）。敵の絵は WS-0008 で足す */
 .battle-enemy { display: grid; justify-items: center; }
+/* 敵のウィンドウの中の背景は真っ黒（v1.19。仕様書 §11.3・§11.5）。敵の絵 v5 の背景の真っ黒と同じ色にして、絵のまわりの四角を見せない。
+   .wiz-window の background より後に置き、class を 2 つ重ねて確実に勝たせる */
+.wiz-window.battle-enemy-window { background: var(--wiz-color-enemy-background); }
 /* 敵の絵（仕様書 §13.2）：どの画面も 256×256（絵の大きさのまま）。名前との間 0、ブラウザが拡大するときもぼかさない */
 .wiz-enemy-image { width: 256px; height: 256px; }
 .wiz-enemy-img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
