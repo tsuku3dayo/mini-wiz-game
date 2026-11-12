@@ -13,10 +13,10 @@ sources:
   - MWIZ-US-0021（v1.0）
   - MWIZ-US-0022（v1.1）
   - MWIZ-US-0023（v1.0）
-  - MWIZ-US-0024（v1.1）
-  - MWIZ-US-0025（v1.0）
+  - MWIZ-US-0024（v1.2）
+  - MWIZ-US-0025（v1.1）
   - MWIZ-US-0033（v1.4）
-  - docs/specification-ja.md (v1.19) §5.8、§11.5、§11.6、§11.8、§13.2
+  - docs/specification-ja.md (v1.20) §5.8、§11.5、§11.6、§11.8、§13.2
 verified: { by: "tsuku3dayo", at: "2026-11-12T13:05:16+09:00" }
 ---
 
