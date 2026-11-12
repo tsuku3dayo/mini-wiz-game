@@ -2,13 +2,13 @@
 id: MWIZ-US-0025
 type: User Story
 title: 次の周へ進む
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-12
 sources:
   - MWIZ-EP-0005（v1.0）
   - docs/specification-ja.md (v1.20) §9.3、§11.5、§16.1
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-12T14:37:00+09:00" }
 ---
 
 # US-0025 次の周へ進む
