@@ -2,13 +2,13 @@
 id: MWIZ-US-0034
 type: User Story
 title: 場面ごとの BGM を聴く
-status: review
+status: stable
 version: 1.3
 updated: 2026-11-12
 sources:
   - MWIZ-EP-0009（v1.1）
   - docs/specification-ja.md (v1.18) §12.2、§16.5、§26
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-12T11:17:42+09:00" }
 ---
 
 # US-0034 場面ごとの BGM を聴く
