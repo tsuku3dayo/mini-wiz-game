@@ -15,7 +15,7 @@ sources:
   - MWIZ-ADR-0005（v1.0）
   - MWIZ-ADR-0010（v1.0）
   - MWIZ-ADR-0012（v1.1）
-  - docs/specification-ja.md (v1.18) §11.1〜§11.4、§11.6、§11.8、§11.11、§14
+  - docs/specification-ja.md (v1.19) §11.1〜§11.4、§11.6、§11.8、§11.11、§14
 verified: { by: "tsuku3dayo", at: "2026-11-12T10:55:01+09:00" }
 ---
 
