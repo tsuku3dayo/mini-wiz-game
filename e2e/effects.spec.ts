@@ -306,6 +306,42 @@ test.describe('演出', () => {
     expect(counts).toEqual({ levelUp: 2, 'rareDrop UR': 2, 'rareDrop LG': 3, bossAppear: 2, bossDefeat: 2 });
   });
 
+  test('TC-0018-12 ボスの遭遇から 2905ms までは、メッセージ欄のクリック（PC は Enter・Space も）でも bossAppear が飛ばず、たたかう も押せない。2906ms で終わって押せる（v1.17）', async ({ page }, info) => {
+    await page.clock.install();
+    await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) } });
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    const forward = page.getByRole('button', { name: '前進', exact: true });
+    if (info.project.name === 'desktop') await forward.click();
+    else await forward.tap();
+    await expect(layer(page)).toHaveAttribute('data-effect', 'bossAppear');
+    const revision = () => page.evaluate(() => JSON.parse(localStorage.getItem('mini-wiz-game-game')!).revision as number);
+    const r0 = await revision();
+    const fight = page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').filter({ hasText: 'たたかう' });
+    const mash = async () => {
+      if (info.project.name === 'desktop') {
+        await page.getByTestId('message-window').click();
+        await page.keyboard.press('Enter');
+        await page.keyboard.press(' ');
+        await fight.click({ force: true });
+      } else {
+        await page.getByTestId('message-window').tap();
+        await fight.tap({ force: true });
+      }
+    };
+    for (const step of [0, 1000, 1000, 905]) {
+      await page.clock.runFor(step);
+      await mash();
+      await expect(layer(page), `${step}`).toHaveAttribute('data-effect', 'bossAppear');
+      await expect(page.locator('body')).toHaveAttribute('data-busy', 'true');
+      expect(await revision()).toBe(r0);
+    }
+    await page.clock.runFor(1);
+    await expect(layer(page)).not.toHaveAttribute('data-effect', /./);
+    await expect(page.locator('body')).toHaveAttribute('data-busy', 'false');
+    await expect(page.getByRole('menu', { name: '戦闘' })).not.toHaveAttribute('aria-disabled', 'true');
+    expect(await revision()).toBe(r0);
+  });
+
   test('TC-0031-12 演出の長さがアニメーションより長いとき、アニメーションのあとも演出の長さまで層が残る（bossAppear 2906ms・bossDefeat 1000ms）', async ({ page }, info) => {
     await page.clock.install();
     // bossAppear：アニメーション 1200ms のあとも、2905ms までは名前とともに残り、2906ms で消える

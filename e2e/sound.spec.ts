@@ -377,7 +377,7 @@ test.describe('場面ごとの BGM', () => {
     await expect.poll(async () => (await audioEvents(fresh)).map((e) => `${e.type}:${e.name}`)).toEqual(['sound:toggle', 'bgm:title']);
   });
 
-  test('TC-0034-13 ボスのマスに入ると、bossAppear の演出のあいだ曲を止め（null）、2906ms でボスの曲（v1.10）。演出を飛ばせばすぐボスの曲', async ({ page }) => {
+  test('TC-0034-13 ボスのマスに入ると、bossAppear の演出のあいだ曲を止め（null）、2906ms でボスの曲（v1.10）。演出中にクリック（PC は Enter も）しても飛ばず、2906ms まで null（v1.17）', async ({ page }, info) => {
     await soundOnAtStart(page);
     await recordAudio(page);
     await page.clock.install();
@@ -389,12 +389,14 @@ test.describe('場面ごとの BGM', () => {
       await expect(page.locator('#effect-layer')).toHaveAttribute('data-effect', 'bossAppear');
       expect(await bgmNames(page)).toEqual([null]);
       if (skip) {
+        // 遭遇の入力止めの間なので飛ばない（v1.17。v1.16 まではここで すぐ boss）
         await page.getByTestId('message-window').click();
-      } else {
-        await page.clock.runFor(2905);
-        expect(await bgmNames(page)).toEqual([null]);
-        await page.clock.runFor(1);
+        if (info.project.name === 'desktop') await page.keyboard.press('Enter');
+        await expect(page.locator('#effect-layer')).toHaveAttribute('data-effect', 'bossAppear');
       }
+      await page.clock.runFor(2905);
+      expect(await bgmNames(page), `skip=${skip}`).toEqual([null]);
+      await page.clock.runFor(1);
       await expect.poll(() => bgmNames(page)).toEqual([null, 'boss']);
     }
   });

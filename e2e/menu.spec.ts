@@ -14,7 +14,8 @@ const statusLine = (page: Page) => page.getByTestId('status-panel').locator('.wi
 test.describe('メニューとコマンド', () => {
   test('TC-0010-02 ↑↓ でカーソルが動いて端で止まる（タイトル・宿屋・戦闘）。Enter でも Space でも決まる', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'キーボードのテストは desktop だけ');
-    const active = (label: string) => page.getByRole('menu', { name: label }).locator('.wiz-menu-item.active');
+    // 戦闘はどの画面も横 1 列のボタン（v1.17）なので、カーソルの印が違う
+    const active = (label: string) => page.getByRole('menu', { name: label }).locator(label === '戦闘' ? '.command-button.active' : '.wiz-menu-item.active');
     const expectAt = async (label: string, text: string) => {
       expect(await cursorLabel(page, label)).toBe(text);
       await expect(active(label)).toBeFocused();

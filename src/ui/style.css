@@ -360,8 +360,12 @@ body {
 .battle-enemy[data-boss="true"] .battle-enemy-name { color: var(--wiz-color-error); }
 .battle-log-slot { display: flex; flex-direction: column; }
 .battle-log-slot > .wiz-window { flex: 1 1 auto; }
+/* 広い画面の戦闘のコマンドのボタン（v1.17。仕様書 §11.5、TD-0004 §5）：箱が右の列の残りを埋め、ボタンを箱の高さにする（88px 以上）。
+   ボタンの下の端が左のメッセージ欄の下の端とそろう */
 @media (min-width: 600px) {
-  .wiz-columns.stretch > .wiz-column > .battle-command { flex: 1 1 auto; }
+  .wiz-columns.stretch > .wiz-column > .battle-command-buttons { flex: 1 1 auto; }
+  .battle-command-buttons > .command-buttons { height: 100%; }
+  .battle-command-buttons .command-buttons .command-button { height: auto; min-height: 88px; }
 }
 
 /* ItemLabel（仕様書 §8.7、§11.7）：折り返し可。1 つの補正の途中では折り返さない */

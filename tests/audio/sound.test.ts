@@ -47,6 +47,16 @@ describe('効果音', () => {
     expect(s.SFX_MS.rareDropLG).toBeLessThanOrEqual(RARE_DROP_LG_MS);
   });
 
+  test('TC-0018-10 遭遇の入力止めの長さ：通常の敵は遭遇の音（SFX_MS.encounter）、ボスはボス出現の演出（EFFECT_MS.bossAppear）と同じ（510・2906ms。v1.17）', async () => {
+    const s = await load();
+    const { EFFECT_MS, ENCOUNTER_LOCK_MS, encounterLockMs } = await import('../../src/logic/message-plan');
+    expect(ENCOUNTER_LOCK_MS).toEqual({ normal: 510, boss: 2906 });
+    expect(ENCOUNTER_LOCK_MS.normal).toBe(s.SFX_MS.encounter);
+    expect(ENCOUNTER_LOCK_MS.boss).toBe(EFFECT_MS.bossAppear);
+    expect(encounterLockMs(false)).toBe(510);
+    expect(encounterLockMs(true)).toBe(2906);
+  });
+
   test('TC-0032-22 createDynamicsCompressor がない・例外のときも、例外を出さず、ローパスが destination に直接つながって鳴る', async () => {
     for (const mode of ['none', 'throw'] as const) {
       state.compressor = mode;

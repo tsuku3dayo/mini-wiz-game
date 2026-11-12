@@ -1,9 +1,10 @@
 // 戦闘（#/battle。仕様書 §11.5「戦闘」、GUI-0005 §1、TD-0004 §5）
-// 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド（横 1 列のボタン。v1.14）。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）
+// 狭い画面：敵 → メッセージ欄（5 行）→ ステータス → コマンド（横 1 列のボタン。v1.14）。広い画面：敵、下を 2 カラム（メッセージ欄 7 行｜ステータス・コマンド）。
+// コマンドはどちらも枠なしの横 1 列のボタン（広い画面は v1.17。右の列の残りいっぱいの高さ）
 // 敵の絵（256×256）は名前の上。敵の種類が変わったら作り直す（仕様書 §13.2）
 import type { BattleView } from '../../api/types';
 import { commandButtons } from '../components/command-buttons';
-import { commandMenu, type MenuItem } from '../components/command-menu';
+import type { MenuItem } from '../components/command-menu';
 import { enemyImage } from '../components/enemy-image';
 import { errorPanel } from '../components/error-panel';
 import { columns, gameFrame } from '../components/game-frame';
@@ -19,7 +20,7 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
 
   let parts: { destroy(): void }[] = [];
   let status: StatusPanel | null = null;
-  /** コマンド：狭い画面は横 1 列のボタン、広い画面は縦の CommandMenu（v1.14。同じ形の update を持つ） */
+  /** コマンド：横 1 列のボタン（狭い画面は v1.14、広い画面は v1.17） */
   let menu: { el: HTMLElement; update(next: { items?: MenuItem[]; disabled?: boolean }): void; focus(): void } | null = null;
   let enemyBox: HTMLElement | null = null;
   let enemyName: HTMLElement | null = null;
@@ -35,7 +36,7 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
   let drawnKey = '';
 
   const showReason = (reason: string) => queue.enqueue([{ text: reason, tone: 'normal' }]);
-  /** 場所が BATTLE でない（勝利後の保留中など）・応答待ち・逐次表示中は、メニュー全体を無効 */
+  /** 場所が BATTLE でない（勝利後の保留中など）・応答待ち・逐次表示中・遭遇の入力止めの間（v1.17）は、メニュー全体を無効 */
   const locked = () => store.game.state?.location !== 'BATTLE' || command.locked || command.fatal !== null;
   const run = (c: 'attack' | 'heal' | 'flee') => void command.run(() => api.battle({ command: c }));
 
@@ -64,12 +65,10 @@ export function mountBattle(root: HTMLElement, ctx: ScreenContext): { destroy():
     const enemyWin = gameWindow({ testId: 'enemy-window', className: 'battle-enemy-window' }, enemyBox);
     status = statusPanel({ variant: 'compact', character: state.character });
     const menuOpts = { label: '戦闘', items: items(shown), autoFocus: !locked(), disabled: locked(), onDisabledSelect: showReason };
-    menu = wide ? commandMenu(menuOpts) : commandButtons(menuOpts);
+    menu = commandButtons(menuOpts);
     drawnKey = `${shown.canHeal}|${shown.canFlee}`;
-    // 広い画面は見出し「コマンド」のウィンドウの中、狭い画面は枠なしの箱にボタンを置く（v1.16）
-    const commandWin = wide
-      ? gameWindow({ title: 'コマンド', className: 'battle-command' }, menu.el)
-      : { el: el('div', { class: 'battle-command-buttons' }, menu.el) };
+    // どちらの画面も枠なしの箱にボタンを置く（狭い画面は v1.16、広い画面は v1.17。広い画面では箱が右の列の残りを埋める）
+    const commandWin = { el: el('div', { class: 'battle-command-buttons' }, menu.el) };
     const log = messageLog({ queue, command, rows: wide ? 7 : 5 });
     logEl = log.el;
     logSlot = el('div', { class: 'battle-log-slot' }, log.el);
