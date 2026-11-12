@@ -2,7 +2,7 @@
 id: MWIZ-AC-0039
 type: Attested Computation
 title: PC の戦闘のボタンと遭遇の入力止めの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-12
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0019（v1.4）
   - MWIZ-TC-0034（v1.6）
   - MWIZ-TC-0036（v1.3）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-12T12:17:22+09:00" }
 ---
 
 # AC-0039 PC の戦闘のボタンと遭遇の入力止めの実施記録
