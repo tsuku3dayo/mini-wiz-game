@@ -3,10 +3,10 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.7
-updated: 2026-11-11
+version: 1.8
+updated: 2026-11-12
 sources:
-  - MWIZ-TD-0003（v1.6）
+  - MWIZ-TD-0003（v1.7）
   - MWIZ-GUI-0001（v1.4）
   - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0003（v1.3）
@@ -71,11 +71,14 @@ verified: null
 | 画面 | 並び |
 | --- | --- |
 | 狭い画面 | `gameFrame(hideNameOnNarrow)` → 敵のウィンドウ［`enemyImage`（256px）・敵の名前］→ `messageLog(5)` → `statusPanel(compact)` → `commandButtons`（v1.5。横 1 列、`grid-template-columns: 2fr 1fr 1fr`、間 8px。v1.7（仕様書 v1.16）：`gameWindow`（コマンド）で包まず、`.battle-command-buttons` の箱に直接置く。高さ 88px。箱の左右の端はほかのウィンドウの外枠の端にそろう（GameFrame の中身の幅いっぱい）） |
-| 広い画面 | 敵のウィンドウ、下：`messageLog(7)`｜［`statusPanel(compact)`・コマンド］ |
+| 広い画面 | 敵のウィンドウ、下：`messageLog(7)`｜［`statusPanel(compact)`・`commandButtons`］（v1.8。仕様書 v1.17：狭い画面と同じ `.battle-command-buttons` の箱に置く。v1.7 までは `gameWindow`（コマンド）の中の `commandMenu`） |
 
 - 敵の種類が変わったら `enemyImage` を作り直す。遷移の保留中は直前の敵を出し続ける。
 - ダメージの行で HP の値を 200ms 点滅（`ui/effects.ts`）。
 - （v1.5）狭い画面と広い画面でコマンドの部品が違う（`commandButtons`／`commandMenu`）。`onWideChange` で作り直す。項目・無効・理由・`onSelect` は同じ値（`battleItems(game)`）から作る。狭い画面の高さは、3 行（44 × 3）が 1 行（56）になるので低くなる。実装のあと 375 × 667・414 × 715 で測り、GUI-0005 の高さの記述を直す。v1.7（仕様書 v1.16）：枠なし・88px を CSS で仮に作って測ると、画面の高さは 638px → 634px、375 × 667・414 × 715 とも縦にはみ出さず、ボタンの下端から画面の下端まで 41px・89px、ボタンの箱の左右は 8px・画面の幅 − 8px でステータスのウィンドウとそろう（2026-11-11。ふつう・所持品 50 個・ボス戦の 3 場面で同じ値）
+- （v1.8。仕様書 v1.17）広い画面も `commandButtons` にする。狭い画面と広い画面で部品は同じになるが、`onWideChange` で作り直すのはそのまま（メッセージ欄の行数と 2 カラムが替わるため）。`battle.ts` から `commandMenu` と `gameWindow({ title: 'コマンド' })` を使う分岐を消す。
+- （v1.8）広い画面のボタンの高さ：CSS で `@media (min-width: 600px)` のとき `.wiz-columns.stretch > .wiz-column > .battle-command-buttons { flex: 1 1 auto }`・`.battle-command-buttons > .command-buttons { height: 100% }`・`.battle-command-buttons .command-button { height: auto; min-height: 88px }`。右の列（`.wiz-column`、2 カラムは `stretch` で高さをそろえる）の残りを箱が埋め、ボタンが箱の高さに伸びる。v1.16 の `.battle-command`（ウィンドウ）の `flex: 1 1 auto` は使わなくなるので消す。依頼の時に仮に作って測った値（2026-11-12、GUI-0005 §1.1）：幅 800px の枠でボタン 130px（たたかう 186・ヒール／にげる 93px）、幅 600px の枠で 104px（136・68px）、画面の高さ 581px（1280 × 800）、ボタンの下端がメッセージ欄の下端とそろう。
+- （v1.8）遭遇の入力止めの間は `command.locked` が真なので、`commandButtons` の `disabled` が真（外の箱に `aria-disabled="true"`、ボタンは disabled 色）。いまの逐次表示中・演出中と同じ仕組みで扱う：画面は `command.subscribe` で変化を受け、`update({ disabled })` する（ボタンを作り直さない。TD-0003 §7）。`autoFocus` は作ったときに無効なら付けず、無効が解けたときに（フォーカスが画面の外なら）カーソルのボタンにフォーカスを移す（`battle.ts` の今の作りのまま。キーだけで遊ぶ人が、解けたあとすぐ Enter で決められる）。`queue.lock` の解除で `notify()` が呼ばれれば、`command.ts` は `queue.subscribe` で受けているので、`body[data-busy]` と画面に届く。
 - iPhone 11 の Safari（414 × 715）で 1 画面に収まる高さ（714px）は、敵の絵と名前の間 0・名前の行の高さ 1.1・1 行のステータスの余白（上 8・下 6）で作る（GUI-0001 §7.4）。
 
 ## 6. ゲームクリア・入れ替え

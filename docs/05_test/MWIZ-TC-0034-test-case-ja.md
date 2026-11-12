@@ -3,8 +3,8 @@ id: MWIZ-TC-0034
 type: Test Case
 title: 場面ごとの BGM を聴く
 status: stable
-version: 1.5
-updated: 2026-11-11
+version: 1.6
+updated: 2026-11-12
 sources:
   - MWIZ-US-0034（v1.3）
   - MWIZ-TST-0001（v1.2）
@@ -36,7 +36,7 @@ verified: null
 | TC-0034-10 | 5 | `playBgm('battle', 0.68)` の 1 音目が `今 + 0.05 + 0.68` に予約される。`playBgm('title', 0.08)` は `今 + 0.05 + 0.08` | 単体 | `tests/audio/bgm.test.ts` |
 | TC-0034-11 | 5 | 音がオンで通常の敵に遭遇すると、`app:sound`（`encounter`）のあとに `app:bgm`（`battle`）が出る。音がオフの状態でタイトルを開いて「おと：オフ」を選ぶと、`app:sound`（`toggle`）のあとに `app:bgm`（`title`）が出る | E2E | `e2e/sound.spec.ts` |
 | TC-0034-12 | 6 | `sceneBgm` は `active.effect` が `bossAppear` または `bossDefeat` のとき、パスによらず `null` | 単体 | `tests/logic/bgm-scene.test.ts` |
-| TC-0034-13 | 6 | 音がオンでボスのマスに入ると、bossAppear の演出が立ったときに `app:bgm` `{ name: null }`、演出の 2906ms が過ぎたときに `{ name: 'boss' }`（2905ms ではまだ null。v1.3）。演出中にメッセージ欄をクリックしたときは、その場で `{ name: 'boss' }` | E2E | `e2e/sound.spec.ts` |
+| TC-0034-13 | 6 | 音がオンでボスのマスに入ると、bossAppear の演出が立ったときに `app:bgm` `{ name: null }`、演出の 2906ms が過ぎたときに `{ name: 'boss' }`（2905ms ではまだ null。v1.3）。演出中にメッセージ欄をクリック（`desktop` は Enter も）しても、演出は飛ばず、2905ms まで `null` のまま（v1.6。仕様書 v1.17：遭遇の入力止めの間はスキップできない。v1.5 までは「クリックでその場で `boss`」） | E2E | `e2e/sound.spec.ts` |
 | TC-0034-14 | 7 | `sceneBgm` が、`location` が `SWAP` で `dungeon === null` のとき `'clear'`（v1.1。ただし戦闘の画面 `'/battle'` で `defeatShown` が false＝とどめの一撃のあと撃破の行がまだのときは `null`。`'/swap'`・`'/clear'` では `defeatShown` によらず `'clear'`）、`SWAP` で `dungeon` があるとき（`'/swap'`）`'dungeon'` | 単体 | `tests/logic/bgm-scene.test.ts` |
 | TC-0034-15 | 7 | ボスを倒すと bossDefeat の演出で `app:bgm` `{ name: null }` が出て、演出が終わると `{ name: 'clear' }`。そのあと撃破のメッセージ・クリア画面のあいだ次の `app:bgm` が出ない。所持品 50 個でボスを倒したときの入れ替え画面でも `clear` のまま出ない。入れ替え画面で再読み込みすると `{ name: 'clear' }`。クリア画面の「宿屋へ」で `{ name: 'inn' }`（v1.1） | E2E | `e2e/sound.spec.ts` |
 | TC-0034-16 | 8 | 通常の敵に勝つと、勝利のメッセージを出しているあいだ（`body[data-screen]` が `battle`）は `app:bgm` が出ず、ダンジョン画面に移ったときに `{ name: 'dungeon' }`。倒れたときは宿屋に移ったときに `{ name: 'inn' }` | E2E | `e2e/sound.spec.ts` |
@@ -60,7 +60,7 @@ verified: null
 | TC-0034-03 | タイトル →「はじめから」→ 名前を入れて決定 →「ダンジョンへ」→ 遭遇するシードで前進 → 記録が `title`・`inn`・`dungeon`・`battle` の順。ボスの手前の状態から前進して演出が終わると `boss` |
 | TC-0034-06 | HP 1 のボス戦で「たたかう」→ 偽の時計でクリア画面まで進め、さらに 5 秒進める → `bossDefeat` の `null`、演出のあとの `clear` のあとに記録が増えない（v1.1） |
 | TC-0034-08 | 宿屋で記録を空にしてから、メニュー → ステータス → もどる → メニューを閉じる |
-| TC-0034-13 | ボスの手前から前進 → 演出が立った時刻に `null`、2905ms 進めてもまだ `null`、さらに 1ms 進めて `boss`。もう一度最初からやり、演出中にメッセージ欄をクリック → すぐ `boss` |
+| TC-0034-13 | ボスの手前から前進 → 演出が立った時刻に `null`、2905ms 進めてもまだ `null`、さらに 1ms 進めて `boss`。もう一度最初からやり、演出中にメッセージ欄をクリック（`desktop` は Enter も）→ `null` のまま → 2905ms までに `boss` が出ない → 2906ms で `boss`（v1.6） |
 | TC-0034-15 | HP 1 のボス戦で勝つ → 記録を見る →「宿屋へ」で `inn`。所持品 50 個の状態で同じことをし、入れ替え画面で再読み込みする |
 | TC-0034-16 | HP 1 の通常の敵に勝つ → 逐次表示中は `battle` 画面で記録なし → ダンジョンに移って `dungeon`。HP 1・敵が先に攻撃する状態で「たたかう」→ 宿屋で `inn` |
 | TC-0034-21 | ダンジョンで記録を空にしてから、`setItem` を差し替えて前進 → ErrorPanel が出て、記録が空のまま |

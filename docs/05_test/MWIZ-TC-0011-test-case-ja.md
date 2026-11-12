@@ -3,13 +3,13 @@ id: MWIZ-TC-0011
 type: Test Case
 title: メッセージを読む
 status: stable
-version: 1.2
-updated: 2026-11-10
+version: 1.3
+updated: 2026-11-12
 sources:
   - MWIZ-US-0011（v1.2）
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0002（v1.9）
-  - MWIZ-TD-0003（v1.6）
+  - MWIZ-TD-0003（v1.7）
   - MWIZ-GUI-0001（v1.4）
   - docs/specification-ja.md (v1.18) §11.8、§11.10、§16.4
 verified: null
@@ -19,6 +19,7 @@ verified: null
 
 - 対象：[US-0011](../02_requirements/MWIZ-US-0011-user-story-ja.md)（受け入れ条件 4 つ）
 - 方法の分け方・置き場所の決まりは [TST-0001](MWIZ-TST-0001-test-strategy-ja.md)。
+- 条件 1 の「ただし、遭遇してから通常の敵 510ms・ボス 2906ms は飛ばせない」（US-0011 v1.2）は、US-0018 の条件 4 と同じことなので、TC-0018-11〜13 で確かめる（v1.3）。このページの TC-0011-05・06 は戦闘のターンの逐次表示で確かめていて、遭遇の入力止めに当たらない。
 
 ## 1. 確認の一覧
 
