@@ -3,8 +3,8 @@ id: MWIZ-TC-0026
 type: Test Case
 title: 実績とステータスを見る
 status: stable
-version: 1.2
-updated: 2026-11-11
+version: 1.3
+updated: 2026-11-12
 sources:
   - MWIZ-US-0026（v1.1）
   - MWIZ-TST-0001（v1.2）
@@ -35,7 +35,7 @@ verified: null
 
 ## 2. 準備
 
-- 単体：`tests/helpers/fixtures.ts` の初期キャラクター。TC-0026-01 は `tests/helpers/maps.ts` の `openMap(player, extra, 5)` でボスのマスの手前に立つ状態を偽の保存に書く。入ったときに作られるボス（HP 260）と戦うので、こうげきの高いキャラクター（実績は初期値のまま）にし、`SequenceRng` で攻撃が当たり続ける値を渡す。TC-0026-02 は `explore`・`battle` の関数を続けて呼ぶ（遭遇 → 逃走、遭遇 → 勝利）。
+- 単体：`tests/helpers/fixtures.ts` の初期キャラクター。TC-0026-01 は `tests/helpers/maps.ts` の `openMap(player, extra, 5)` でボスのマスの手前に立つ状態を偽の保存に書く。入ったときに作られるボス（HP 800。v1.3：仕様書 v1.20。v1.2 までは 260）と戦うので、こうげきの高いキャラクター（実績は初期値のまま）にし、`SequenceRng` で攻撃が当たり続ける値を渡す。TC-0026-02 は `explore`・`battle` の関数を続けて呼ぶ（遭遇 → 逃走、遭遇 → 勝利）。
 - E2E：`?debug=1` で開き、`startAt('INN', …)` で実績 `{ battles: 128, kills: 120, deaths: 3, laps: 2, bossKills: 1 }`、さいだいHP +15・こうげき +10 の装備をした状態から始める。ダンジョンからの確かめは `startAt('DUNGEON', …)`。
 
 ## 3. 手順（E2E）
