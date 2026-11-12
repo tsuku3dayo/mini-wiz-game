@@ -3,12 +3,12 @@ id: MWIZ-US-0033
 type: User Story
 title: 戦闘で敵の絵を見る
 status: stable
-version: 1.3
-updated: 2026-11-06
+version: 1.4
+updated: 2026-11-12
 sources:
-  - MWIZ-EP-0008（v1.5）
-  - docs/specification-ja.md (v1.18) §13、§16.5
-verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
+  - MWIZ-EP-0008（v1.6）
+  - docs/specification-ja.md (v1.19) §13、§16.5
+verified: { by: "tsuku3dayo", at: "2026-11-12T13:05:16+09:00" }
 ---
 
 # US-0033 戦闘で敵の絵を見る
@@ -26,7 +26,8 @@ verified: { by: "tsuku3dayo", at: "2026-11-06T11:38:09+09:00" }
 - [ ] どの画面の大きさでも 256px で出て、ぼやけない（§16.5）
 - [ ] 画像の alt は敵の名前（§16.5）
 - [ ] 画像が読めないとき、枠ごと消えて名前だけが出る（エラーにならない）（§16.5）
-- [ ] 6 枚とも 256×256・背景透過で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る（§16.5）
+- [ ] 6 枚とも 256×256・背景は真っ黒（透明なし。v1.4。仕様書 v1.19。v1.3 までは背景透過）で、MD5 が §13.1 と同じ。`enemy-images.test.ts` が通る（§16.5）
+- [ ] 戦闘の敵のウィンドウの中の背景が真っ黒（`#000000`）で、敵の絵のまわりに四角が見えない（§11.5、§16.5。v1.4。仕様書 v1.19）
 
 ## 確かめ方
 
