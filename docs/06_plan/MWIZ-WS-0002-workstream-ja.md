@@ -12,7 +12,7 @@ sources:
   - MWIZ-US-0008（v1.1）
   - MWIZ-US-0009（v1.1）
   - MWIZ-US-0010（v1.1）
-  - MWIZ-US-0011（v1.1）
+  - MWIZ-US-0011（v1.2）
   - MWIZ-US-0012（v1.1）
   - MWIZ-US-0038（v1.0）
   - MWIZ-TST-0001（v1.2）
