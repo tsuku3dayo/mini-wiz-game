@@ -3,8 +3,8 @@ id: MWIZ-TC-0025
 type: Test Case
 title: 次の周へ進む
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-12
 sources:
   - MWIZ-US-0025（v1.1）
   - MWIZ-TST-0001（v1.2）
@@ -27,7 +27,7 @@ verified: null
 | TC-0025-01 | 1 | CLEARED で `continueGame()` を送ると、場所 INN・`dungeon` が null・HP・MP・レベル・経験値・装備・所持品・実績が送る前と同じ。メッセージ「ゆうしゃは 宿屋に もどった」（normal）。乱数を引かない。もう一度送ると 409 `invalid_state`「その操作は いまは できない」で、周回数は増えない | 単体 | `tests/api/game-api.test.ts` |
 | TC-0025-02 | 1 | クリア画面で「宿屋へ」を選ぶと宿屋（`#/inn`）に移り、メッセージ欄に「ゆうしゃは 宿屋に もどった」が出る。ステータスの HP・MP はクリア画面に入る前と同じ | E2E | `e2e/clear.spec.ts` |
 | TC-0025-03 | 2 | 自動プレイヤーで 2 周（`laps: 2`）遊ぶと、2 周目の出発で新しい 5 階層が作られ（1F の入口に北向き）、5F のボスとまた戦って倒せる。終わったときの実績が `laps` 3・`bossKills` 2 | 単体 | `tests/api/playthrough.test.ts` |
-| TC-0025-04 | 3 | 周回数 9 の状態で 5F のボスのマスに入ると、戦闘の敵（保存の中の状態）の HP が 260。`ENEMIES` の能力値・経験値は周回数によって変わらない | 単体 | `tests/domain/explore.test.ts` |
+| TC-0025-04 | 3 | 周回数 9 の状態で 5F のボスのマスに入ると、戦闘の敵（保存の中の状態）の HP が 800（v1.1。仕様書 v1.20。v1.0 は 260）。`ENEMIES` の能力値・経験値は周回数によって変わらない | 単体 | `tests/domain/explore.test.ts` |
 
 ## 2. 準備
 

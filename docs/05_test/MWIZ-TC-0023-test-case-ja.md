@@ -3,8 +3,8 @@ id: MWIZ-TC-0023
 type: Test Case
 title: 倒れても宿屋で目覚める
 status: stable
-version: 1.1
-updated: 2026-11-11
+version: 1.2
+updated: 2026-11-12
 sources:
   - MWIZ-US-0023（v1.0）
   - MWIZ-TST-0001（v1.2）
@@ -29,7 +29,7 @@ verified: null
 
 ## 2. 準備
 
-- 単体：`tests/helpers/maps.ts` の `dungeonState` で、HP 1 のキャラクターとゴブリン（速さ 6。先に攻撃する）との戦闘中の状態を作る。乱数は `SequenceRng`（回避の判定が外れる 100、ダメージ 0）。ゲーム API は `fake-storage.ts` にセーブを書いておく。
+- 単体：`tests/helpers/maps.ts` の `dungeonState` で、HP 1 のキャラクターとゴブリン（速さ 7。先に攻撃する。v1.2：仕様書 v1.20 で 6 から 7 に）との戦闘中の状態を作る。乱数は `SequenceRng`（回避の判定が外れる 100、ダメージ 0）。ゲーム API は `fake-storage.ts` にセーブを書いておく。
 - E2E：`?debug=1` で開き、`startAt('BATTLE', …)` で HP 1 のキャラクターとゴブリンの戦闘から始める。`useSeed` で敵の攻撃が当たるシードにする。
 
 ## 3. 手順（E2E）

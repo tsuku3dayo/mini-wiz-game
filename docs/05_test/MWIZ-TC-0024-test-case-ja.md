@@ -3,8 +3,8 @@ id: MWIZ-TC-0024
 type: Test Case
 title: ボスを倒してクリアする
 status: stable
-version: 1.1
-updated: 2026-11-11
+version: 1.2
+updated: 2026-11-12
 sources:
   - MWIZ-US-0024（v1.2）
   - MWIZ-TST-0001（v1.2）
@@ -31,7 +31,7 @@ verified: null
 | TC-0024-05 | 4 | 自動プレイヤーでシード 2026 からボスを倒すまで遊ぶと、場所 CLEARED になり、自動セーブしたスロットの実績・Lv がプレイ中状態と同じ（自動プレイヤーは宿屋で やすむ ので育つ。v1.1） | 単体 | `tests/api/playthrough.test.ts` |
 | TC-0024-06 | 5 | `fake-storage.ts` で書くスロットのキー（`mini-wiz-game-save-n`）の書き込みを失敗させてボスを倒す操作をすると、500 `storage_error` で reject し、プレイ中状態とセーブの両方が操作の前の値のまま。プレイ中状態のキーを失敗させても同じ。撃破後の入れ替え（`lootTake`・`lootAbandon`）で CLEARED になるときも同じ | 単体 | `tests/api/game-api.test.ts` |
 | TC-0024-07 | 6 | クリア画面（`#/clear`）に、見出し「暗黒のネクロマンサーを たおした」、ウィンドウに「暗黒のネクロマンサーは ほろび、ダンジョンに 平和が もどった」「ゆうしゃ Lv12」「ぼうけんの きろくを セーブした」（success 色）「2 周目へ すすむ」（arcane 色）がこの順に出る。`clear.autoSaved` が false の状態（スロットが 3 つとも埋まっていて `saveSlot` が null のとき、または版 2 で保存されたクリア状態）では、代わりに「スロットが いっぱいなので セーブしなかった」（textSub 色）が出る（v1.1） | E2E | `e2e/clear.spec.ts` |
-| TC-0024-08 | 7 | 平均成長・装備なしの Lv12 は、シード 1〜200 の模擬戦（HP が上限の 40% 以下で MP があればヒール、それ以外は攻撃）でボスに勝つ割合が 20% 以下。weapon5（+11）・armor5（+9）・shield5（かいひ +6）・accessory4（さいだいHP +15）を装備した Lv11 は 80% 以上勝つ（v1.1 で Lv10 から Lv11 に） | 単体 | `tests/domain/balance.test.ts` |
+| TC-0024-08 | 7 | 平均成長・装備なしの Lv27 は、シード 1〜200 の模擬戦（HP が上限の 40% 以下で MP があればヒール、それ以外は攻撃）でボスに勝つ割合が 20% 以下。weapon7［SR］（+26）・armor7［SR］（+22）・shield7［SR］（かいひ +14）・accessory4［R］（さいだいHP +15）を装備した Lv25 は 80% 以上勝ち、同じ装備の Lv21 は 20% 以下（v1.2。仕様書 v1.20。v1.1 までは装備なしの Lv12 と、段階 5 の装備の Lv11。依頼のときの模擬戦では Lv25 96%・Lv21 1.5%・装備なし Lv27 0%） | 単体 | `tests/domain/balance.test.ts` |
 | TC-0024-09 | 3 | クリアの自動セーブのスロット：`saveSlot` が 3 なら `save-3` に書く。`saveSlot` が null で スロット 1 が埋まり 2 が空きなら `save-2` に書き、プレイ中の状態の `saveSlot` が 2 になる。3 つとも埋まっていて `saveSlot` が null なら、どのスロットも変わらず、プレイ中の状態だけが書かれ（場所 CLEARED）、`clear.autoSaved` が false（v1.1） | 単体 | `tests/api/game-api.test.ts` |
 
 ## 2. 準備
