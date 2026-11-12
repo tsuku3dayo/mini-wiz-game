@@ -3,13 +3,13 @@ id: MWIZ-TC-0036
 type: Test Case
 title: キーボード・読み上げでも遊べる
 status: stable
-version: 1.2
-updated: 2026-11-11
+version: 1.3
+updated: 2026-11-12
 sources:
   - MWIZ-US-0036（v1.0）
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0002（v1.9）
-  - MWIZ-TD-0003（v1.6）
+  - MWIZ-TD-0003（v1.7）
   - MWIZ-GUI-0001（v1.4）
   - docs/specification-ja.md (v1.17) §11.5、§11.11、§14、§16.4
 verified: null
@@ -33,7 +33,7 @@ verified: null
 | TC-0036-07 | 4 | `describeView` が §11.5 の順で文をつなぐ：「{階}F {向き}を向いている。」→ 正面の壁（「前方は かべ。」／「前方 {k} マス先は かべ。」／「前方は {段の数−1} マス先まで つうろ。」）→「左に わかれみち。」「右に わかれみち。」→「{k} マス先に くだり階段。」など → 足元（「ここは入口。」／「足元に くだり階段。」）。例の視界で「3F 北を向いている。前方 2 マス先は かべ。左に わかれみち。足元に くだり階段。」に等しい | 単体 | `tests/logic/describe-view.test.ts` |
 | TC-0036-08 | 4 | 疑似3D の `<svg>` が `role="img"` で、`aria-label` が `describeView` の結果と同じ。地図の `<svg>` が `role="img"`、`aria-label` が「{階}F の地図。踏破済み {N} マス。」（N は踏破済みのマスの数。例：3 マス踏破した 3F で「3F の地図。踏破済み 3 マス。」） | E2E | `e2e/dungeon.spec.ts` |
 | TC-0036-09 | 4 | VoiceOver で、疑似3D・地図の説明文、メッセージ欄に新しく出た行、メニューの項目と選べない理由が読み上げられる | 手動 | 実機（iPhone 11）または PC |
-| TC-0036-10 | 5 | `@axe-core/playwright` で、タイトル・名前入力・クレジット（v1.1。仕様書 v1.12）・宿屋・ダンジョン・戦闘（狭い画面のコマンドのボタンも。v1.2）・ゲームクリア・そうび・もちもの・入れ替え・ステータスの各画面と、GameMenu・ConfirmMenu（上書きの確認も）・スロットの一覧（つづきから・セーブ。v1.2）・演出（rareDrop・bossAppear）・ErrorPanel を出した状態で、`violations` が 0 件 | E2E | `e2e/a11y.spec.ts` |
+| TC-0036-10 | 5 | `@axe-core/playwright` で、タイトル・名前入力・クレジット（v1.1。仕様書 v1.12）・宿屋・ダンジョン・戦闘（狭い画面のコマンドのボタンも。v1.2。広い画面（`desktop`）のコマンドのボタンも。v1.3）・ゲームクリア・そうび・もちもの・入れ替え・ステータスの各画面と、GameMenu・ConfirmMenu（上書きの確認も）・スロットの一覧（つづきから・セーブ。v1.2）・演出（rareDrop・bossAppear）・ErrorPanel を出した状態で、`violations` が 0 件 | E2E | `e2e/a11y.spec.ts` |
 
 ## 2. 準備
 

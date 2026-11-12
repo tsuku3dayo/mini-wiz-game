@@ -3,8 +3,8 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.6
-updated: 2026-11-11
+version: 1.7
+updated: 2026-11-12
 sources:
   - MWIZ-TD-0001（v1.2）
   - MWIZ-GUI-0001（v1.4）
@@ -24,7 +24,7 @@ verified: null
 | --- | --- | --- |
 | `ui/store.ts` | `game`・`save`（仕様書 §27.3。v1.5 から `save` は `{ status, slots }`。`slots` は `getSaves()` の 3 つ）、`subscribe(listener)` | メッセージは持たない。値が変わったら購読者に知らせる |
 | `ui/router.ts` | 今の画面・LocationGuard・`hashchange` | 画面を替える手順は仕様書 §27.4 の 1〜5。遷移の保留中（`queue.holdNavigation`）は替えない。替えるときは前の画面の `destroy()` を呼ぶ |
-| `ui/command.ts` | `run`・`isPending`・`locked`・`fatal`・`retry` | 仕様書 §11.10。成功時の扱い（遭遇なら `queue.clear()` と遭遇の音 → 足元の案内を足して enqueue → `store.setGame`）。失敗時は TD-0001 §4 |
+| `ui/command.ts` | `run`・`isPending`・`locked`・`fatal`・`retry` | 仕様書 §11.10。成功時の扱い（遭遇なら `queue.clear()` → `queue.lock(encounterLockMs(next.battle?.isBoss))`（v1.7。仕様書 v1.17。§3）→ 遭遇の音 → 足元の案内を足して enqueue → `store.setGame`）。`locked` は `queue.busy` を含むので、遭遇の入力止めの間も `run` は何もしない。失敗時は TD-0001 §4 |
 
 - `body[data-screen]`・`body[data-location]`・`body[data-busy]` はルーターと `command` が書く（仕様書 §28）。
 
@@ -36,7 +36,13 @@ verified: null
 
 ## 3. メッセージ（`ui/message-queue.ts`・`components/message-log.ts`）
 
-- キューは `lines`（最新 7 行。`logic/message-plan.ts` の `MAX_LINES`）・`pending`・`busy`・`holdNavigation`・`activeEffect` を持つ（仕様書 §11.8）。
+- キューは `lines`（最新 7 行。`logic/message-plan.ts` の `MAX_LINES`）・`pending`・`busy`・`holdNavigation`・`activeEffect`・`locked`（v1.7）を持つ（仕様書 §11.8）。
+- 遭遇の入力止め（v1.7。仕様書 v1.17 §11.8 の 7）：
+  - 長さは `logic/message-plan.ts` の `ENCOUNTER_LOCK_MS = { normal: SFX_MS.encounter, boss: EFFECT_MS.bossAppear }`（510・2906）と `encounterLockMs(isBoss: boolean): number`。`SFX_MS` は `audio/sound.ts` にあるが、`logic/` から `audio/` は読めない（層の決まり）ので、`ENCOUNTER_LOCK_MS.normal` は数値 510 で書き、単体テストで `SFX_MS.encounter` と同じことを確かめる（TC-0018-10）。
+  - キューに `lock(ms)` を足す：`lockUntil = max(lockUntil, now + ms)` にし、タイマー（行のタイマーとは別）で `lockUntil` に `locked` を解いて `notify()`。`now` は `Date.now()`（E2E の偽の時計で進む）。`locked` は `lockUntil > now` ではなく、タイマーで切り替えるフラグにする（購読者に知らせる時点と値をそろえる）。
+  - `busy` は `pending.length > 0 || active !== null || locked`。
+  - `skip()` は `locked` の間、何もしない（行・演出・保留をそのまま）。`clear()` は入力止めも解く（タイマーを止め、`locked = false`）。`destroy()` もタイマーを止める。
+  - 動きを減らす設定でも同じ（`lock` は `enqueue` の出し方と別に動く）。
 - メッセージ欄は `messageLog({ rows })` で作る。**`rows` はメッセージ欄が出す行数**で、画面が渡す：
 
 | 画面 | 狭い画面 | 広い画面 |
@@ -68,7 +74,7 @@ verified: null
 | `item-list` | 高さは部品の中で `fitItemList`（§6）を呼んで決める（v1.2。v1.1 では画面が `maxHeight` を渡すとしていた。もちもの・入れ替えの両方で同じ合わせ方をするため、部品に持たせた） | §11.7 |
 | `equipment-panel`・`inventory-panel` | `{ store, api, command, onClose }` を受け、操作（`command.run`）・取り直しの反映・一番下の `errorPanel` まで部品の中で行う（v1.2。宿屋とダンジョンの両方から同じ形で開くため） | §11.7、§11.9 |
 | `enemy-image` | なし（256×256 の絵を 256px で出す。拡大しない。読めなければ消す。v1.4） | §13.2 |
-| `command-buttons`（v1.5。仕様書 v1.14） | 狭い画面の戦闘のコマンドのボタン（v1.6。仕様書 v1.16：ウィンドウで包まず、高さ 88px。戦闘の画面が置き場所を決める）。`commandMenu` と同じ形の引数（`label`・`items`（`label`・`disabled`・`disabledReason`・`span`）・`onSelect`・`onDisabledSelect`・`disabled`・`autoFocus`）と `update`。`logic/menu-model.ts` のカーソルの動き（端で止まる）を使い、← ↑ を前、→ ↓ を次にする。外の箱 `role="menu"`、ボタン `<button role="menuitem">`（`aria-disabled`。`disabled` 属性は付けない）、ロービング tabindex。押す要素を作り直さない（§7 の決まり） | §11.5 |
+| `command-buttons`（v1.5。仕様書 v1.14） | 戦闘のコマンドのボタン（v1.6。仕様書 v1.16：ウィンドウで包まず、狭い画面は高さ 88px。v1.7。仕様書 v1.17：広い画面でも使い、高さは右の列の残りいっぱいで 88px 以上（TD-0004 §2 の戦闘）。戦闘の画面が置き場所を決める）。`commandMenu` と同じ形の引数（`label`・`items`（`label`・`disabled`・`disabledReason`・`span`）・`onSelect`・`onDisabledSelect`・`disabled`・`autoFocus`）と `update`。`logic/menu-model.ts` のカーソルの動き（端で止まる）を使い、← ↑ を前、→ ↓ を次にする。外の箱 `role="menu"`、ボタン `<button role="menuitem">`（`aria-disabled`。`disabled` 属性は付けない）、ロービング tabindex。押す要素を作り直さない（§7 の決まり） | §11.5 |
 | `save-slot-menu`（v1.5。仕様書 v1.14） | スロットの一覧。`{ title: 'つづきから' \| 'セーブ', slots, mode: 'load' \| 'save', initialSlot, onPick(slot), onBack, disabled }`。`gameWindow`（見出し）の中に `commandMenu`（もどる／スロット1〜3、`autoFocus`・`trapFocus`・Esc＝もどる）。`load` では空きを無効（理由なし）。行の文は `logic/save-slots.ts` | §11.5 |
 | `error-panel` | なし（置き場所は画面が決める。TD-0004） | §11.9 |
 
@@ -122,6 +128,7 @@ fitItemList(list)           … 描いた直後・しぼりこみを替えたあ
 ## 7. キー・フォーカス・タッチ
 
 - 矢印キー（ダンジョン）・Enter／Space のスキップ（メッセージ）は `window` で受ける（仕様書 §11.5・§11.8）。**入力欄（`input`・`textarea`）から来たキーと、IME の変換中（`isComposing`）のキーは捨てる**（名前入力で誤って動かないように）。
+- 遭遇の入力止めの間（`queue.locked`。v1.7）：`attachSkipKeys` は `busy` なので Enter／Space をいつもどおりキャプチャ段階で受けて `preventDefault`・`stopPropagation` し、`queue.skip()` を呼ぶ（`skip()` が何もしない）。メッセージ欄のクリックも `queue.skip()` を呼ぶだけ（何もしない）。戦闘のボタンは `locked`（`command.locked`）で `aria-disabled` になり、クリック・キーは捨てられる（押した分を後で決めない）。
 - 初めのフォーカスは各画面の CommandMenu の `autoFocus`（仕様書 §27.4 の 4）。
 - 表示を更新するときは、押される要素（メニューの行・ボタン）を作り直さず、文字・class・属性だけを書き替える。押し始め（フォーカスが移る）と押し終わりで要素が替わると、クリック・タップが届かない。`commandMenu` は、項目が変わったときだけ行を作り直し、カーソルの移動と無効・有効の切り替えでは作り直さない（v1.1。WS-0002 のふりかえり）。
 - 操作する場所（ボタン・メニュー・メッセージ欄）は `touch-action: manipulation` と `-webkit-tap-highlight-color: transparent`。長押しの選択は `user-select: none`。ページの拡大は禁止しない（仕様書 §11.11）。
