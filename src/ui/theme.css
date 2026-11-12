@@ -1,6 +1,7 @@
 /* 色・文字の CSS 変数（仕様書 §11.3）。部品には Hex を書かず、ここの変数を使う */
 :root {
   --wiz-color-background: #0b0a0f;
+  --wiz-color-enemy-background: #000000; /* 戦闘の敵のウィンドウの中（v1.19。敵の絵 v5 の背景の真っ黒に合わせる） */
   --wiz-color-primary: #e8dcc0;
   --wiz-color-frame: #c9a227;
   --wiz-color-line: #ffffff;
