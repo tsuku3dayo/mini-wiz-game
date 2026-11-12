@@ -22,7 +22,8 @@ function targets(page: Page): Promise<Target[]> {
     for (const e of document.querySelectorAll<HTMLElement>('button, .wiz-button, [role="menuitem"]')) {
       const r = e.getBoundingClientRect();
       if (r.width === 0 || r.height === 0 || e.closest('[hidden], .visually-hidden')) continue;
-      const kind = e.getAttribute('role') === 'menuitem' ? 'row' : e.classList.contains('wiz-filter-button') ? 'filter' : 'button';
+      // 戦闘のコマンドのボタン（role="menuitem" の button）は、メニューの行でなくボタンとして測る（広い画面も。v1.17）
+      const kind = e.getAttribute('role') === 'menuitem' && !e.classList.contains('command-button') ? 'row' : e.classList.contains('wiz-filter-button') ? 'filter' : 'button';
       out.push({ kind, text: (e.getAttribute('aria-label') ?? e.textContent ?? '').trim().slice(0, 20), w: r.width, h: r.height });
     }
     return out;

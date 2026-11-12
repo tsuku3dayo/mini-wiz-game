@@ -1,6 +1,7 @@
 // 操作の共通の流れ（仕様書 §11.8「操作の結果の扱い」、§11.9、§11.10。v1.0 の useGameCommand）
 import { GameError, type CommandResult, type GameView, type Message } from '../api/types';
 import { isEncounter } from '../logic/arrival';
+import { encounterLockMs } from '../logic/message-plan';
 import type { MessageQueue } from './message-queue';
 import type { Store } from './store';
 
@@ -53,6 +54,8 @@ export function createCommand(deps: CommandDeps): Command {
     const next = result.state;
     if (isEncounter(prev, next)) {
       queue.clear();
+      // 遭遇の入力止め（仕様書 v1.17 §11.8）：連打で たたかう が決まったり、ボス出現の演出が飛んだりしないように
+      queue.lock(encounterLockMs(next.battle?.isBoss === true));
       deps.onEncounter?.(next);
     }
     const arrival = deps.arrival?.(prev, next);

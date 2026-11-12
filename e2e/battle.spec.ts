@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { battleOf, dungeonMap, logLines, SEEDS, startAt } from './helpers';
+import { battleOf, dungeonMap, logLines, SEEDS, soundOnAtStart, startAt } from './helpers';
 
 const commandItem = (page: Page, text: string) => page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').filter({ hasText: text });
 const hp = (page: Page) => page.getByTestId('status-hp');
@@ -16,21 +16,19 @@ async function pauseClock(page: Page) {
 }
 
 test.describe('戦闘の画面', () => {
-  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・コマンド（たたかう／ヒール／にげる。狭い画面は枠なしのボタン、広い画面は見出し「コマンド」の中）・メッセージ欄が出る', async ({ page }, info) => {
+  test('TC-0019-01 敵の名前（数字なし）・見出し「ステータス」の 1 行・コマンド（たたかう／ヒール／にげる。どの画面も枠なしのボタン）・メッセージ欄が出る', async ({ page }) => {
     await startAt(page, 'BATTLE');
-    // 狭い画面は横 1 列のボタン、広い画面は縦のメニュー（v1.14）
+    // どの画面も横 1 列のボタン（狭い画面は v1.14、広い画面は v1.17）
     const menu = page.getByRole('menu', { name: '戦闘' });
-    if (info.project.name === 'desktop') await expect(menu).toHaveClass(/wiz-menu/);
-    else await expect(menu).toHaveClass(/command-buttons/);
+    await expect(menu).toHaveClass(/command-buttons/);
     const enemy = page.getByTestId('enemy-window');
     await expect(enemy).toHaveText('ゴブリン');
     expect(await enemy.textContent()).not.toMatch(/[0-9]/);
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
     await expect(status.locator('.wiz-status-compact')).toContainText('ゆうしゃ');
-    // 見出し「コマンド」は広い画面だけ（狭い画面は枠なし。v1.16）
-    if (info.project.name === 'desktop') await expect(page.locator('.battle-command .wiz-window-title')).toContainText('コマンド');
-    else await expect(page.locator('.wiz-window-title', { hasText: 'コマンド' })).toHaveCount(0);
+    // 見出し「コマンド」のウィンドウはない（狭い画面は v1.16、広い画面は v1.17）
+    await expect(page.locator('.wiz-window-title', { hasText: 'コマンド' })).toHaveCount(0);
     const labels = (await page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').allTextContents()).map((t) => t.replace(/^[▶\s]/, ''));
     expect(labels).toEqual(['たたかう', 'ヒール', 'にげる']);
     await expect(page.getByRole('log')).toHaveCount(1);
@@ -108,7 +106,8 @@ test.describe('戦闘の画面', () => {
     expect((await page.evaluate(() => window.__wiz!.debugDungeon())).player).toEqual(before);
   });
 
-  test('TC-0019-14 狭い画面の戦闘のコマンドは横 1 列のボタン（たたかう・ヒール・にげる、幅 2：1：1、高さ 88px、枠なしでステータスと左右がそろう、▶ なし、初めのフォーカスは たたかう）。広い画面は縦の 3 行', async ({ page }, info) => {
+  test('TC-0019-14 狭い画面の戦闘のコマンドは横 1 列のボタン（たたかう・ヒール・にげる、幅 2：1：1、高さ 88px、枠なしでステータスと左右がそろう、▶ なし、初めのフォーカスは たたかう）', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop', '狭い画面の大きさ（広い画面は TC-0019-17）');
     await startAt(page, 'BATTLE');
     const buttons = page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem');
     await expect(buttons).toHaveCount(3);
@@ -116,12 +115,6 @@ test.describe('戦闘の画面', () => {
       const r = e.getBoundingClientRect();
       return { text: e.textContent ?? '', top: r.top, left: r.left, width: r.width, height: r.height };
     }));
-    if (info.project.name === 'desktop') {
-      // 広い画面は縦の CommandMenu のまま
-      expect(boxes[0].top).toBeLessThan(boxes[1].top);
-      expect(boxes[1].top).toBeLessThan(boxes[2].top);
-      return;
-    }
     expect(boxes.map((b) => b.text)).toEqual(['たたかう', 'ヒール', 'にげる']);
     // 上端がそろい、左から並ぶ
     expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
@@ -203,6 +196,99 @@ test.describe('戦闘の画面', () => {
     await page.evaluate(() => window.__wiz!.setDelay(0));
   });
 
+  test('TC-0019-17 広い画面のコマンドも横 1 列のボタン：幅 2：1：1、枠なし、左右はステータス・下端はメッセージ欄とそろい、高さ 88px 以上（800px の枠で 130px・600px で 104px）、文字は 1 行、画面の高さは 581px で、はみ出さない', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', '広い画面の大きさ');
+    await startAt(page, 'BATTLE');
+    await expect(page.getByRole('heading', { name: 'コマンド' })).toHaveCount(0);
+    for (const [width, height, buttonHeight] of [[1280, 800, 130], [1024, 768, 130], [800, 600, 130], [600, 800, 104]] as const) {
+      const size = `${width}x${height}`;
+      await page.setViewportSize({ width, height });
+      const buttons = page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem');
+      await expect(buttons, size).toHaveCount(3);
+      // 幅が変わると作り直すことがあるので、ボタンの高さが落ち着くまで待つ
+      await expect.poll(() => buttons.first().evaluate((e) => Math.round(e.getBoundingClientRect().height)), size).toBe(buttonHeight);
+      const m = await page.evaluate(() => {
+        const rect = (e: Element) => e.getBoundingClientRect();
+        const list = [...document.querySelectorAll('[role="menu"][aria-label="戦闘"] [role="menuitem"]')];
+        const range = document.createRange();
+        return {
+          buttons: list.map((e) => {
+            const r = rect(e);
+            range.selectNodeContents(e);
+            return { text: e.textContent ?? '', top: r.top, left: r.left, width: r.width, height: r.height, bottom: r.bottom, lines: range.getClientRects().length };
+          }),
+          box: rect(document.querySelector('.command-buttons')!),
+          status: rect(document.querySelector('[data-testid="status-panel"]')!),
+          log: rect(document.querySelector('[data-testid="message-window"]')!),
+          frame: rect(document.querySelector('.wiz-frame')!).height,
+          overY: document.documentElement.scrollHeight - innerHeight,
+          overX: document.documentElement.scrollWidth - innerWidth,
+        };
+      });
+      const [fight, heal, flee] = m.buttons;
+      expect(m.buttons.map((b) => b.text), size).toEqual(['たたかう', 'ヒール', 'にげる']);
+      expect(new Set(m.buttons.map((b) => Math.round(b.top))).size, size).toBe(1);
+      expect(fight.left < heal.left && heal.left < flee.left, size).toBe(true);
+      expect(Math.abs(fight.width - (heal.width + flee.width)), size).toBeLessThanOrEqual(1);
+      for (const b of m.buttons) {
+        expect(Math.abs(b.height - buttonHeight), `${size} ${b.text}`).toBeLessThanOrEqual(1);
+        expect(b.height, `${size} ${b.text}`).toBeGreaterThanOrEqual(88);
+        expect(b.lines, `${size} ${b.text} は 1 行`).toBe(1);
+        expect(b.text.includes('▶'), size).toBe(false);
+      }
+      expect(Math.abs(m.box.left - m.status.left), size).toBeLessThanOrEqual(1);
+      expect(Math.abs(m.box.right - m.status.right), size).toBeLessThanOrEqual(1);
+      expect(Math.abs(fight.bottom - m.log.bottom), size).toBeLessThanOrEqual(1);
+      if (width === 1280) expect(Math.abs(m.frame - 581), size).toBeLessThanOrEqual(1);
+      expect(m.overY, size).toBeLessThanOrEqual(0);
+      expect(m.overX, size).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('TC-0019-18 広い画面のボタン：初めは たたかう。クリックで進む。← → ↑ ↓ で動いて端で止まり、Enter・Space で決まる。押せない ヒール・にげる は理由を出して進まない', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'マウスとキーの広い画面');
+    const revision = () => page.evaluate(() => JSON.parse(localStorage.getItem('mini-wiz-game-game')!).revision as number);
+    const ready = () => expect(page.getByRole('menu', { name: '戦闘' })).not.toHaveAttribute('aria-disabled', 'true', { timeout: 10_000 });
+
+    await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999 }, seed: SEEDS.hits });
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    const r0 = await revision();
+    await commandItem(page, 'たたかう').click();
+    await expect.poll(revision).toBe(r0 + 1);
+    await ready();
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(commandItem(page, 'ヒール')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(commandItem(page, 'にげる')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(commandItem(page, 'にげる')).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowLeft');
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect.poll(revision).toBe(r0 + 2);
+    await ready();
+    await expect(commandItem(page, 'たたかう')).toBeFocused();
+    await page.keyboard.press(' ');
+    await expect.poll(revision).toBe(r0 + 3);
+
+    for (const [state, name, reason] of [
+      [{ mp: 2 }, 'ヒール', 'MP が たりない'],
+      [{ battle: battleOf('necromancer', 260), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
+    ] as const) {
+      await startAt(page, 'BATTLE', { state, seed: SEEDS.hits });
+      const button = commandItem(page, name);
+      await expect(button).toHaveAttribute('aria-disabled', 'true');
+      const before = await revision();
+      await button.click({ force: true });
+      await expect.poll(async () => (await logLines(page)).at(-1), name).toBe(reason);
+      expect(await revision(), name).toBe(before);
+    }
+  });
+
   test.describe('敵の絵', () => {
   const KINDS = [['slime', 'スライム'], ['goblin', 'ゴブリン'], ['skeleton', 'スケルトン'], ['orc', 'オークロード'], ['darkKnight', 'ダークナイト'], ['necromancer', '暗黒のネクロマンサー']] as const;
   const frame = (page: Page) => page.getByTestId('enemy-window').getByTestId('enemy-image-frame');
@@ -259,6 +345,78 @@ test.describe('戦闘の画面', () => {
     await expect(page.getByTestId('error-panel')).toHaveCount(0);
     expect(errors).toEqual([]);
   });
+  });
+});
+
+test.describe('遭遇の入力止め（v1.17）', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  const revision = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('mini-wiz-game-game')!).revision as number);
+  const busy = (page: Page) => page.locator('body').getAttribute('data-busy');
+  const menu = (page: Page) => page.getByRole('menu', { name: '戦闘' });
+
+  /** 前進して遭遇する（偽の時計を止めた状態で。boss ならボスのマスへ） */
+  async function encounter(page: Page, info: TestInfo, boss = false) {
+    if (boss) await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) } });
+    else await startAt(page, 'DUNGEON', { state: { hp: 999, maxHp: 999, dungeon: dungeonMap({ x: 4, y: 4 }) }, seed: SEEDS.slimeNext });
+    await pauseClock(page);
+    await choose(page, info, page.getByRole('button', { name: '前進', exact: true }));
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+  }
+
+  /** 止めている間に、たたかう・メッセージ欄を押す（PC は Enter・Space も） */
+  async function mash(page: Page, info: TestInfo) {
+    const fight = commandItem(page, 'たたかう');
+    if (info.project.name === 'desktop') {
+      await fight.click({ force: true });
+      await page.getByTestId('message-window').click();
+      await page.keyboard.press('Enter');
+      await page.keyboard.press(' ');
+    } else {
+      await fight.tap({ force: true });
+      await page.getByTestId('message-window').tap();
+    }
+  }
+
+  /** 止める時間（ms）の 1ms 前までは押しても進まず、ちょうどで押せるようになり、そのあと 1 回押すと 1 ターンだけ進む */
+  async function lockSteps(page: Page, info: TestInfo, ms: number, label: string) {
+    const r0 = await revision(page);
+    const lines0 = await logLines(page);
+    expect(await busy(page), label).toBe('true');
+    await expect(menu(page), label).toHaveAttribute('aria-disabled', 'true');
+    await mash(page, info);
+    await page.clock.runFor(ms - 1);
+    await mash(page, info);
+    expect(await revision(page), label).toBe(r0);
+    expect(await logLines(page), label).toEqual(lines0);
+    expect(await busy(page), label).toBe('true');
+    await expect(menu(page), label).toHaveAttribute('aria-disabled', 'true');
+    await page.clock.runFor(1);
+    await expect(page.locator('body'), label).toHaveAttribute('data-busy', 'false');
+    await expect(menu(page), label).not.toHaveAttribute('aria-disabled', 'true');
+    await choose(page, info, commandItem(page, 'たたかう'));
+    await expect.poll(() => revision(page), label).toBe(r0 + 1);
+    // 止めている間に押した分が、あとで決まらない
+    await page.clock.runFor(5000);
+    expect(await revision(page), label).toBe(r0 + 1);
+  }
+
+  test('TC-0018-11 通常の敵：遭遇から 509ms までは たたかう・メッセージ欄（PC は Enter・Space も）が効かず、510ms で押せる。押した分はあとで決まらない', async ({ page }, info) => {
+    await page.clock.install();
+    await encounter(page, info);
+    expect(await logLines(page)).toEqual(['スライムが あらわれた！']);
+    await lockSteps(page, info, 510, '通常の敵');
+  });
+
+  test('TC-0018-13 音がオンでも、動きを減らす設定でも、止める時間は同じ（通常の敵 510ms・ボス 2906ms）', async ({ page }, info) => {
+    await page.clock.install();
+    await soundOnAtStart(page);
+    await encounter(page, info);
+    await lockSteps(page, info, 510, '音オン・通常の敵');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await encounter(page, info);
+    await lockSteps(page, info, 510, '動きを減らす・通常の敵');
+    await encounter(page, info, true);
+    await lockSteps(page, info, 2906, '動きを減らす・ボス');
   });
 });
 

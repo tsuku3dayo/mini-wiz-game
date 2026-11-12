@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { appendLines, EFFECT_MS, effectDuration, holdCount, LINE_INTERVAL_MS, MAX_LINES, planReduced, planSteps, RARE_DROP_LG_MS, waitAfter } from '../../src/logic/message-plan';
+import { appendLines, EFFECT_MS, effectDuration, ENCOUNTER_LOCK_MS, encounterLockMs, holdCount, LINE_INTERVAL_MS, MAX_LINES, planReduced, planSteps, RARE_DROP_LG_MS, waitAfter } from '../../src/logic/message-plan';
 
 describe('メッセージの進め方', () => {
   test('TC-0011-01 演出のない行は 400ms、演出のある行は演出の長さ。持つ行は 7 行で、8 行目でいちばん古い行が消える', () => {
@@ -55,6 +55,14 @@ describe('演出の長さと計画', () => {
 });
 
 // 確認 ID のない、遷移の保留の件数（仕様書 §11.8）
+describe('遭遇の入力止め（v1.17）', () => {
+  test('TC-0018-10 遭遇の入力止めの長さは、通常の敵 510ms・ボス 2906ms（ボス出現の演出と同じ）', () => {
+    expect(ENCOUNTER_LOCK_MS).toEqual({ normal: 510, boss: EFFECT_MS.bossAppear });
+    expect(encounterLockMs(false)).toBe(510);
+    expect(encounterLockMs(true)).toBe(2906);
+  });
+});
+
 describe('遷移の保留の件数', () => {
   test('danger の行があれば最後の danger まで、なければ末尾の clear の行を除いた件数', () => {
     expect(holdCount([{ tone: 'normal' }, { tone: 'danger' }, { tone: 'normal' }])).toBe(2);

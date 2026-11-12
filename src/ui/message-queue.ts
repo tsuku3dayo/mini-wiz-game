@@ -17,17 +17,21 @@ export interface ActiveEffect {
 export interface MessageQueue {
   /** 表示中の行（最新 7 行） */
   readonly lines: readonly QueueLine[];
-  /** 未表示の行がある、または演出中 */
+  /** 未表示の行がある、演出中、または遭遇の入力止めの間 */
   readonly busy: boolean;
+  /** 遭遇の入力止めの間（v1.17）。このあいだはスキップもしない */
+  readonly locked: boolean;
   /** 画面の遷移を保留すべきか */
   readonly holdNavigation: boolean;
   readonly activeEffect: ActiveEffect | null;
   /** afterNavigation（足元の案内）は保留に数えない */
   enqueue(messages: readonly Message[], afterNavigation?: readonly Message[]): void;
-  /** 残りをすべて出し、演出を終え、保留を解く */
+  /** 残りをすべて出し、演出を終え、保留を解く（遭遇の入力止めの間は何もしない） */
   skip(): void;
-  /** 表示中の行・表示待ち・保留・演出を全部消す */
+  /** 表示中の行・表示待ち・保留・演出・遭遇の入力止めを全部消す */
   clear(): void;
+  /** 遭遇の入力止め：いまから ms のあいだ locked（と busy）にする。重ねたら遅く終わるほうに合わせる */
+  lock(ms: number): void;
   subscribe(listener: () => void): () => void;
   destroy(): void;
 }
@@ -45,6 +49,9 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
   let hold = 0;
   let active: ActiveEffect | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  let locked = false;
+  let lockUntil = 0;
+  let lockTimer: ReturnType<typeof setTimeout> | null = null;
   let nextId = 1;
   let seq = 0;
   const listeners = new Set<() => void>();
@@ -55,6 +62,13 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
   function stopTimer() {
     if (timer !== null) clearTimeout(timer);
     timer = null;
+  }
+
+  function stopLock() {
+    if (lockTimer !== null) clearTimeout(lockTimer);
+    lockTimer = null;
+    locked = false;
+    lockUntil = 0;
   }
 
   function startEffect(line: QueueLine) {
@@ -89,7 +103,8 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
 
   const queue: MessageQueue = {
     get lines() { return lines; },
-    get busy() { return pending.length > 0 || active !== null; },
+    get busy() { return pending.length > 0 || active !== null || locked; },
+    get locked() { return locked; },
     get holdNavigation() { return hold > 0; },
     get activeEffect() { return active; },
 
@@ -120,6 +135,7 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
     },
 
     skip() {
+      if (locked) return;
       stopTimer();
       lines = appendLines(lines, pending);
       pending = [];
@@ -130,10 +146,26 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
 
     clear() {
       stopTimer();
+      stopLock();
       lines = [];
       pending = [];
       hold = 0;
       endEffect();
+      notify();
+    },
+
+    lock(ms) {
+      const until = Date.now() + ms;
+      if (locked && until <= lockUntil) return;
+      if (lockTimer !== null) clearTimeout(lockTimer);
+      locked = true;
+      lockUntil = until;
+      lockTimer = setTimeout(() => {
+        lockTimer = null;
+        locked = false;
+        lockUntil = 0;
+        notify();
+      }, ms);
       notify();
     },
 
@@ -144,6 +176,7 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
 
     destroy() {
       stopTimer();
+      stopLock();
       listeners.clear();
     },
   };
