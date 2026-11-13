@@ -89,7 +89,7 @@ describe('宿屋で休む', () => {
       speed: 6,
       records: { battles: 4, kills: 3, deaths: 1, laps: 1, bossKills: 0 },
       inventory: {
-        equipped: { weapon: makeItem(1, 'weapon1', 'N', 2), armor: null, shield: null, accessory: makeItem(2, 'accessory4', 'R', 15) },
+        equipped: { weapon: makeItem(1, 'weapon1', 'N', 2), armor: null, shield: null, accessory: makeItem(2, 'accessory1', 'R', 7) },
         items: [makeItem(3, 'armor1', 'N', 1)],
         nextId: 4,
         pending: null,
@@ -103,8 +103,8 @@ describe('宿屋で休む', () => {
       s = r.state;
     }
     rng.assertExhausted();
-    // HP・MP だけが変わる（装備込みの最大値まで。さいだいHP +15 → 61）
-    expect(s).toEqual({ ...before, hp: 61, mp: 13 });
+    // HP・MP だけが変わる（装備込みの最大値まで。さいだいHP +7 → 53）
+    expect(s).toEqual({ ...before, hp: 53, mp: 13 });
 
     for (const location of ['DUNGEON', 'BATTLE', 'SWAP', 'CLEARED'] as const) {
       const other = deepFreeze(makeState(location));
@@ -161,15 +161,15 @@ describe('経験値とレベルアップ・周回', () => {
 });
 
 describe('宿屋で休む（装備込み）', () => {
-  test('TC-0008-02 やすむと HP・MP が装備込みの最大になる（さいだいHP +15 で 46 → HP 10 が 61）。最大でも実行でき、1 行', () => {
-    const life = makeItem(1, 'accessory4', 'R', 15);
+  test('TC-0008-02 やすむと HP・MP が装備込みの最大になる（さいだいHP +7 で 46 → HP 10 が 53）。最大でも実行でき、1 行', () => {
+    const life = makeItem(1, 'accessory1', 'R', 7); // ライフアミュレット［R］（v1.21）
     const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [], nextId: 2, pending: null };
     const s = deepFreeze(makeState('INN', { level: 3, exp: 72, hp: 10, maxHp: 46, mp: 1, maxMp: 16, inventory }));
     const r = rest(s, new SequenceRng([]));
-    expect(r.state).toMatchObject({ hp: 61, mp: 16, maxHp: 46 });
+    expect(r.state).toMatchObject({ hp: 53, mp: 16, maxHp: 46 });
     expect(r.messages).toEqual([{ text: 'HP と MP が かいふくした', tone: 'success' }]);
     const again = rest(deepFreeze(r.state), new SequenceRng([]));
-    expect(again.state).toMatchObject({ hp: 61, mp: 16 });
+    expect(again.state).toMatchObject({ hp: 53, mp: 16 });
     expect(again.messages).toHaveLength(1);
   });
 

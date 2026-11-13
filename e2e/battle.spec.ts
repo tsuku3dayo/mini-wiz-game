@@ -488,7 +488,7 @@ test.describe('メッセージを 1 行ずつ出す場面', () => {
       await page.clock.runFor(400);
       await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
       expect(new URL(page.url()).hash).toBe('#/dungeon');
-      expect((await logLines(page)).slice(-2)).toEqual(['スライムを たおした！', '経験値 4 を かくとく']);
+      expect((await logLines(page)).slice(-2)).toEqual(['スライムを たおした！', '経験値 8 を かくとく']);
 
       // もう一度：1 行目が出たらメッセージ欄をクリック → すぐにダンジョンへ
       await startAt(page, 'BATTLE', { state: { battle: battleOf('slime', 1) }, seed: SEEDS.hits });

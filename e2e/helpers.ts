@@ -9,7 +9,8 @@ const RECORDS = { battles: 0, kills: 0, deaths: 0, laps: 1, bossKills: 0 };
 export function storedInn(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     ...CHARACTER,
-    schemaVersion: 6,
+    // 今の版（src/domain/game-state.ts の GAME_SCHEMA_VERSION）。古い版だと読み込みでアクセの ID が付け替わる
+    schemaVersion: 7,
     revision: 0,
     location: 'INN',
     dungeon: null,
@@ -24,7 +25,7 @@ export function storedInn(overrides: Record<string, unknown> = {}): Record<strin
 
 /** セーブ（StoredSave の形） */
 export function storedSave(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return { schemaVersion: 3, ...CHARACTER, inventory: EMPTY_INVENTORY, records: RECORDS, savedAt: '2026-11-02T00:00:00.000Z', ...overrides };
+  return { schemaVersion: 4, ...CHARACTER, inventory: EMPTY_INVENTORY, records: RECORDS, savedAt: '2026-11-02T00:00:00.000Z', ...overrides };
 }
 
 /** ?debug=1 で開いて、テスト用の入口ができるまで待つ */
@@ -91,7 +92,8 @@ export function innLevelUp(): Record<string, unknown> {
 /** HP 1 のボスとの戦闘（5F のボスのマス）。SEEDS.bossWin で倒す */
 export function bossBattle(): Record<string, unknown> {
   return {
-    location: 'BATTLE', level: 12, exp: 1584, speed: 30, hp: 100, maxHp: 120,
+    // ボス（速さ 50）より先に動く（v1.21）
+    location: 'BATTLE', level: 12, exp: 1584, speed: 50, hp: 100, maxHp: 120,
     dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }), battle: battleOf('necromancer', 1),
   };
 }

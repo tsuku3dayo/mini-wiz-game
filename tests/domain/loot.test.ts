@@ -26,20 +26,24 @@ function inventoryOf(n: number): InventoryData {
 }
 
 describe('ドロップ', () => {
-  test('TC-0027-03 出るレアリティは段階で決まり、80 で低い方・81 で高い方。段階 8 は 81 でも LG（乱数は 1 個引く）', () => {
-    // ゴブリン（段階 1〜2）：落とす 1 → 部位 0 → 段階 → レアリティ → 補正値の元
-    const drop = (tier: number, r: number) => rollDrop('goblin', new SequenceRng([1, 0, tier, r, 1]));
+  test('TC-0027-03 出るレアリティは段階で決まり（ガードリングだけ段階 3 でも R／SR）、80 で低い方・81 で高い方。段階 8 は 81 でも LG（乱数は 1 個引く）', () => {
+    // ゴブリン（段階 1〜2）：落とす 1 → 部位 0 → 段階 → レアリティ → 補正値（範囲の中の値。N 1〜2・R 3〜4）
+    const drop = (tier: number, r: number) => rollDrop('goblin', new SequenceRng([1, 0, tier, r, r >= 81 ? 3 : 1]));
     expect(drop(1, 80)!.rarity).toBe('N');
     expect(drop(1, 81)!.rarity).toBe('R');
     // オーク（段階 3〜5）：段階 4・5 は R/SR
-    expect(rollDrop('orc', new SequenceRng([1, 0, 4, 80, 7]))!.rarity).toBe('R');
-    expect(rollDrop('orc', new SequenceRng([1, 0, 5, 81, 9]))!.rarity).toBe('SR');
+    expect(rollDrop('orc', new SequenceRng([1, 0, 4, 80, 8]))!.rarity).toBe('R');
+    expect(rollDrop('orc', new SequenceRng([1, 0, 5, 81, 16]))!.rarity).toBe('SR');
+    // ガードリング（アクセの段階 3）：80 で R、81 で SR（ほかの段階 3 は N／R。v1.21）
+    expect(rollDrop('skeleton', new SequenceRng([1, 3, 3, 80, 4]))).toEqual({ itemId: 'accessory3', rarity: 'R', value: 4 });
+    expect(rollDrop('skeleton', new SequenceRng([1, 3, 3, 81, 8]))).toEqual({ itemId: 'accessory3', rarity: 'SR', value: 8 });
+    expect(rollDrop('skeleton', new SequenceRng([1, 0, 3, 80, 5]))!.rarity).toBe('N');
     // ダークナイト（段階 5〜7）：段階 6・7 は SR/UR
-    expect(rollDrop('darkKnight', new SequenceRng([1, 6, 0, 6, 80, 12]))!.rarity).toBe('SR');
-    expect(rollDrop('darkKnight', new SequenceRng([1, 6, 0, 7, 81, 15]))!.rarity).toBe('UR');
-    // ボス：段階 8 は 81 でも LG。乱数は 5 個（落とす・部位・段階・レアリティ・補正値の元）
-    const rng = new SequenceRng([1, 0, 8, 81, 20]);
-    expect(rollDrop('necromancer', rng)).toEqual({ itemId: 'weapon8', rarity: 'LG', value: 60 });
+    expect(rollDrop('darkKnight', new SequenceRng([1, 6, 0, 6, 80, 18]))!.rarity).toBe('SR');
+    expect(rollDrop('darkKnight', new SequenceRng([1, 6, 0, 7, 81, 31]))!.rarity).toBe('UR');
+    // ボス：段階 8 は 81 でも LG。乱数は 5 個（落とす・部位・段階・レアリティ・補正値）
+    const rng = new SequenceRng([1, 0, 8, 81, 50]);
+    expect(rollDrop('necromancer', rng)).toEqual({ itemId: 'weapon8', rarity: 'LG', value: 50 });
     rng.assertExhausted();
   });
 
@@ -51,11 +55,11 @@ describe('ドロップ', () => {
   });
 
   test('TC-0027-05 ダークナイトは特例 5 で段階 8・LG（段階の乱数なし）、6 なら段階を int(5,7) で引く', () => {
-    const special = new SequenceRng([35, 5, 1, 50, 17]);
+    const special = new SequenceRng([35, 5, 1, 50, 51]);
     expect(rollDrop('darkKnight', special)).toEqual({ itemId: 'armor8', rarity: 'LG', value: 51 });
     special.assertExhausted();
-    // 補正値の元は、たての段階 5〜7（5〜7・7〜9・8〜11）のどれにも入る値
-    const base = { 5: 7, 6: 8, 7: 8 } as const;
+    // 補正値は、たての段階 5〜7 の低い方の範囲（R 6〜8・SR 10〜13・SR 12〜16）に入る値
+    const base = { 5: 7, 6: 10, 7: 12 } as const;
     for (const tier of [5, 6, 7] as const) {
       const d = rollDrop('darkKnight', new SequenceRng([35, 6, 2, tier, 1, base[tier]]))!;
       expect(d.itemId).toBe(`shield${tier}`);
@@ -64,19 +68,19 @@ describe('ドロップ', () => {
 
   test('TC-0027-06 ボスは 100 でも落とし、必ず段階 8・LG。段階の乱数 int(8,8) も引く', () => {
     let tierCall = false;
-    const values = [100, 3, 8, 1, 5];
+    const values = [100, 3, 8, 1, 25];
     let i = 0;
     const rng = { int: (a: number, b: number) => { if (a === 8 && b === 8) tierCall = true; return values[i++]; }, chance: () => false };
-    expect(rollDrop('necromancer', rng)).toEqual({ itemId: 'accessory8', rarity: 'LG', value: 15 });
+    expect(rollDrop('necromancer', rng)).toEqual({ itemId: 'accessory8', rarity: 'LG', value: 25 });
     expect(tierCall).toBe(true);
     expect(i).toBe(5);
   });
 
   test('TC-0027-08 ドロップの行の形（全角の括弧・「は」の後に半角スペース）、tone normal・rarity、UR・LG だけ rareDrop', () => {
-    expect(dropMessage('スライム', { itemId: 'shield1', rarity: 'R', value: 1 }))
-      .toEqual({ text: 'スライムは ウッドシールド［R］（かいひ +1）を おとした！', tone: 'normal', rarity: 'R' });
-    expect(dropMessage('暗黒のネクロマンサー', { itemId: 'accessory8', rarity: 'LG', value: 20 }))
-      .toEqual({ text: '暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +20 ぼうぎょ +20）を おとした！', tone: 'normal', rarity: 'LG', effect: 'rareDrop' });
+    expect(dropMessage('スライム', { itemId: 'shield1', rarity: 'R', value: 3 }))
+      .toEqual({ text: 'スライムは ウッドシールド［R］（かいひ +3）を おとした！', tone: 'normal', rarity: 'R' });
+    expect(dropMessage('暗黒のネクロマンサー', { itemId: 'accessory8', rarity: 'LG', value: 30 }))
+      .toEqual({ text: '暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +30 ぼうぎょ +30 かいひ +30）を おとした！', tone: 'normal', rarity: 'LG', effect: 'rareDrop' });
     expect(dropMessage('ダークナイト', { itemId: 'weapon7', rarity: 'UR', value: 30 }).effect).toBe('rareDrop');
     for (const r of ['N', 'R', 'SR'] as const) expect(dropMessage('x', { itemId: 'weapon1', rarity: r, value: 1 }).effect).toBeUndefined();
   });
@@ -118,7 +122,7 @@ describe('E2E のシード', () => {
     expect(sr.messages.at(-1)?.effect).toBeUndefined();
     const n = resolveTurn(deepFreeze(battleState('goblin', 1, { hp: 999, maxHp: 999 })), 'attack', new SeededRng(5));
     expect(n.messages.at(-1)).toMatchObject({ rarity: 'N' });
-    const boss = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, dungeon: openMap({ x: 9, y: 0 }, {}, 5) })), 'attack', new SeededRng(1));
+    const boss = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 50, maxHp: 120, hp: 100, dungeon: openMap({ x: 9, y: 0 }, {}, 5) })), 'attack', new SeededRng(1));
     expect(boss.messages.map((m) => m.effect ?? null)).toEqual([null, 'bossDefeat', null, 'rareDrop', 'clear']);
     expect(boss.state.level).toBe(12);
     expect(boss.messages.at(-2)).toMatchObject({ rarity: 'LG' });
@@ -127,19 +131,19 @@ describe('E2E のシード', () => {
 
 describe('満杯のときの入れ替え', () => {
   test('TC-0030-01 所持品 50 個で落とすと SWAP（pending・thenClear false）で所持品は同じ。49 個＋装備 4 個なら末尾に入って 50 個', () => {
-    // スライム（HP 1）を倒す：回避 100・ダメージ 0、ドロップ 15 → 部位 0 → 段階 1 → 81（R）→ 2
-    const seq = () => new SequenceRng([100, 0, 15, 0, 1, 81, 2]);
+    // スライム（HP 1）を倒す：回避 100・ダメージ 0、ドロップ 15 → 部位 0 → 段階 1 → 81（R）→ 3（R 3〜4）
+    const seq = () => new SequenceRng([100, 0, 15, 0, 1, 81, 3]);
     const full = deepFreeze(battleState('slime', 1, { inventory: inventoryOf(50) }));
     const r = resolveTurn(full, 'attack', seq());
     expect(r.state.location).toBe('SWAP');
     expect(r.state.inventory.items).toEqual(full.inventory.items);
-    expect(r.state.inventory.pending).toEqual({ item: { id: 200, itemId: 'weapon1', rarity: 'R', value: 2 }, thenClear: false });
-    expect(r.messages.at(-1)!.text).toBe('スライムは ショートソード［R］（こうげき +2）を おとした！');
+    expect(r.state.inventory.pending).toEqual({ item: { id: 200, itemId: 'weapon1', rarity: 'R', value: 3 }, thenClear: false });
+    expect(r.messages.at(-1)!.text).toBe('スライムは ショートソード［R］（こうげき +3）を おとした！');
 
     const r49 = resolveTurn(deepFreeze(battleState('slime', 1, { inventory: inventoryOf(49) })), 'attack', seq());
     expect(r49.state.location).toBe('DUNGEON');
     expect(r49.state.inventory.items).toHaveLength(50);
-    expect(r49.state.inventory.items.at(-1)).toEqual({ id: 200, itemId: 'weapon1', rarity: 'R', value: 2 });
+    expect(r49.state.inventory.items.at(-1)).toEqual({ id: 200, itemId: 'weapon1', rarity: 'R', value: 3 });
   });
 
   test('TC-0030-05 拾う・あきらめるで pending を消して DUNGEON。thenClear なら CLEARED と「平和が もどった」。所持品にない ID は 409', () => {

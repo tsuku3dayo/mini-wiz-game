@@ -4,16 +4,16 @@ import { cursorLabel, logLines, shortSwords, startAt, storedInventory, storedIte
 // TC-0029 の準備：所持品 23 個（ショートソード［R］と、部位がばらばらの個体）。
 // 段階 8 の エクスカリバー［LG］18 個は弱い順の最後に並ぶので、前の 5 個が一覧の上に来る
 const mixed = [
-  storedItem(1, 'weapon1', 'R', 2),
+  storedItem(1, 'weapon1', 'R', 3),
   storedItem(2, 'shield1', 'N', 1),
   storedItem(3, 'armor1', 'N', 1),
-  storedItem(4, 'accessory1', 'R', 3),
-  storedItem(5, 'weapon4', 'SR', 12),
+  storedItem(4, 'accessory1', 'R', 5),
+  storedItem(5, 'weapon4', 'SR', 13),
 ];
 const excaliburs = Array.from({ length: 18 }, (_, i) => storedItem(6 + i, 'weapon8', 'LG', 60));
 const scene = { inventory: storedInventory({ items: [...mixed, ...excaliburs] }) };
-/** 弱い順（段階 1：補正 1 の 2 個は名前の逆順 → 補正 2 → 補正 3、段階 4、段階 8） */
-const WEAK = ['クロースアーマー［N］', 'ウッドシールド［N］', 'ショートソード［R］', 'ガードリング［R］', 'ロングソード［SR］', ...Array(18).fill('エクスカリバー［LG］')];
+/** 弱い順（段階 1：補正 1 の 2 個は名前の逆順 → 補正 3 → 補正 5、段階 4、段階 8）。値は仕様書 v1.21 の範囲で出るもの */
+const WEAK = ['クロースアーマー［N］', 'ウッドシールド［N］', 'ショートソード［R］', 'ライフアミュレット［R］', 'ロングソード［SR］', ...Array(18).fill('エクスカリバー［LG］')];
 
 async function press(info: TestInfo, target: Locator) {
   if (info.project.name === 'desktop') await target.click();
@@ -109,7 +109,7 @@ test.describe('もちもの画面', () => {
     expect(seen).toEqual(['ぶき', 'よろい', 'たて', 'アクセ', 'すべて']);
     await press(info, prev);
     await expect(filterName(page)).toHaveText('アクセ');
-    expect(await names(page)).toEqual(['ガードリング［R］']);
+    expect(await names(page)).toEqual(['ライフアミュレット［R］']);
   });
 
   test('TC-0029-05 一覧にフォーカスがあるとき、→ で次、← で前のしぼりこみに循環する', async ({ page }, info) => {
@@ -123,7 +123,7 @@ test.describe('もちもの画面', () => {
     await page.keyboard.press('ArrowLeft');
     await expect(filterName(page)).toHaveText('アクセ');
     // しぼりこみを替えても一覧にフォーカスが残る（カーソルは もどる の次）
-    await expect(row(page, 'もちもの', 'ガードリング［R］')).toBeFocused();
+    await expect(row(page, 'もちもの', 'ライフアミュレット［R］')).toBeFocused();
   });
 
   test('TC-0029-06 個体を選ぶと「〇〇を すてますか？」（カーソルは いいえ）。いいえ・Esc で同じ個体に戻り、はい で捨てて「もちもの 22／50」。閉じるとメッセージ欄に「〇〇を すてた」', async ({ page }, info) => {

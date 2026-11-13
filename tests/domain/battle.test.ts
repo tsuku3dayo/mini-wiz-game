@@ -27,10 +27,10 @@ describe('敵と戦う', () => {
   test('TC-0019-04 素早さが同じならプレイヤーが先、プレイヤーが 1 遅いと敵が先。同じ速さの敵と戦うと最初の行はプレイヤーの攻撃', () => {
     expect(turnOrder(6, 6)).toEqual(['player', 'enemy']);
     expect(turnOrder(5, 6)).toEqual(['enemy', 'player']);
-    // スライムの速さ 3 と同じ速さのプレイヤー
-    const r = resolveTurn(deepFreeze(battleState('slime', 12, { speed: 3 })), 'attack', new SequenceRng([100, 0, 100, 0]));
-    expect(r.messages[0].text).toBe('ゆうしゃの こうげき！ スライムに 4 の ダメージ！');
-    expect(r.messages[1].text).toMatch(/^スライムの こうげき！/);
+    // ゴブリンの速さ 7 と同じ速さのプレイヤー（v1.21 でスライムの速さが 0 になったので、ゴブリンにした）
+    const r = resolveTurn(deepFreeze(battleState('goblin', 20, { speed: 7 })), 'attack', new SequenceRng([100, 0, 100, 0]));
+    expect(r.messages[0].text).toBe('ゆうしゃの こうげき！ ゴブリンに 4 の ダメージ！');
+    expect(r.messages[1].text).toMatch(/^ゴブリンの こうげき！/);
   });
 
   test('TC-0019-05 evadeChance(受ける側のかいひ, 攻撃側の速) は clamp(かいひ − 速, 0, 90)', () => {
@@ -42,14 +42,14 @@ describe('敵と戦う', () => {
 
   test('TC-0019-06 プレイヤーの攻撃が回避されると敵の HP は変わらず、ダメージの int(0,2) を引かない。次は敵の攻撃の回避の判定', () => {
     // 敵の かいひ は 0 なので、敵が回避するのは敵の方が速いとき（＝敵が先に動く）。
-    // プレイヤー（速さ 1）とスライム（速さ 3）：スライムの回避率 2%。
-    // 1 ターン目：敵の攻撃（回避 100 で外れ・ダメージ 0）→ プレイヤーの攻撃を 2 で回避（ダメージの乱数は引かない）
+    // プレイヤー（速さ 5）とゴブリン（速さ 7）：ゴブリンの回避率 2%（v1.21 でスライムの速さが 0 になったので、ゴブリンにした）。
+    // 1 ターン目：敵の攻撃（回避 100 で外れ・ダメージ 0 → 7 − 2 = 5）→ プレイヤーの攻撃を 2 で回避（ダメージの乱数は引かない）
     const rng = new SequenceRng([100, 0, 2]);
-    const r = resolveTurn(deepFreeze(battleState('slime', 12, { speed: 1 })), 'attack', rng);
+    const r = resolveTurn(deepFreeze(battleState('goblin', 20, { speed: 5 })), 'attack', rng);
     rng.assertExhausted();
-    expect(r.messages[0].text).toBe('スライムの こうげき！ 2 の ダメージを うけた！');
-    expect(r.messages[1]).toEqual({ text: 'スライムは ひらりと みをかわした！', tone: 'normal' });
-    expect(r.state.battle!.enemy.hp).toBe(12);
+    expect(r.messages[0].text).toBe('ゴブリンの こうげき！ 5 の ダメージを うけた！');
+    expect(r.messages[1]).toEqual({ text: 'ゴブリンは ひらりと みをかわした！', tone: 'normal' });
+    expect(r.state.battle!.enemy.hp).toBe(20);
     expect(r.outcome).toBe('continue');
     // 次に引く乱数は、敵の攻撃の回避の int(1,100)
     const next = recordingRng(new SequenceRng([100, 0, 2]));
@@ -139,44 +139,44 @@ describe('戦闘から逃げる', () => {
 });
 
 describe('経験値を得て強くなる', () => {
-  test('TC-0022-01 スライムを倒すと「たおした」→「経験値 4 を かくとく」。同じマスのダンジョンへ、経験値 +4、HP は減ったまま、討伐数 +1', () => {
+  test('TC-0022-01 スライムを倒すと「たおした」→「経験値 8 を かくとく」。同じマスのダンジョンへ、経験値 +8、HP は減ったまま、討伐数 +1', () => {
     const start = deepFreeze(battleState('slime', 1, { hp: 20, exp: 3 }));
     const r = resolveTurn(start, 'attack', new SequenceRng([100, 0, 100]));
     expect(r.messages).toEqual([
-      { text: 'ゆうしゃの こうげき！ スライムに 4 の ダメージ！', tone: 'normal' },
+      { text: 'ゆうしゃの こうげき！ スライムに 5 の ダメージ！', tone: 'normal' },
       { text: 'スライムを たおした！', tone: 'success' },
-      { text: '経験値 4 を かくとく', tone: 'success' },
+      { text: '経験値 8 を かくとく', tone: 'success' },
     ]);
-    expect(r.state).toMatchObject({ location: 'DUNGEON', battle: null, exp: 7, hp: 20 });
+    expect(r.state).toMatchObject({ location: 'DUNGEON', battle: null, exp: 11, hp: 20 });
     expect(r.state.dungeon!.player).toEqual(start.dungeon!.player);
     expect(r.state.records.kills).toBe(start.records.kills + 1);
     // 経験値が次のレベルを超えても、レベルは上がらず、レベルアップの行がない（v1.14）
     const over = resolveTurn(deepFreeze(battleState('slime', 1, { exp: 23 })), 'attack', new SequenceRng([100, 0, 100]));
-    expect(over.state).toMatchObject({ level: 1, exp: 27 });
+    expect(over.state).toMatchObject({ level: 1, exp: 31 });
     expect(over.messages.some((m) => m.effect === 'levelUp')).toBe(false);
   });
 
   test('TC-0022-12 通常の敵に勝つと、引く乱数は攻撃とドロップの分だけ（成長の 5 個を引かない）。expToNext は max(0, nextLevelExp − exp)', () => {
-    // 経験値 20 + ゴブリン 10 = 30（Lv2 の 24 を超える）。プレイヤーが先：回避・ダメージ → ドロップ判定（21 で外れ）
+    // 経験値 20 + ゴブリン 20 = 40（Lv2 の 24 を超える）。プレイヤーが先：回避・ダメージ → ドロップ判定（21 で外れ）
     const rng = recordingRng(new SequenceRng([100, 0, 21]));
     const r = resolveTurn(deepFreeze(battleState('goblin', 1, { exp: 20, speed: 10 })), 'attack', rng);
     expect(rng.calls.map(({ min, max }) => [min, max])).toEqual([[1, 100], [0, 2], [1, 100]]);
-    expect(r.state).toMatchObject({ level: 1, exp: 30 });
+    expect(r.state).toMatchObject({ level: 1, exp: 40 });
     expect(toGameView(r.state).character).toMatchObject({ nextLevelExp: 24, expToNext: 0 });
     expect(toGameView({ ...r.state, exp: 10 }).character.expToNext).toBe(14);
   });
 });
 
 describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
-  test('TC-0023-01 HP が 0 になると宿屋で目覚め、HP・MP は装備込みの最大（61/61）。Lv・経験値・基礎値・装備・所持品は同じ、死亡 +1、最後の 2 行。ボス戦でも同じ', () => {
-    const life = makeItem(1, 'accessory4', 'R', 15);
+  test('TC-0023-01 HP が 0 になると宿屋で目覚め、HP・MP は装備込みの最大（53/53）。Lv・経験値・基礎値・装備・所持品は同じ、死亡 +1、最後の 2 行。ボス戦でも同じ', () => {
+    const life = makeItem(1, 'accessory1', 'R', 7); // ライフアミュレット［R］さいだいHP +7（v1.21）
     const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [makeItem(2, 'armor1', 'N', 1)], nextId: 3, pending: null };
     const lv3 = { level: 3, exp: 80, hp: 1, maxHp: 46, mp: 2, maxMp: 16, attack: 7, defense: 7, speed: 5, inventory };
     for (const [kind, hp] of [['goblin', 20], ['necromancer', 800]] as const) {
       const start = deepFreeze(battleState(kind, hp, lv3));
       const r = resolveTurn(start, 'attack', new SequenceRng([100, 0]));
       expect(r.outcome).toBe('defeat');
-      expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, hp: 61, mp: 16, level: 3, exp: 80, maxHp: 46, attack: 7, defense: 7, speed: 5 });
+      expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, hp: 53, mp: 16, level: 3, exp: 80, maxHp: 46, attack: 7, defense: 7, speed: 5 });
       expect(r.state.inventory).toEqual(inventory);
       expect(r.state.records.deaths).toBe(start.records.deaths + 1);
       expect(r.messages.slice(-2)).toEqual([
@@ -187,14 +187,15 @@ describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
   });
 
   test('TC-0024-03 Lv12・累計 1584 でボスを倒すと 4 行（たおした・経験値・ドロップ・平和）。effect の並び。CLEARED・ダンジョンと戦闘は null', () => {
-    const rng = new SequenceRng([100, 0, 1, 0, 8, 1, 20]);
-    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100 })), 'attack', rng);
+    // ボス（速さ 50）より先に動く。補正値はエクスカリバー［LG］の範囲 40〜68 の中（v1.21）
+    const rng = new SequenceRng([100, 0, 1, 0, 8, 1, 50]);
+    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 50, maxHp: 120, hp: 100 })), 'attack', rng);
     rng.assertExhausted();
     const lines = r.messages.slice(1); // 先頭はプレイヤーの攻撃の行
     expect(lines.map((m) => m.text)).toEqual([
       '暗黒のネクロマンサーを たおした！',
       '経験値 1000 を かくとく',
-      '暗黒のネクロマンサーは エクスカリバー［LG］（こうげき +60）を おとした！',
+      '暗黒のネクロマンサーは エクスカリバー［LG］（こうげき +50）を おとした！',
       'ダンジョンに 平和が もどった',
     ]);
     expect(lines.map((m) => m.effect).filter(Boolean)).toEqual(['bossDefeat', 'rareDrop', 'clear']);
@@ -206,14 +207,15 @@ describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
     const slime = recordingRng(new SequenceRng([100, 0, 15, 2, 1, 50, 1]));
     resolveTurn(deepFreeze(battleState('slime', 1)), 'attack', slime);
     expect(slime.calls.map(({ min, max }) => [min, max])).toEqual([[1, 100], [0, 2], [1, 100], [0, 3], [1, 1], [1, 100], [1, 2]]);
-    // ダークナイト（HP 1・速 26）を速 30 のプレイヤーが先に倒す。経験値 75 で Lv2 を超えても成長の乱数はなく、すぐドロップ（特例あり）
-    const dk = recordingRng(new SequenceRng([100, 0, 35, 6, 1, 7, 50, 13]));
+    // ダークナイト（HP 1・速 26）を速 30 のプレイヤーが先に倒す。経験値 150 で Lv2 を超えても成長の乱数はなく、すぐドロップ（特例あり）
+    // ドラゴンメイル（段階 7）の低い方 SR 19〜25 の補正値（v1.21）
+    const dk = recordingRng(new SequenceRng([100, 0, 35, 6, 1, 7, 50, 20]));
     const r = resolveTurn(deepFreeze(battleState('darkKnight', 1, { speed: 30, attack: 30 })), 'attack', dk);
     expect(dk.calls.map(({ min, max }) => [min, max])).toEqual([
       [1, 100], [0, 2],
-      [1, 100], [1, 100], [0, 3], [5, 7], [1, 100], [13, 17],
+      [1, 100], [1, 100], [0, 3], [5, 7], [1, 100], [19, 25],
     ]);
-    expect(r.state).toMatchObject({ level: 1, exp: 75 });
+    expect(r.state).toMatchObject({ level: 1, exp: 150 });
   });
 });
 
@@ -221,8 +223,9 @@ describe('ボスを倒す', () => {
   test('TC-0024-02 ボスの経験値は 1000。Lv12・累計 1584 で倒すと累計 2584・Lv12 のまま。そのあと やすむ と Lv15', () => {
     expect(ENEMIES.necromancer.exp).toBe(1000);
     // ボスの HP 1、プレイヤーが速い：回避 100（外れ）・ダメージ 0 → 撃破 → ドロップ 5 個（成長の乱数はない）
-    const rng = new SequenceRng([100, 0, 1, 0, 8, 1, 20]);
-    const start = deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100 }));
+    // ボス（速さ 50）より先に動く。補正値はエクスカリバー［LG］の範囲 40〜68 の中（v1.21）
+    const rng = new SequenceRng([100, 0, 1, 0, 8, 1, 50]);
+    const start = deepFreeze(battleState('necromancer', 1, { level: 12, exp: 1584, speed: 50, maxHp: 120, hp: 100 }));
     const r = resolveTurn(start, 'attack', rng);
     rng.assertExhausted();
     expect(r.state).toMatchObject({ level: 12, exp: 2584 });
@@ -262,13 +265,13 @@ describe('戦闘の決まり', () => {
   });
 
   test('勝ったときにドロップを引き、所持品の末尾に加える。満杯なら入れ替え待ち（SWAP）', () => {
-    // スライム：ドロップ 15 以下 → 部位 0（ぶき）→ 段階 1 → レアリティ 81（R）→ 補正値の元 2 → floor(2 × 12 / 10) = 2
-    const rng = new SequenceRng([100, 0, 15, 0, 1, 81, 2]);
+    // スライム：ドロップ 15 以下 → 部位 0（ぶき）→ 段階 1 → レアリティ 81（R）→ 補正値 3（R の範囲 3〜4。v1.21）
+    const rng = new SequenceRng([100, 0, 15, 0, 1, 81, 3]);
     const r = resolveTurn(deepFreeze(battleState('slime', 1)), 'attack', rng);
     rng.assertExhausted();
-    expect(r.state.inventory.items).toEqual([{ id: 1, itemId: 'weapon1', rarity: 'R', value: 2 }]);
+    expect(r.state.inventory.items).toEqual([{ id: 1, itemId: 'weapon1', rarity: 'R', value: 3 }]);
     expect(r.state.inventory.nextId).toBe(2);
-    expect(r.messages.at(-1)).toEqual({ text: 'スライムは ショートソード［R］（こうげき +2）を おとした！', tone: 'normal', rarity: 'R' });
+    expect(r.messages.at(-1)).toEqual({ text: 'スライムは ショートソード［R］（こうげき +3）を おとした！', tone: 'normal', rarity: 'R' });
 
     const full = { equipped: { weapon: null, armor: null, shield: null, accessory: null }, items: Array.from({ length: 50 }, (_, i) => makeItem(i + 1, 'armor1', 'N', 1)), nextId: 51, pending: null };
     const s = resolveTurn(deepFreeze(battleState('slime', 1, { inventory: full })), 'attack', new SequenceRng([100, 0, 15, 0, 1, 80, 1]));
@@ -280,15 +283,15 @@ describe('戦闘の決まり', () => {
 
   test('ボスに勝つと、ダンジョンを破棄し討伐・ボス討伐・周回を数え、段階 8 の LG を拾って CLEARED、最後に「平和が もどった」', () => {
     // ボスの HP 1、プレイヤーが速い。経験値 1000 を足すだけ（レベルは やすむ まで上がらない）。
-    // ドロップ：1（必ず）→ 部位 3（アクセ）→ 段階 8 → レアリティ 50（LG）→ 補正値の元 5 → 15
-    const rng = new SequenceRng([100, 0, 1, 3, 8, 50, 5]);
-    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { speed: 30 })), 'attack', rng);
+    // ドロップ：1（必ず）→ 部位 3（アクセ）→ 段階 8 → レアリティ 50（LG）→ 補正値 30（ソロモンのゆびわ LG 25〜33。v1.21）
+    const rng = new SequenceRng([100, 0, 1, 3, 8, 50, 30]);
+    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { speed: 50 })), 'attack', rng);
     rng.assertExhausted();
     expect(r.state).toMatchObject({ location: 'CLEARED', dungeon: null, battle: null, level: 1, exp: 1000 });
     expect(r.state.records).toMatchObject({ kills: 1, bossKills: 1, laps: 2 });
-    expect(r.state.inventory.items.at(-1)).toEqual({ id: 1, itemId: 'accessory8', rarity: 'LG', value: 15 });
+    expect(r.state.inventory.items.at(-1)).toEqual({ id: 1, itemId: 'accessory8', rarity: 'LG', value: 30 });
     expect(r.messages.map((m) => m.effect).filter(Boolean)).toEqual(['bossDefeat', 'rareDrop', 'clear']);
     expect(r.messages.at(-1)).toEqual({ text: 'ダンジョンに 平和が もどった', tone: 'success', effect: 'clear' });
-    expect(r.messages.at(-2)!.text).toBe('暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +15 ぼうぎょ +15）を おとした！');
+    expect(r.messages.at(-2)!.text).toBe('暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +30 ぼうぎょ +30 かいひ +30）を おとした！');
   });
 });

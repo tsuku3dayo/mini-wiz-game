@@ -73,13 +73,41 @@ describe('セーブして、つづきから再開する', () => {
     // migrateSave：版 1 は所持品を空・実績を初期値
     const save = (schemaVersion: number): StoredSave => deepFreeze({ ...CHARACTER, schemaVersion, inventory: SAVE_INVENTORY, records: RECORDS, savedAt: '2026-11-02T00:00:00.000Z' });
     const pendingNull = { ...SAVE_INVENTORY, pending: null };
-    expect(migrateSave(save(1))).toEqual({ schemaVersion: 3, ...CHARACTER, inventory: emptyInventory(), records: initialRecords() });
+    expect(migrateSave(save(1))).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: emptyInventory(), records: initialRecords() });
     // 版 2 は所持品を補い（入れ替え待ちは null）、実績を初期値
-    expect(migrateSave(save(2))).toEqual({ schemaVersion: 3, ...CHARACTER, inventory: pendingNull, records: initialRecords() });
-    // 版 3 は両方を補う
-    expect(migrateSave(save(3))).toEqual({ schemaVersion: 3, ...CHARACTER, inventory: pendingNull, records: RECORDS });
+    expect(migrateSave(save(2))).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: pendingNull, records: initialRecords() });
+    // 版 3・4 は両方を補う（v1.21 で版 4 を足した）
+    expect(migrateSave(save(3))).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: pendingNull, records: RECORDS });
+    expect(migrateSave(save(4))).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: pendingNull, records: RECORDS });
     // それ以外は例外
-    for (const v of [0, 4, 9]) expect(() => migrateSave(save(v))).toThrow(`Unsupported save schemaVersion: ${v}`);
+    for (const v of [0, 5, 9]) expect(() => migrateSave(save(v))).toThrow(`Unsupported save schemaVersion: ${v}`);
+  });
+
+  test('TC-0009-13 版 6 以下のゲーム状態・版 3 以下のセーブのアクセは、名前で引き継ぐ（ID を付け替えてから補正）。版 7・4 は付け替えない。何度通しても同じ', () => {
+    // 装備中・所持品・入れ替え待ちに accessory1〜8 を 1 つずつ（v1.20 までの ID と値）
+    const old = {
+      equipped: { weapon: makeItem(1, 'weapon1', 'N', 1), armor: null, shield: null, accessory: makeItem(2, 'accessory4', 'R', 15) },
+      items: [makeItem(3, 'accessory1', 'N', 2), makeItem(4, 'accessory2', 'R', 3), makeItem(5, 'accessory3', 'N', 3), makeItem(6, 'accessory5', 'R', 9), makeItem(7, 'accessory6', 'SR', 20), makeItem(8, 'accessory7', 'UR', 30)],
+      nextId: 10,
+      pending: { item: makeItem(9, 'accessory8', 'LG', 30), thenClear: false },
+    };
+    const want = {
+      equipped: { weapon: makeItem(1, 'weapon1', 'N', 1), armor: null, shield: null, accessory: makeItem(2, 'accessory1', 'R', 7) },
+      items: [makeItem(3, 'accessory3', 'R', 4), makeItem(4, 'accessory4', 'R', 8), makeItem(5, 'accessory5', 'R', 4), makeItem(6, 'accessory2', 'R', 4), makeItem(7, 'accessory6', 'SR', 20), makeItem(8, 'accessory7', 'UR', 30)],
+      nextId: 10,
+      pending: { item: makeItem(9, 'accessory8', 'LG', 30), thenClear: false },
+    };
+    for (const v of [5, 6]) expect(migrateGameState(deepFreeze(stored({ schemaVersion: v, inventory: old }))).inventory, `版 ${v}`).toEqual(want);
+    // 版 7 は付け替えない：accessory4［R］15 は パワーリング［R］12、accessory1［N］2 は ライフアミュレット［N］2
+    const v7 = migrateGameState(deepFreeze(stored({ schemaVersion: 7, inventory: old }))).inventory;
+    expect(v7.equipped.accessory).toEqual(makeItem(2, 'accessory4', 'R', 12));
+    expect(v7.items[0]).toEqual(makeItem(3, 'accessory1', 'N', 2));
+    // セーブ：版 3 は付け替え、版 4 は付け替えない（入れ替え待ちはセーブでは null）
+    const save = (schemaVersion: number): StoredSave => deepFreeze({ ...CHARACTER, schemaVersion, inventory: old, records: RECORDS, savedAt: '2026-11-02T00:00:00.000Z' });
+    expect(migrateSave(save(3)).inventory).toEqual({ ...want, pending: null });
+    expect(migrateSave(save(4)).inventory.equipped.accessory).toEqual(makeItem(2, 'accessory4', 'R', 12));
+    // 付け替えたあとの値を今の版で読んでも変わらない
+    expect(migrateGameState(deepFreeze(stored({ schemaVersion: 7, inventory: want }))).inventory).toEqual(want);
   });
 });
 
@@ -108,36 +136,36 @@ describe('読み込み時の補正とセーブの変換', () => {
     expect(normalizeInventory(null)).toEqual({ inv: emptyInventory(), dropped: [] });
     expect(normalizeInventory([1, 2])).toEqual({ inv: emptyInventory(), dropped: [] });
     const raw = deepFreeze({
-      equipped: { weapon: { id: 9, itemId: 'sword99', rarity: 'N', value: 1 }, armor: { id: 2, itemId: 'weapon1', rarity: 'N', value: 1 }, shield: null, accessory: makeItem(3, 'accessory8', 'LG', 20) },
-      items: [makeItem(4, 'armor1', 'R', 2), { id: 'x', itemId: 'armor1', rarity: 'N', value: 1 }, { id: 5, itemId: 'armor1', rarity: 'Z', value: 1 }, { id: 12, itemId: 'old', rarity: 'R', value: 3 }],
+      equipped: { weapon: { id: 9, itemId: 'sword99', rarity: 'N', value: 1 }, armor: { id: 2, itemId: 'weapon1', rarity: 'N', value: 1 }, shield: null, accessory: makeItem(3, 'accessory8', 'LG', 30) },
+      items: [makeItem(4, 'armor1', 'R', 3), { id: 'x', itemId: 'armor1', rarity: 'N', value: 1 }, { id: 5, itemId: 'armor1', rarity: 'Z', value: 1 }, { id: 12, itemId: 'old', rarity: 'R', value: 3 }],
       nextId: 2,
       pending: { item: makeItem(6, 'weapon1', 'N', 1), thenClear: true },
     });
     const { inv, dropped } = normalizeInventory(raw);
     expect(dropped).toEqual<DroppedItem[]>([{ id: 9, itemId: 'sword99' }, { id: 12, itemId: 'old' }]);
-    expect(inv.equipped).toEqual({ weapon: null, armor: null, shield: null, accessory: makeItem(3, 'accessory8', 'LG', 20) });
-    expect(inv.items).toEqual([makeItem(4, 'armor1', 'R', 2)]);
+    expect(inv.equipped).toEqual({ weapon: null, armor: null, shield: null, accessory: makeItem(3, 'accessory8', 'LG', 30) });
+    expect(inv.items).toEqual([makeItem(4, 'armor1', 'R', 3)]);
     expect(inv.pending).toEqual({ item: makeItem(6, 'weapon1', 'N', 1), thenClear: true });
     expect(inv.nextId).toBe(13);
   });
 
-  test('conformItem：段階で出ないレアリティは近いものに替えて値を掛け直し、範囲に切り詰める。冪等', () => {
-    // ロングソード（段階 4：R・SR）の N 9 → R、floor(9×12/10)=10
-    expect(conformItem(makeItem(1, 'weapon4', 'N', 9))).toEqual(makeItem(1, 'weapon4', 'R', 10));
-    // エクスカリバー（段階 8：LG）の UR 40 → LG、floor(40×30/20)=60
-    expect(conformItem(makeItem(1, 'weapon8', 'UR', 40))).toEqual(makeItem(1, 'weapon8', 'LG', 60));
-    // ショートソード（段階 1：N・R）の SR → R（近い方）、範囲 [1, 2] に切り詰め
-    expect(conformItem(makeItem(1, 'weapon1', 'SR', 30))).toEqual(makeItem(1, 'weapon1', 'R', 2));
+  test('conformItem：種類で出ないレアリティは近いものに替え（値は換算しない。v1.21）、範囲に切り詰める。冪等', () => {
+    // ロングソード（段階 4：R 8〜12・SR 13〜18）の N 9 → R 9
+    expect(conformItem(makeItem(1, 'weapon4', 'N', 9))).toEqual(makeItem(1, 'weapon4', 'R', 9));
+    // エクスカリバー（段階 8：LG 40〜68）の UR 40 → LG 40
+    expect(conformItem(makeItem(1, 'weapon8', 'UR', 40))).toEqual(makeItem(1, 'weapon8', 'LG', 40));
+    // ショートソード（段階 1：N 1〜2・R 3〜4）の SR → R（近い方）、範囲 [3, 4] に切り詰め
+    expect(conformItem(makeItem(1, 'weapon1', 'SR', 30))).toEqual(makeItem(1, 'weapon1', 'R', 4));
     // ミスリルソード（段階 6：SR・UR）の LG → UR、R → SR
     expect(conformItem(makeItem(1, 'weapon6', 'LG', 48)).rarity).toBe('UR');
     expect(conformItem(makeItem(1, 'weapon6', 'R', 18)).rarity).toBe('SR');
     // 合っている個体はそのまま、何度通しても同じ
-    const ok = makeItem(1, 'weapon3', 'R', 7);
+    const ok = makeItem(1, 'weapon3', 'R', 10);
     expect(conformItem(ok)).toBe(ok);
     const once = conformItem(makeItem(1, 'armor6', 'N', 1));
     expect(conformItem(once)).toEqual(once);
-    expect(valueRange('weapon3', 'R')).toEqual([6, 9]);
-    expect(valueRange('weapon8', 'LG')).toEqual([60, 78]);
+    expect(valueRange('weapon3', 'R')).toEqual([9, 12]);
+    expect(valueRange('weapon8', 'LG')).toEqual([40, 68]);
   });
 
   test('normalizeRecords：項目ごとに 0 以上の整数（周回数は 1 以上）でなければ初期値', () => {
@@ -146,10 +174,10 @@ describe('読み込み時の補正とセーブの変換', () => {
     expect(normalizeRecords(RECORDS)).toEqual(RECORDS);
   });
 
-  test('toSaveData は版 3・入れ替え待ちなし（saveSlot は入れない）、fromSaveData は宿屋から・saveSlot は読んだスロット', () => {
+  test('toSaveData は版 4・入れ替え待ちなし（saveSlot は入れない）、fromSaveData は宿屋から・saveSlot は読んだスロット', () => {
     const s = deepFreeze(makeState('SWAP', { ...CHARACTER, records: RECORDS, saveSlot: 2 }));
     const save = toSaveData(s);
-    expect(save).toEqual({ schemaVersion: 3, ...CHARACTER, inventory: { ...s.inventory, pending: null }, records: RECORDS });
+    expect(save).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: { ...s.inventory, pending: null }, records: RECORDS });
     expect(fromSaveData(deepFreeze(save), 3)).toEqual({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, inventory: { ...s.inventory, pending: null }, records: RECORDS, saveSlot: 3 });
   });
 });

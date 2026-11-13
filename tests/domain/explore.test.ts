@@ -81,7 +81,7 @@ describe('迷宮を歩く', () => {
     const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 }, {}, 3)));
     const r = moveInDungeon(start, 'forward', new SequenceRng([20, 31]));
     expect(r.state.location).toBe('BATTLE');
-    expect(r.state.battle).toEqual({ enemy: { kind: 'skeleton', hp: 42 }, isBoss: false });
+    expect(r.state.battle).toEqual({ enemy: { kind: 'skeleton', hp: 32 }, isBoss: false });
     expect(r.state.records.battles).toBe(1);
     expect(r.messages).toEqual([{ text: 'スケルトンが あらわれた！', tone: 'normal' }]);
     expect(r.state.dungeon!.floors[2].visited[cellIndex({ x: 4, y: 4 })]).toBe(true);
@@ -257,7 +257,7 @@ describe('踏破記録とボス', () => {
     const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { records })), 'forward', noRng());
     expect(r.state.battle!.enemy.hp).toBe(800);
     expect(JSON.stringify(ENEMIES)).toBe(before);
-    expect(ENEMIES.necromancer).toMatchObject({ maxHp: 800, attack: 60, defense: 40, speed: 30, exp: 1000 });
+    expect(ENEMIES.necromancer).toMatchObject({ maxHp: 800, attack: 80, defense: 0, speed: 50, exp: 1000 });
   });
 });
 

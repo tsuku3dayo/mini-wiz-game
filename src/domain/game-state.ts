@@ -5,8 +5,8 @@ import { emptyInventory } from './loot';
 import { initialRecords, normalizeRecords, type Records } from './records';
 import type { EnemyKind } from './constants';
 
-export const GAME_SCHEMA_VERSION = 6;
-export const SAVE_SCHEMA_VERSION = 3;
+export const GAME_SCHEMA_VERSION = 7;
+export const SAVE_SCHEMA_VERSION = 4;
 
 /** セーブのスロット（v1.14。仕様書 §21.2） */
 export type SaveSlot = 1 | 2 | 3;
@@ -201,6 +201,26 @@ export function normalizeInventory(raw: unknown): { inv: InventoryData; dropped:
   return { inv, dropped };
 }
 
+/** v1.20 までのアクセの ID → v1.21 の ID（名前で引き継ぐ。仕様書 §21.4） */
+const ACCESSORY_REMAP: Readonly<Record<string, string>> = {
+  accessory1: 'accessory3', // ガードリング
+  accessory2: 'accessory4', // パワーリング
+  accessory3: 'accessory5', // ウィンドブーツ
+  accessory4: 'accessory1', // ライフアミュレット
+  accessory5: 'accessory2', // マナブレスレット
+};
+
+/** 保存値の所持品の、アクセの ID を 1 回だけ付け替える（版 6 以下・セーブの版 3 以下。形は調べない） */
+export function remapAccessoryIds(raw: unknown): unknown {
+  if (!isObject(raw)) return raw;
+  const one = (v: unknown): unknown =>
+    isObject(v) && typeof v.itemId === 'string' && Object.hasOwn(ACCESSORY_REMAP, v.itemId) ? { ...v, itemId: ACCESSORY_REMAP[v.itemId] } : v;
+  const equipped = isObject(raw.equipped) ? Object.fromEntries(Object.entries(raw.equipped).map(([k, v]) => [k, one(v)])) : raw.equipped;
+  const items = Array.isArray(raw.items) ? raw.items.map(one) : raw.items;
+  const pending = isObject(raw.pending) ? { ...raw.pending, item: one(raw.pending.item) } : raw.pending;
+  return { ...raw, equipped, items, pending };
+}
+
 /** 版 2 のダンジョンに踏破記録を補う。今の階の今の位置だけ true（ボスのマスなら記録しない） */
 function addVisited(d: DungeonData): DungeonData {
   const size = d.width * d.height;
@@ -229,7 +249,9 @@ export function migrateGameState(row: StoredGameState, onDropped?: (dropped: Dro
       battle = null;
     }
   }
-  const { inv, dropped } = normalizeInventory(row.inventory);
+  // 版 6 以下のアクセは名前で引き継ぐ（v1.21）
+  const rawInventory = row.schemaVersion >= 7 ? row.inventory : remapAccessoryIds(row.inventory);
+  const { inv, dropped } = normalizeInventory(rawInventory);
   if (dropped.length > 0) onDropped?.(dropped);
   return {
     ...pickCharacter(row),
@@ -269,10 +291,11 @@ export function fromSaveData(save: SaveData, slot: SaveSlot): GameStateData {
 /** セーブの読み込み時の移行（仕様書 §21.4）。知らない版は例外 */
 export function migrateSave(save: StoredSave, onDropped?: (dropped: DroppedItem[]) => void): SaveData {
   const v = save.schemaVersion;
-  if (v !== 1 && v !== 2 && v !== 3) throw new Error(`Unsupported save schemaVersion: ${v}`);
+  if (v !== 1 && v !== 2 && v !== 3 && v !== 4) throw new Error(`Unsupported save schemaVersion: ${v}`);
   let inventory = emptyInventory();
   if (v >= 2) {
-    const { inv, dropped } = normalizeInventory(save.inventory);
+    // 版 3 以下のアクセは名前で引き継ぐ（v1.21）
+    const { inv, dropped } = normalizeInventory(v >= 4 ? save.inventory : remapAccessoryIds(save.inventory));
     if (dropped.length > 0) onDropped?.(dropped);
     inventory = { ...inv, pending: null };
   }
@@ -280,6 +303,6 @@ export function migrateSave(save: StoredSave, onDropped?: (dropped: DroppedItem[
     schemaVersion: SAVE_SCHEMA_VERSION,
     ...pickCharacter(save),
     inventory,
-    records: v === 3 ? normalizeRecords(save.records) : initialRecords(),
+    records: v >= 3 ? normalizeRecords(save.records) : initialRecords(),
   };
 }
