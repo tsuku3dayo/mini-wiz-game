@@ -18,9 +18,9 @@ export const heavy = {
     items: shortSwords(50, 10),
     equipped: {
       weapon: storedItem(1, 'weapon6', 'UR', 28),
-      armor: storedItem(2, 'armor4', 'R', 10),
+      armor: storedItem(2, 'armor4', 'R', 9),
       shield: storedItem(3, 'shield4', 'R', 6),
-      accessory: storedItem(4, 'accessory4', 'R', 15),
+      accessory: storedItem(4, 'accessory1', 'R', 7),
     },
   }),
 };

@@ -10,13 +10,13 @@ async function openStatus(page: Page) {
   await expect(page.locator('h1')).toHaveText('ステータス');
 }
 
-/** さいだいHP +15 のアクセとこうげき +10 のぶきを付けた状態 */
+/** さいだいHP +7 のアクセとこうげき +10 のぶきを付けた状態（v1.21） */
 const equipped = {
   equipped: {
     weapon: { id: 1, itemId: 'weapon4', rarity: 'R', value: 10 },
     armor: null,
     shield: null,
-    accessory: { id: 2, itemId: 'accessory4', rarity: 'R', value: 15 },
+    accessory: { id: 2, itemId: 'accessory1', rarity: 'R', value: 7 },
   },
   items: [],
   nextId: 3,
@@ -37,7 +37,7 @@ test.describe('ステータス画面', () => {
     const dds = await status.locator('dd').allTextContents();
     expect(await status.locator('dt').allTextContents()).toEqual(['Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']);
     // かいひ は すばやさ＋たて（たてなし → すばやさ 7。v1.16）
-    expect(dds).toEqual(['  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  7']);
+    expect(dds).toEqual(['  3', ' 80（つぎまで 64）', ' 25/ 53 (+7)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  7']);
     const rec = page.getByTestId('records-window');
     await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
     await expect(rec).toContainText('このキャラクターの きろく');

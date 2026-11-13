@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createGameApi } from '../../src/api/game-api';
 import { GameError, type GameApi } from '../../src/api/types';
-import { toSaveData, type GameStateData } from '../../src/domain/game-state';
+import { GAME_SCHEMA_VERSION, SAVE_SCHEMA_VERSION, toSaveData, type GameStateData } from '../../src/domain/game-state';
 import { SeededRng, SequenceRng, SwappableRng, type Rng } from '../../src/domain/rng';
 import { createFakeStorage, type FakeStorage } from '../helpers/fake-storage';
 import { LOCATIONS, makeItem, makeState } from '../helpers/fixtures';
@@ -13,12 +13,13 @@ const CHARACTER = { name: 'アルド', level: 4, exp: 150, hp: 12, maxHp: 55, mp
 const RECORDS = { battles: 9, kills: 7, deaths: 1, laps: 1, bossKills: 0 };
 const INVENTORY = {
   equipped: { weapon: makeItem(1, 'weapon2', 'N', 3), armor: null, shield: null, accessory: null },
-  items: [makeItem(2, 'armor1', 'N', 1), makeItem(3, 'shield1', 'R', 2)],
+  items: [makeItem(2, 'armor1', 'N', 1), makeItem(3, 'shield1', 'R', 3)],
   nextId: 5,
   pending: { item: makeItem(4, 'weapon1', 'N', 1), thenClear: false },
 };
 
-function storedGame(state: GameStateData, revision = 3, schemaVersion = 6) {
+// 保存の版は今の版（古い版で書くと、読み込みでアクセの ID が付け替わる。TD-0002 §1.9）
+function storedGame(state: GameStateData, revision = 3, schemaVersion = GAME_SCHEMA_VERSION) {
   return { ...state, schemaVersion, revision, updatedAt: '2026-11-01T00:00:00.000Z' };
 }
 
@@ -27,7 +28,7 @@ function without(obj: object, ...keys: string[]): Record<string, unknown> {
   return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 }
 
-function storedSave(schemaVersion = 3) {
+function storedSave(schemaVersion = SAVE_SCHEMA_VERSION) {
   return { schemaVersion, ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS, savedAt: '2026-11-01T00:00:00.000Z' };
 }
 
@@ -77,7 +78,7 @@ describe('名前を付けてキャラクターを作る', () => {
     expect(r.messages).toEqual([{ text: 'ゆうしゃの ぼうけんが はじまった', tone: 'normal' }]);
     expect(r.state).toMatchObject({ location: 'INN', character: { name: 'ゆうしゃ', level: 1, hp: 30, maxHp: 30 } });
     const game = JSON.parse(store.raw('game')!);
-    expect(game).toMatchObject({ name: 'ゆうしゃ', level: 1, location: 'INN', dungeon: null, revision: 5, schemaVersion: 6, updatedAt: NOW });
+    expect(game).toMatchObject({ name: 'ゆうしゃ', level: 1, location: 'INN', dungeon: null, revision: 5, schemaVersion: GAME_SCHEMA_VERSION, updatedAt: NOW });
     expect(store.log.filter((l) => l.name.startsWith('save'))).toEqual([]);
     expect(store.raw('save-1')).toBe(save);
 
@@ -89,7 +90,7 @@ describe('名前を付けてキャラクターを作る', () => {
 });
 
 describe('セーブして、つづきから再開する', () => {
-  test('TC-0009-01 INN で save({ slot: 2 }) すると save-2 に版 3 のセーブを書き、プレイ中の状態は saveSlot 2・revision + 1。slot の違反は 400、ほかの場所では 409', async () => {
+  test('TC-0009-01 INN で save({ slot: 2 }) すると save-2 に版 4 のセーブを書き、プレイ中の状態は saveSlot 2・revision + 1。slot の違反は 400、ほかの場所では 409', async () => {
     const state = makeState('INN', { ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS });
     const { api, store } = setup({ game: storedGame(state, 3), 'save-1': storedSave(), 'save-3': storedSave() });
     const before = JSON.parse(store.raw('game')!);
@@ -97,7 +98,7 @@ describe('セーブして、つづきから再開する', () => {
     const r = await api.save({ slot: 2 });
     expect(r.messages).toEqual([{ text: 'スロット2に セーブしました', tone: 'success' }]);
     expect(JSON.parse(store.raw('save-2')!)).toEqual({
-      schemaVersion: 3, ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS, savedAt: NOW,
+      schemaVersion: 4, ...CHARACTER, inventory: { ...INVENTORY, pending: null }, records: RECORDS, savedAt: NOW,
     });
     // プレイ中の状態は saveSlot と revision・updatedAt だけが変わる
     expect(JSON.parse(store.raw('game')!)).toEqual({ ...before, saveSlot: 2, revision: 4, updatedAt: NOW });
@@ -152,7 +153,7 @@ describe('セーブして、つづきから再開する', () => {
     });
   });
 
-  test('TC-0009-10 版 1・2 のゲーム状態は移した GameView、saveSlot は版 5 以下で持たなければ null・1〜3 ならその値。版 1・2 のセーブは宿屋から。版 4 のセーブは 500 internal_error', async () => {
+  test('TC-0009-10 版 1・2 のゲーム状態は移した GameView、saveSlot は版 5 以下で持たなければ null・1〜3 ならその値。版 1〜3 のセーブは宿屋から。版 5 のセーブは 500 internal_error（v1.21 で版を 7・4 に）', async () => {
     // saveSlot（v1.14）：版 5 で持たない → null、移し替えで 1 を足した版 5・版 6 の 2 → その値、形違い → null
     const plain = without(storedGame(makeState('INN', CHARACTER), 1, 5), 'saveSlot');
     for (const [stored, want] of [
@@ -182,10 +183,14 @@ describe('セーブして、つづきから再開する', () => {
       expect(r.state).toMatchObject({ location: 'INN', character: { name: 'アルド', level: 4 }, records: { battles: 0, laps: 1 } });
       expect(r.state.inventory.count).toBe(v === 1 ? 0 : 2);
     }
+    // 版 3：所持品・実績を読む（アクセの付け替えは TC-0009-13）
+    const v3 = await setup({ 'save-1': storedSave(3) }).api.load({ slot: 1 });
+    expect(v3.state).toMatchObject({ location: 'INN', records: { battles: 9, laps: 1 } });
+    expect(v3.state.inventory.count).toBe(2);
 
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const v4 = setup({ 'save-1': storedSave(4) });
-    const err = await caught(v4.api.load({ slot: 1 }));
+    const v5 = setup({ 'save-1': storedSave(5) });
+    const err = await caught(v5.api.load({ slot: 1 }));
     expect({ status: err.status, error: err.error, message: err.message }).toEqual({ status: 500, error: 'internal_error', message: '内部エラー' });
   });
 });
@@ -363,8 +368,8 @@ describe('戦闘とヒール（ゲーム API）', () => {
 
 /** 所持品つきの状態の材料：装備 2 枠・所持品 2 個・nextId 10（読み込みの補正で変わらないよう、段階で出るレアリティと範囲の値にする） */
 const GEAR = {
-  equipped: { weapon: makeItem(1, 'weapon3', 'R', 9), armor: null, shield: null, accessory: makeItem(2, 'accessory8', 'LG', 20) },
-  items: [makeItem(3, 'weapon1', 'R', 2), makeItem(4, 'armor1', 'N', 1)],
+  equipped: { weapon: makeItem(1, 'weapon3', 'R', 9), armor: null, shield: null, accessory: makeItem(2, 'accessory8', 'LG', 30) },
+  items: [makeItem(3, 'weapon1', 'R', 3), makeItem(4, 'armor1', 'N', 1)],
   nextId: 10,
   pending: null,
 };
@@ -373,9 +378,11 @@ const GEAR = {
 const fullItems = (n: number) => Array.from({ length: n }, (_, i) => makeItem(i + 1, i === 0 ? 'weapon1' : 'armor1', 'N', 1));
 
 /** Lv12・累計 1584 で、残り HP 1 のボスを倒す乱数（ボスのドロップ：エクスカリバー［LG］。v1.14 から成長の乱数はない） */
-const BOSS_KILL = [100, 0, 1, 0, 8, 1, 20];
+// 補正値の乱数は、エクスカリバー［LG］の範囲 40〜68 の中（v1.21）
+const BOSS_KILL = [100, 0, 1, 0, 8, 1, 50];
 const bossState = (overrides: Partial<GameStateData> = {}) =>
-  battleState('necromancer', 1, { level: 12, exp: 1584, speed: 30, maxHp: 120, hp: 100, maxMp: 40, mp: 30, ...overrides });
+  // ボス（速さ 50）より先に動く（v1.21）
+  battleState('necromancer', 1, { level: 12, exp: 1584, speed: 50, maxHp: 120, hp: 100, maxMp: 40, mp: 30, ...overrides });
 
 describe('エラーの形（ゲーム API）', () => {
   test('TC-0012-02 §10.3 の表で許されない場所から呼ぶと 409 invalid_state。保存（revision を含む）は同じ', async () => {
@@ -620,10 +627,10 @@ describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
 
 describe('実績（ゲーム API）', () => {
   test('TC-0026-01 初期の実績で 5F のボスのマスに入り、1 戦目で倒すと { battles 1, kills 1, deaths 0, laps 2, bossKills 1 }', async () => {
-    // こうげき 900・速さ 30 のキャラクター：先攻・回避 100（外れ）・ダメージ 0 → 900 − 20 ＝ 880 ダメージで撃破（ボスの HP 800）。
-    // 経験値を足すだけ（成長の乱数なし。v1.14）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値の元 20）
-    const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 900, speed: 30 });
-    const { api } = setupWith({ game: storedGame(state) }, new SequenceRng([100, 0, 1, 0, 8, 1, 20]));
+    // こうげき 900・速さ 50 のキャラクター：先攻（ボスも速さ 50）・回避 100（外れ）・ダメージ 0 → 900 − 0 ＝ 900 ダメージで撃破（ボスの HP 800・防御 0。v1.21）。
+    // 経験値を足すだけ（成長の乱数なし。v1.14）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値 50）
+    const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 900, speed: 50 });
+    const { api } = setupWith({ game: storedGame(state) }, new SequenceRng(BOSS_KILL));
     const met = await api.move({ action: 'forward' });
     expect(met.state.battle).toMatchObject({ isBoss: true });
     const r = await api.battle({ command: 'attack' });

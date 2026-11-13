@@ -169,11 +169,11 @@ test.describe('宿屋', () => {
     }
     expect(await values()).toMatchObject({ Lv: '  3', EXP: ' 80（つぎまで 64）', HP: ' 25/ 46', MP: ' 10/ 16', こうげき: '  7', ぼうぎょ: '  7', すばやさ: '  7', かいひ: '  7' });
 
-    // さいだいHP +15 のアクセを付けると「 25/ 61 (+15)」。かいひ は すばやさ＋たて で「 13 (+6)」（v1.16）
-    const life = { id: 1, itemId: 'accessory4', rarity: 'R', value: 15 };
+    // さいだいHP +7 のアクセ（ライフアミュレット［R］。v1.21）を付けると「 25/ 53 (+7)」。かいひ は すばやさ＋たて で「 13 (+6)」（v1.16）
+    const life = { id: 1, itemId: 'accessory1', rarity: 'R', value: 7 };
     const shield = { id: 2, itemId: 'shield5', rarity: 'R', value: 6 };
     await startAt(page, 'INN', { state: { ...lv3, inventory: { equipped: { weapon: null, armor: null, shield, accessory: life }, items: [], nextId: 3, pending: null } } });
-    expect(await values()).toMatchObject({ HP: ' 25/ 61 (+15)', かいひ: ' 13 (+6)' });
+    expect(await values()).toMatchObject({ HP: ' 25/ 53 (+7)', かいひ: ' 13 (+6)' });
   });
 
   test('TC-0008-07 経験値 72・Lv1 で「やすむ」と、回復の行に続けてレベルアップの行が出て、演出と levelUp の音が出る。Lv「  3」・EXP「 72（つぎまで 72）」', async ({ page }, info) => {
@@ -218,7 +218,7 @@ test.describe('宿屋', () => {
   test('TC-0026-06 広い画面の宿屋に「ステータス」（なまえ・補正つき）と「じっせき」が横に並び、メニューは もどる・そうび・もちもの・おと：オフ（ステータスなし）', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', '広い画面のテストは desktop だけ');
     const inventory = {
-      equipped: { weapon: { id: 1, itemId: 'weapon4', rarity: 'R', value: 10 }, armor: null, shield: null, accessory: { id: 2, itemId: 'accessory4', rarity: 'R', value: 15 } },
+      equipped: { weapon: { id: 1, itemId: 'weapon4', rarity: 'R', value: 10 }, armor: null, shield: null, accessory: { id: 2, itemId: 'accessory1', rarity: 'R', value: 7 } },
       items: [],
       nextId: 3,
       pending: null,
@@ -228,7 +228,7 @@ test.describe('宿屋', () => {
     const status = page.getByTestId('status-panel');
     await expect(status.locator('.wiz-window-title')).toContainText('ステータス');
     expect(await status.locator('dt').allTextContents()).toEqual(['なまえ', 'Lv', 'EXP', 'HP', 'MP', 'こうげき', 'ぼうぎょ', 'すばやさ', 'かいひ']);
-    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 61 (+15)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  7']);
+    expect(await status.locator('dd').allTextContents()).toEqual(['ゆうしゃ', '  3', ' 80（つぎまで 64）', ' 25/ 53 (+7)', ' 10/ 16', ' 17 (+10)', '  7', '  7', '  7']);
     const rec = page.getByTestId('records-window');
     await expect(rec.locator('.wiz-window-title')).toContainText('じっせき');
     expect(await rec.locator('dd').allTextContents()).toEqual(['128 回', '120 体', '3 回', '2 周目', '1 回']);

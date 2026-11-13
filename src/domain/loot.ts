@@ -4,7 +4,7 @@ import type { EnemyKind } from './constants';
 import { assertPending, itemLabel } from './equipment';
 import { RuleViolationError } from './errors';
 import type { GameStateData, InventoryData, ItemInstance, Location, Message, StepResult } from './game-state';
-import { HIGH_RARITY_FROM, INVENTORY_CAPACITY, ITEMS, RARITY_BY_TIER, RARITY_MULTIPLIER, SLOTS, statName, type ItemId } from './items';
+import { HIGH_RARITY_FROM, INVENTORY_CAPACITY, ITEMS, SLOTS, statName, valueRange, type ItemId } from './items';
 import type { Rng } from './rng';
 
 export type Drop = Omit<ItemInstance, 'id'>;
@@ -47,12 +47,14 @@ export function rollDrop(kind: EnemyKind, rng: Rng): Drop | null {
   const slot = SLOTS[rng.int(0, 3)];
   // 特例で段階が決まったときは、段階の乱数を引かない（ボスは 8〜8 でも 1 回引く）
   if (tier === null) tier = rng.int(rule.tiers[0], rule.tiers[1]);
-  const choices = RARITY_BY_TIER[tier];
+  const itemId = `${slot}${tier}` as ItemId;
+  // 出るレアリティは種類ごと（ガードリングだけ段階 3 でも R／SR。v1.21）
+  const choices = ITEMS[itemId].rarities;
   const roll = rng.int(1, 100);
   const rarity = choices[roll >= HIGH_RARITY_FROM && choices.length > 1 ? 1 : 0];
-  const itemId = `${slot}${tier}` as ItemId;
-  const { min, max } = ITEMS[itemId];
-  const value = Math.floor((rng.int(min, max) * RARITY_MULTIPLIER[rarity]) / 10);
+  // 補正値は種類とレアリティの範囲から選ぶ（v1.21。v1.20 までは元の幅 × 倍率）
+  const [lo, hi] = valueRange(itemId, rarity);
+  const value = rng.int(lo, hi);
   return { itemId, rarity, value };
 }
 

@@ -13,12 +13,12 @@ export interface EnemyStats {
 
 /** 敵 6 種（周回数・レベルで変わらない） */
 export const ENEMIES: Readonly<Record<EnemyKind, EnemyStats>> = {
-  slime: { name: 'スライム', maxHp: 12, attack: 4, defense: 2, speed: 3, exp: 4 },
-  goblin: { name: 'ゴブリン', maxHp: 20, attack: 7, defense: 3, speed: 7, exp: 10 },
-  skeleton: { name: 'スケルトン', maxHp: 42, attack: 16, defense: 10, speed: 13, exp: 27 },
-  orc: { name: 'オークロード', maxHp: 79, attack: 28, defense: 17, speed: 17, exp: 45 },
-  darkKnight: { name: 'ダークナイト', maxHp: 110, attack: 45, defense: 28, speed: 26, exp: 75 },
-  necromancer: { name: '暗黒のネクロマンサー', maxHp: 800, attack: 60, defense: 40, speed: 30, exp: 1000 },
+  slime: { name: 'スライム', maxHp: 24, attack: 4, defense: 0, speed: 0, exp: 8 },
+  goblin: { name: 'ゴブリン', maxHp: 20, attack: 7, defense: 3, speed: 7, exp: 20 },
+  skeleton: { name: 'スケルトン', maxHp: 32, attack: 21, defense: 5, speed: 18, exp: 54 },
+  orc: { name: 'オークロード', maxHp: 99, attack: 38, defense: 7, speed: 7, exp: 90 },
+  darkKnight: { name: 'ダークナイト', maxHp: 110, attack: 45, defense: 28, speed: 26, exp: 150 },
+  necromancer: { name: '暗黒のネクロマンサー', maxHp: 800, attack: 80, defense: 0, speed: 50, exp: 1000 },
 };
 
 /** 階ごとの出現表（百分率、この順に累積して判定する。仕様書 §6.2） */
