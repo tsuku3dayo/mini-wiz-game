@@ -160,7 +160,7 @@ const SCREEN_OF = { INN: 'inn', DUNGEON: 'dungeon', BATTLE: 'battle', CLEARED: '
 
 /**
  * ?debug=1 で開き、その場所のプレイ中の状態（と、あればセーブ）を書いて、画面が出るまで待つ。
- * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。BATTLE は 1F の (4,4) でゴブリン（HP 18）。
+ * DUNGEON は state.dungeon がなければ 1F の入口（北向き）。BATTLE は 1F の (4,4) でゴブリン（HP 20）。
  * CLEARED は 1 回ボスを倒したあと（laps 2・bossKills 1）。
  * SWAP は 1F の (4,4) で、所持品 50 個（ショートソード［N］、id 1〜50）、
  * 落ちている個体 ミスリルソード［UR］（こうげき +28、id 51）、thenClear: false。
@@ -176,7 +176,7 @@ export async function startAt(
   const base: Record<string, Record<string, unknown>> = {
     INN: {},
     DUNGEON: { location: 'DUNGEON', dungeon: dungeonMap({ x: 0, y: 9 }) },
-    BATTLE: { location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) },
+    BATTLE: { location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 20) },
     CLEARED: { location: 'CLEARED', records: { battles: 30, kills: 25, deaths: 1, laps: 2, bossKills: 1 } },
     SWAP: { location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() },
   };

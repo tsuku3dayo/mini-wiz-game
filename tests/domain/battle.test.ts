@@ -16,7 +16,7 @@ describe('敵と戦う', () => {
     expect(Object.keys(view).sort()).toEqual(['canFlee', 'canHeal', 'enemyKind', 'enemyName', 'isBoss']);
     expect(view).toEqual({ enemyKind: 'goblin', enemyName: 'ゴブリン', isBoss: false, canHeal: true, canFlee: true });
     expect(JSON.stringify(view)).not.toContain('7');
-    expect(toBattleView(battleState('necromancer', 260, { mp: 2 }))).toMatchObject({ isBoss: true, canHeal: false, canFlee: false });
+    expect(toBattleView(battleState('necromancer', 800, { mp: 2 }))).toMatchObject({ isBoss: true, canHeal: false, canFlee: false });
   });
 
   test('TC-0019-03 damage は max(1, 攻撃力 − floor(防御力 ÷ 2) + int(0,2))', () => {
@@ -76,28 +76,28 @@ describe('敵と戦う', () => {
     expect(evaded / 10_000).toBeLessThanOrEqual(0.165);
   });
 
-  test('TC-0019-16 たて（かいひ +6）を付けた速 20 のプレイヤー（かいひ 26）は、ゴブリン（速 6）の攻撃を回避率 20 で判定する。ゴブリンの回避率は 0。ダークナイト（かいひ 10）は速 5 の攻撃を 5% でよける', () => {
+  test('TC-0019-16 たて（かいひ +6）を付けた速 20 のプレイヤー（かいひ 26）は、ゴブリン（速 7）の攻撃を回避率 19 で判定する。ゴブリンの回避率は 0。ダークナイト（かいひ 26）は速 5 の攻撃を 21% でよける', () => {
     const shield = makeItem(1, 'shield5', 'R', 6);
     const inventory = { equipped: { weapon: null, armor: null, shield, accessory: null }, items: [], nextId: 2, pending: null };
-    const start = deepFreeze(battleState('goblin', 18, { speed: 20, inventory }));
-    // プレイヤーが先：ゴブリンの回避率 かいひ 6 − 20 → 0。乱数 1 でも当たる（回避の乱数は 1 個引く）。ダメージ 0 → 5 − 1 = 4
-    // ゴブリンの攻撃：回避率 かいひ（20 + 6）− 6 = 20 → 20 で回避
-    const evaded = new SequenceRng([1, 0, 20]);
+    const start = deepFreeze(battleState('goblin', 20, { speed: 20, inventory }));
+    // プレイヤーが先：ゴブリンの回避率 かいひ 7 − 20 → 0。乱数 1 でも当たる（回避の乱数は 1 個引く）。ダメージ 0 → 5 − 1 = 4
+    // ゴブリンの攻撃：回避率 かいひ（20 + 6）− 7 = 19 → 19 で回避
+    const evaded = new SequenceRng([1, 0, 19]);
     const r1 = resolveTurn(start, 'attack', evaded);
     evaded.assertExhausted();
     expect(r1.messages.map((m) => m.text)).toEqual(['ゆうしゃの こうげき！ ゴブリンに 4 の ダメージ！', 'ゆうしゃは ひらりと みをかわした！']);
-    // 21 なら当たる（ダメージの乱数 0 → 6 − 2 = 4）
-    const hit = new SequenceRng([1, 0, 21, 0]);
+    // 20 なら当たる（ダメージの乱数 0 → 7 − 2 = 5）
+    const hit = new SequenceRng([1, 0, 20, 0]);
     const r2 = resolveTurn(start, 'attack', hit);
     hit.assertExhausted();
-    expect(r2.messages[1].text).toBe('ゴブリンの こうげき！ 4 の ダメージを うけた！');
+    expect(r2.messages[1].text).toBe('ゴブリンの こうげき！ 5 の ダメージを うけた！');
 
-    // 敵の かいひ は素早さ（v1.16）：ダークナイト（速 10）は速 5 のプレイヤーの攻撃を 10 − 5 ＝ 5% でよける
-    // 敵が先（速 10 > 5）：敵の攻撃を 100 で外し・ダメージ 0 → プレイヤーの攻撃の回避 5 で回避、6 で当たる
-    const dk = deepFreeze(battleState('darkKnight', 70, { hp: 999, maxHp: 999 }));
-    const dodge = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 5]));
+    // 敵の かいひ は素早さ（v1.16）：ダークナイト（速 26）は速 5 のプレイヤーの攻撃を 26 − 5 ＝ 21% でよける
+    // 敵が先（速 26 > 5）：敵の攻撃を 100 で外し・ダメージ 0 → プレイヤーの攻撃の回避 21 で回避、22 で当たる
+    const dk = deepFreeze(battleState('darkKnight', 110, { hp: 999, maxHp: 999 }));
+    const dodge = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 21]));
     expect(dodge.messages.at(-1)!.text).toBe('ダークナイトは ひらりと みをかわした！');
-    const land = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 6, 0]));
+    const land = resolveTurn(dk, 'attack', new SequenceRng([100, 0, 22, 0]));
     expect(land.messages.at(-1)!.text).toMatch(/^ゆうしゃの こうげき！ ダークナイトに \d+ の ダメージ！$/);
   });
 });
@@ -108,7 +108,8 @@ describe('戦闘から逃げる', () => {
   });
 
   test('TC-0020-02 成功すると同じマスのダンジョンへ戻り「うまく にげきれた」。経験値・所持品・討伐数は変わらず、乱数は 1 個だけ', () => {
-    const start = deepFreeze(battleState('skeleton', 20, { exp: 9, inventory: { ...battleState('skeleton', 1).inventory, items: [makeItem(1, 'weapon1', 'N', 1)], nextId: 2 } }));
+    // 速さ 7 どうし（ゴブリン）：成功率 50%（v1.20 で速さ 5 の敵がいなくなった）
+    const start = deepFreeze(battleState('goblin', 20, { speed: 7, exp: 9, inventory: { ...battleState('goblin', 1).inventory, items: [makeItem(1, 'weapon1', 'N', 1)], nextId: 2 } }));
     const rng = new SequenceRng([50]);
     const r = resolveTurn(start, 'flee', rng);
     rng.assertExhausted();
@@ -131,7 +132,7 @@ describe('戦闘から逃げる', () => {
   });
 
   test('TC-0020-05 ボス戦では逃げられない：409「にげられない！」、状態は変わらず乱数を引かない', () => {
-    const start = deepFreeze(battleState('necromancer', 260));
+    const start = deepFreeze(battleState('necromancer', 800));
     expect(() => resolveTurn(start, 'flee', noRng())).toThrow(InvalidStateError);
     expect(() => resolveTurn(start, 'flee', noRng())).toThrow('にげられない！');
   });
@@ -171,7 +172,7 @@ describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
     const life = makeItem(1, 'accessory4', 'R', 15);
     const inventory = { equipped: { weapon: null, armor: null, shield: null, accessory: life }, items: [makeItem(2, 'armor1', 'N', 1)], nextId: 3, pending: null };
     const lv3 = { level: 3, exp: 80, hp: 1, maxHp: 46, mp: 2, maxMp: 16, attack: 7, defense: 7, speed: 5, inventory };
-    for (const [kind, hp] of [['goblin', 18], ['necromancer', 260]] as const) {
+    for (const [kind, hp] of [['goblin', 20], ['necromancer', 800]] as const) {
       const start = deepFreeze(battleState(kind, hp, lv3));
       const r = resolveTurn(start, 'attack', new SequenceRng([100, 0]));
       expect(r.outcome).toBe('defeat');
@@ -205,14 +206,14 @@ describe('倒れる・ボスを倒す・ドロップの乱数の順', () => {
     const slime = recordingRng(new SequenceRng([100, 0, 15, 2, 1, 50, 1]));
     resolveTurn(deepFreeze(battleState('slime', 1)), 'attack', slime);
     expect(slime.calls.map(({ min, max }) => [min, max])).toEqual([[1, 100], [0, 2], [1, 100], [0, 3], [1, 1], [1, 100], [1, 2]]);
-    // ダークナイト（HP 1）をプレイヤーが先に倒す。経験値 50 で Lv2 を超えても成長の乱数はなく、すぐドロップ（特例あり）
+    // ダークナイト（HP 1・速 26）を速 30 のプレイヤーが先に倒す。経験値 75 で Lv2 を超えても成長の乱数はなく、すぐドロップ（特例あり）
     const dk = recordingRng(new SequenceRng([100, 0, 35, 6, 1, 7, 50, 13]));
-    const r = resolveTurn(deepFreeze(battleState('darkKnight', 1, { speed: 20, attack: 30 })), 'attack', dk);
+    const r = resolveTurn(deepFreeze(battleState('darkKnight', 1, { speed: 30, attack: 30 })), 'attack', dk);
     expect(dk.calls.map(({ min, max }) => [min, max])).toEqual([
       [1, 100], [0, 2],
       [1, 100], [1, 100], [0, 3], [5, 7], [1, 100], [13, 17],
     ]);
-    expect(r.state).toMatchObject({ level: 1, exp: 50 });
+    expect(r.state).toMatchObject({ level: 1, exp: 75 });
   });
 });
 
@@ -240,7 +241,7 @@ describe('戦闘の決まり', () => {
   test('敵が先攻で HP が 0 になると、その場で敗北：宿屋・全回復・死亡 +1、最後の 2 行。ヒールは唱えない', () => {
     // ゴブリン（速さ 6）が先。回避の 100（外れ）、ダメージ 0 → 4 ダメージで HP 1 → 0
     const rng = new SequenceRng([100, 0]);
-    const r = resolveTurn(deepFreeze(battleState('goblin', 18, { hp: 1, mp: 5 })), 'heal', rng);
+    const r = resolveTurn(deepFreeze(battleState('goblin', 20, { hp: 1, mp: 5 })), 'heal', rng);
     rng.assertExhausted();
     expect(r.outcome).toBe('defeat');
     expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null, hp: 30, mp: 10 });
@@ -281,7 +282,7 @@ describe('戦闘の決まり', () => {
     // ボスの HP 1、プレイヤーが速い。経験値 1000 を足すだけ（レベルは やすむ まで上がらない）。
     // ドロップ：1（必ず）→ 部位 3（アクセ）→ 段階 8 → レアリティ 50（LG）→ 補正値の元 5 → 15
     const rng = new SequenceRng([100, 0, 1, 3, 8, 50, 5]);
-    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { speed: 20 })), 'attack', rng);
+    const r = resolveTurn(deepFreeze(battleState('necromancer', 1, { speed: 30 })), 'attack', rng);
     rng.assertExhausted();
     expect(r.state).toMatchObject({ location: 'CLEARED', dungeon: null, battle: null, level: 1, exp: 1000 });
     expect(r.state.records).toMatchObject({ kills: 1, bossKills: 1, laps: 2 });

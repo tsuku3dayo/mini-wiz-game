@@ -39,7 +39,7 @@ test.describe('更新の帯', () => {
 
     // 戦闘・入れ替え・クリア（読み込み直さずに状態だけ書き替える）
     const scenes: [Record<string, unknown>, string][] = [
-      [{ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) }, 'battle'],
+      [{ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 20) }, 'battle'],
       [{ location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() }, 'swap'],
       [{ location: 'CLEARED' }, 'clear'],
     ];

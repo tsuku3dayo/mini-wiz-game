@@ -103,7 +103,7 @@ test.describe('テスト用の入口', () => {
     await page.evaluate((seed) => window.__wiz!.useSeed(seed), SEEDS.noEncounter);
     await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
     await expectBody('dungeon', 'DUNGEON');
-    await writeScene(page, { state: storedInn({ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 18) }) });
+    await writeScene(page, { state: storedInn({ location: 'BATTLE', dungeon: dungeonMap({ x: 4, y: 4 }), battle: battleOf('goblin', 20) }) });
     await expectBody('battle', 'BATTLE');
     await writeScene(page, { state: storedInn({ location: 'SWAP', dungeon: dungeonMap({ x: 4, y: 4 }), inventory: swapInventory() }) });
     await expectBody('swap', 'SWAP');
