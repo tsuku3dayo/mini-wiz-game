@@ -11,7 +11,7 @@ sources:
   - MWIZ-US-0019（v1.3）
   - MWIZ-US-0034（v1.3）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.20) §11.4、§11.5、§11.8、§11.11、§12、§15.4、§16.4、§16.5
+  - docs/specification-ja.md (v1.21) §11.4、§11.5、§11.8、§11.11、§12、§15.4、§16.4、§16.5
 verified: null
 ---
 

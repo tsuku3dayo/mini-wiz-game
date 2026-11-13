@@ -2,13 +2,13 @@
 id: MWIZ-US-0027
 type: User Story
 title: 敵が装備を落とす
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-13
 sources:
   - MWIZ-EP-0006（v1.0）
   - docs/specification-ja.md (v1.21) §8.1、§8.2、§8.3、§8.4、§8.7、§15.3、§16.3
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T12:50:39+09:00" }
 ---
 
 # US-0027 敵が装備を落とす
