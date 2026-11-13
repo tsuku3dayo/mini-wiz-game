@@ -148,7 +148,7 @@ test.describe('戦闘の画面', () => {
     // MP 2 の ヒール・ボス戦の にげる：押せない色で、押すと理由だけが出る
     for (const [state, name, reason] of [
       [{ mp: 2 }, 'ヒール', 'MP が たりない'],
-      [{ battle: battleOf('necromancer', 260), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
+      [{ battle: battleOf('necromancer', 800), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
     ] as const) {
       await startAt(page, 'BATTLE', { state, seed: SEEDS.hits });
       const button = commandItem(page, name);
@@ -277,7 +277,7 @@ test.describe('戦闘の画面', () => {
 
     for (const [state, name, reason] of [
       [{ mp: 2 }, 'ヒール', 'MP が たりない'],
-      [{ battle: battleOf('necromancer', 260), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
+      [{ battle: battleOf('necromancer', 800), dungeon: dungeonMap({ x: 9, y: 0, floor: 5 }) }, 'にげる', 'にげられない！'],
     ] as const) {
       await startAt(page, 'BATTLE', { state, seed: SEEDS.hits });
       const button = commandItem(page, name);
@@ -454,7 +454,7 @@ test.describe('メッセージを 1 行ずつ出す場面', () => {
 
     test('TC-0019-09 「ダメージを うけた」の行が出ると HP の値が 200ms・1 回・step-end で点滅する。プレイヤーの攻撃の行だけでは点滅しない', async ({ page }, info) => {
       await page.clock.install();
-      // ゴブリン（速さ 6）が先に攻撃して当たる
+      // ゴブリン（速さ 7）が先に攻撃して当たる
       await startAt(page, 'BATTLE', { seed: SEEDS.hits });
       await pauseClock(page);
       await choose(page, info, commandItem(page, 'たたかう'));

@@ -313,7 +313,7 @@ describe('戦闘とヒール（ゲーム API）', () => {
     expect(Object.keys(met.state.battle!).sort()).toEqual(['canFlee', 'canHeal', 'enemyKind', 'enemyName', 'isBoss']);
     const stairsApi = setup({ game: storedGame(dungeonState(openMap({ x: 9, y: 0 }))) }).api;
     check((await stairsApi.stairs({ direction: 'down' })).state);
-    const fight = setupWith({ game: storedGame(battleState('goblin', 18)) }, new SequenceRng([100, 0, 100, 0]));
+    const fight = setupWith({ game: storedGame(battleState('goblin', 20)) }, new SequenceRng([100, 0, 100, 0]));
     const turn = await fight.api.battle({ command: 'attack' });
     check(turn.state);
     expect(Object.keys(turn.state.battle!).sort()).toEqual(['canFlee', 'canHeal', 'enemyKind', 'enemyName', 'isBoss']);
@@ -345,7 +345,7 @@ describe('戦闘とヒール（ゲーム API）', () => {
 
   test('TC-0023-02 倒れる操作では経験値が増えず、所持品と nextId は同じ（ドロップなし）。セーブも同じ', async () => {
     const inventory = { ...INVENTORY, pending: null };
-    const state = battleState('goblin', 18, { hp: 1, exp: 9, inventory });
+    const state = battleState('goblin', 20, { hp: 1, exp: 9, inventory });
     // ゴブリン（速さ 6）が先：回避の 100（外れ）・ダメージ 0 → 4 ダメージで倒れる
     const { api, store } = setupWith({ game: storedGame(state), 'save-1': storedSave(), 'save-2': storedSave(2) }, new SequenceRng([100, 0]));
     const saves = () => [store.raw('save-1'), store.raw('save-2'), store.raw('save-3')];
@@ -470,7 +470,7 @@ describe('装備と所持品（ゲーム API）', () => {
   });
 
   test('TC-0029-09 倒れても装備・所持品・nextId は同じ。startGame では装備なし・所持品 0・nextId 1', async () => {
-    const { api, store } = setupWith({ game: storedGame(battleState('goblin', 18, { hp: 1, inventory: GEAR })) }, new SequenceRng([100, 0]));
+    const { api, store } = setupWith({ game: storedGame(battleState('goblin', 20, { hp: 1, inventory: GEAR })) }, new SequenceRng([100, 0]));
     const r = await api.battle({ command: 'attack' });
     expect(r.state.location).toBe('INN');
     expect(JSON.parse(store.raw('game')!).inventory).toEqual(GEAR);
@@ -620,9 +620,9 @@ describe('ボスとクリアの自動セーブ（ゲーム API）', () => {
 
 describe('実績（ゲーム API）', () => {
   test('TC-0026-01 初期の実績で 5F のボスのマスに入り、1 戦目で倒すと { battles 1, kills 1, deaths 0, laps 2, bossKills 1 }', async () => {
-    // こうげき 300・速さ 30 のキャラクター：先攻・回避 100（外れ）・ダメージ 0 → 290 ダメージで撃破。
+    // こうげき 900・速さ 30 のキャラクター：先攻・回避 100（外れ）・ダメージ 0 → 900 − 20 ＝ 880 ダメージで撃破（ボスの HP 800）。
     // 経験値を足すだけ（成長の乱数なし。v1.14）→ ボスのドロップ 5 個（部位 0・段階 8・レアリティ・補正値の元 20）
-    const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 300, speed: 30 });
+    const state = dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { attack: 900, speed: 30 });
     const { api } = setupWith({ game: storedGame(state) }, new SequenceRng([100, 0, 1, 0, 8, 1, 20]));
     const met = await api.move({ action: 'forward' });
     expect(met.state.battle).toMatchObject({ isBoss: true });

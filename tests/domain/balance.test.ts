@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { resolveTurn } from '../../src/domain/battle';
+import { ENEMIES } from '../../src/domain/constants';
 import { effectiveStats } from '../../src/domain/equipment';
 import type { GameStateData, InventoryData } from '../../src/domain/game-state';
 import { SeededRng } from '../../src/domain/rng';
@@ -15,46 +16,58 @@ function averageCharacter(level: number): Partial<GameStateData> {
   return { level, hp: maxHp, maxHp, mp: maxMp, maxMp, attack: stat, defense: stat, speed: stat };
 }
 
-/** 模擬戦：HP が上限の 40% 以下で MP があればヒール、それ以外は攻撃。ボスに勝ったか */
-function fight(start: GameStateData, seed: number): boolean {
+/** 模擬戦：HP が上限の 40% 以下で MP があればヒール、それ以外は攻撃。ボスに勝ったか・負けたか・ターンの上限（500）で決着がつかなかったか */
+function fight(start: GameStateData, seed: number): 'win' | 'lose' | 'draw' {
   const rng = new SeededRng(seed);
   let state = start;
   for (let turn = 0; turn < 500; turn += 1) {
     const maxHp = effectiveStats(state).maxHp;
     const command = state.hp * 10 <= maxHp * 4 && state.mp >= 3 ? 'heal' : 'attack';
     const r = resolveTurn(state, command, rng);
-    if (r.outcome === 'victory') return true;
-    if (r.outcome === 'defeat') return false;
+    if (r.outcome === 'victory') return 'win';
+    if (r.outcome === 'defeat') return 'lose';
     state = r.state;
   }
-  return false;
+  return 'draw';
 }
 
-const winRate = (start: GameStateData) => {
+/** シード 1〜200 で勝った割合と、上限で決着がつかなかった回数 */
+const simulate = (start: GameStateData) => {
   let wins = 0;
-  for (let seed = 1; seed <= 200; seed += 1) if (fight(start, seed)) wins += 1;
-  return wins / 200;
+  let draws = 0;
+  for (let seed = 1; seed <= 200; seed += 1) {
+    const result = fight(start, seed);
+    if (result === 'win') wins += 1;
+    if (result === 'draw') draws += 1;
+  }
+  return { rate: wins / 200, draws };
 };
 
+/** weapon7［SR］+26・armor7［SR］+22・shield7［SR］かいひ +14・accessory4［R］さいだいHP +15 を装備した Lv n（HP は装備込みの最大） */
+function gearedCharacter(level: number): GameStateData {
+  const inventory: InventoryData = {
+    equipped: {
+      weapon: makeItem(1, 'weapon7', 'SR', 26),
+      armor: makeItem(2, 'armor7', 'SR', 22),
+      shield: makeItem(3, 'shield7', 'SR', 14),
+      accessory: makeItem(4, 'accessory4', 'R', 15),
+    },
+    items: [],
+    nextId: 5,
+    pending: null,
+  };
+  const base = averageCharacter(level);
+  return battleState('necromancer', ENEMIES.necromancer.maxHp, { ...base, inventory, hp: (base.maxHp ?? 0) + 15 });
+}
+
 describe('ボスの強さの釣り合い', () => {
-  test('TC-0024-08 装備なしの Lv12（平均の成長）はボスに勝つ割合が 20% 以下。weapon5・armor5・shield5・accessory4 を装備した Lv11 は 80% 以上（v1.14 で Lv10 から Lv11 に）', () => {
-    const bare = battleState('necromancer', 260, averageCharacter(12));
-    const geared: InventoryData = {
-      equipped: {
-        weapon: makeItem(1, 'weapon5', 'R', 11),
-        armor: makeItem(2, 'armor5', 'R', 9),
-        shield: makeItem(3, 'shield5', 'R', 6),
-        accessory: makeItem(4, 'accessory4', 'R', 15),
-      },
-      items: [],
-      nextId: 5,
-      pending: null,
-    };
-    const lv11 = averageCharacter(11);
-    const equipped = battleState('necromancer', 260, { ...lv11, inventory: geared, hp: (lv11.maxHp ?? 0) + 15 });
-    const bareRate = winRate(bare);
-    const gearedRate = winRate(equipped);
-    expect(bareRate, `装備なし Lv12：${bareRate}`).toBeLessThanOrEqual(0.2);
-    expect(gearedRate, `装備あり Lv11：${gearedRate}`).toBeGreaterThanOrEqual(0.8);
+  test('TC-0024-08 装備なしの Lv27（平均の成長）はボスに勝つ割合が 20% 以下。weapon7［SR］+26・armor7［SR］+22・shield7［SR］+14・accessory4［R］+15 を装備した Lv25 は 80% 以上、同じ装備の Lv21 は 20% 以下（v1.20）。どの模擬戦もターンの上限 500 までに決着がつく', () => {
+    const bare = simulate(battleState('necromancer', ENEMIES.necromancer.maxHp, averageCharacter(27)));
+    const lv25 = simulate(gearedCharacter(25));
+    const lv21 = simulate(gearedCharacter(21));
+    expect(bare.rate, `装備なし Lv27：${bare.rate}`).toBeLessThanOrEqual(0.2);
+    expect(lv25.rate, `装備あり Lv25：${lv25.rate}`).toBeGreaterThanOrEqual(0.8);
+    expect(lv21.rate, `装備あり Lv21：${lv21.rate}`).toBeLessThanOrEqual(0.2);
+    expect([bare.draws, lv25.draws, lv21.draws], '上限 500 ターンで決着しなかった回数').toEqual([0, 0, 0]);
   });
 });

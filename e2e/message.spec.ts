@@ -3,8 +3,8 @@ import { battleOf, dungeonMap, logLines, SEEDS, startAt } from './helpers';
 
 const attackItem = (page: Page) => page.getByRole('menu', { name: '戦闘' }).getByRole('menuitem').filter({ hasText: 'たたかう' });
 const logHeight = (page: Page) => page.getByRole('log').evaluate((e) => e.getBoundingClientRect().height);
-/** オークとの戦闘（プレイヤーの HP 999。1 ターンで 2 行、倒れない・倒せない） */
-const orcBattle = { hp: 999, maxHp: 999, battle: battleOf('orc', 48) };
+/** オークとの戦闘（プレイヤーの HP 999・速さ 20 でオーク（速さ 17）より先。1 ターンで 2 行、倒れない・倒せない） */
+const orcBattle = { hp: 999, maxHp: 999, speed: 20, battle: battleOf('orc', 79) };
 
 async function choose(page: Page, info: TestInfo, target: ReturnType<Page['locator']>) {
   if (info.project.name === 'desktop') await target.click();

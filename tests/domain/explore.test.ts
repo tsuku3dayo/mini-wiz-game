@@ -81,7 +81,7 @@ describe('迷宮を歩く', () => {
     const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 }, {}, 3)));
     const r = moveInDungeon(start, 'forward', new SequenceRng([20, 31]));
     expect(r.state.location).toBe('BATTLE');
-    expect(r.state.battle).toEqual({ enemy: { kind: 'skeleton', hp: 26 }, isBoss: false });
+    expect(r.state.battle).toEqual({ enemy: { kind: 'skeleton', hp: 42 }, isBoss: false });
     expect(r.state.records.battles).toBe(1);
     expect(r.messages).toEqual([{ text: 'スケルトンが あらわれた！', tone: 'normal' }]);
     expect(r.state.dungeon!.floors[2].visited[cellIndex({ x: 4, y: 4 })]).toBe(true);
@@ -247,17 +247,17 @@ describe('踏破記録とボス', () => {
   test('TC-0024-01 5F でボスのマスへ前進すると、乱数を引かずに暗黒のネクロマンサー戦（isBoss・bossAppear）', () => {
     const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5))), 'forward', noRng());
     expect(r.state.location).toBe('BATTLE');
-    expect(r.state.battle).toEqual({ enemy: { kind: 'necromancer', hp: 260 }, isBoss: true });
+    expect(r.state.battle).toEqual({ enemy: { kind: 'necromancer', hp: 800 }, isBoss: true });
     expect(r.messages).toEqual([{ text: '暗黒のネクロマンサーが あらわれた！', tone: 'normal', effect: 'bossAppear' }]);
   });
 
-  test('TC-0025-04 周回数 9 でもボスの HP は 260。敵の能力値・経験値は周回数で変わらない', () => {
+  test('TC-0025-04 周回数 9 でもボスの HP は 800。敵の能力値・経験値は周回数で変わらない', () => {
     const before = JSON.stringify(ENEMIES);
     const records = { battles: 50, kills: 40, deaths: 2, laps: 9, bossKills: 8 };
     const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5), { records })), 'forward', noRng());
-    expect(r.state.battle!.enemy.hp).toBe(260);
+    expect(r.state.battle!.enemy.hp).toBe(800);
     expect(JSON.stringify(ENEMIES)).toBe(before);
-    expect(ENEMIES.necromancer).toMatchObject({ maxHp: 260, attack: 34, defense: 20, speed: 14, exp: 1000 });
+    expect(ENEMIES.necromancer).toMatchObject({ maxHp: 800, attack: 60, defense: 40, speed: 30, exp: 1000 });
   });
 });
 
@@ -278,7 +278,7 @@ describe('遭遇と踏破記録', () => {
       expect(r.state.location).toBe('DUNGEON');
     }
     const r = moveInDungeon(deepFreeze(dungeonState(openMap({ x: 9, y: 1 }, {}, 5))), 'forward', noRng());
-    expect(r.state.battle).toEqual({ enemy: { kind: 'necromancer', hp: 260 }, isBoss: true });
+    expect(r.state.battle).toEqual({ enemy: { kind: 'necromancer', hp: 800 }, isBoss: true });
     expect(r.messages).toEqual([{ text: '暗黒のネクロマンサーが あらわれた！', tone: 'normal', effect: 'bossAppear' }]);
     expect(r.state.dungeon!.floors[4].visited[cellIndex({ x: 9, y: 0 })]).toBe(false);
   });
