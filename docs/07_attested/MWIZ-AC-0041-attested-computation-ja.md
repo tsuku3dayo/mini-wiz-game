@@ -2,7 +2,7 @@
 id: MWIZ-AC-0041
 type: Attested Computation
 title: 敵の数字（仕様書 v1.20）とボスの釣り合いのテストの実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-13
 sources:
@@ -13,7 +13,7 @@ sources:
   - MWIZ-TC-0024（v1.3）
   - MWIZ-TC-0025（v1.1）
   - MWIZ-TC-0026（v1.4）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T13:12:07+09:00" }
 ---
 
 # AC-0041 敵の数字（仕様書 v1.20）とボスの釣り合いのテストの実施記録
