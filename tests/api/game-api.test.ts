@@ -216,16 +216,39 @@ describe('保存の失敗が分かる', () => {
 });
 
 describe('迷宮を探索する（ゲーム API）', () => {
-  test('TC-0013-03 出発 → 宿屋へ戻る → もう一度出発 すると、2 回目の迷宮は 1 回目と違う', async () => {
+  test('TC-0013-03 出発 → 宿屋へ戻る（マップは残る）→ セーブ → つづきから（マップを捨てる）→ もう一度出発 すると、2 回目の迷宮は 1 回目と違う（v1.22）', async () => {
     const { api } = setup({ game: storedGame(makeState('INN')) });
     await api.enterDungeon();
     const first = await api.debugDungeon();
     expect(first.floor).toBe(1);
     expect(first.player).toEqual({ ...first.up, facing: 'N' });
     await api.returnToInn();
+    await api.save({ slot: 1 });
+    await api.load({ slot: 1 });
     await api.enterDungeon();
     const second = await api.debugDungeon();
     expect({ walls: second.walls, up: second.up, down: second.down }).not.toEqual({ walls: first.walls, up: first.up, down: first.down });
+  });
+
+  test('TC-0017-06 歩いて 1F の入口で宿屋へ戻ると、結果にマップがなく debugDungeon は 409。もう一度出発すると同じマップ・踏破記録の 1F の入口に北向きで立つ（v1.22）', async () => {
+    const d = openMap({ x: 0, y: 7, facing: 'S' });
+    const { api, rng } = setupWith({ game: storedGame(dungeonState(d)) }, new SequenceRng([99]));
+    await api.move({ action: 'forward' });
+    await api.move({ action: 'forward' });
+    const before = await api.debugDungeon();
+    expect(before.player).toEqual({ x: 0, y: 9, facing: 'S' });
+    expect(before.visited.filter(Boolean)).toHaveLength(2);
+    const back = await api.returnToInn();
+    expect(back.state.location).toBe('INN');
+    expect(back.state.dungeon).toBeNull();
+    expect((await api.getGame()).state!.dungeon).toBeNull();
+    const e = await caught(api.debugDungeon());
+    expect({ status: e.status, error: e.error, message: e.message }).toEqual({ status: 409, error: 'invalid_state', message: 'ダンジョンに いません' });
+    const drawn = rng.calls.length;
+    await api.enterDungeon();
+    expect(rng.calls.length).toBe(drawn);
+    const after = await api.debugDungeon();
+    expect(after).toEqual({ ...before, player: { x: 0, y: 9, facing: 'N' } });
   });
 
   test('TC-0038-03 debugDungeon は今の階の全マス（未踏破・ボスを含む）を返し、ふつうの結果にはそれらが入らない', async () => {

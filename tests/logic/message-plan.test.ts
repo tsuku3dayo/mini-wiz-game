@@ -56,9 +56,9 @@ describe('演出の長さと計画', () => {
 
 // 確認 ID のない、遷移の保留の件数（仕様書 §11.8）
 describe('遭遇の入力止め（v1.17）', () => {
-  test('TC-0018-10 遭遇の入力止めの長さは、通常の敵 510ms・ボス 2906ms（ボス出現の演出と同じ）', () => {
-    expect(ENCOUNTER_LOCK_MS).toEqual({ normal: 510, boss: EFFECT_MS.bossAppear });
-    expect(encounterLockMs(false)).toBe(510);
+  test('TC-0018-10 遭遇の入力止めの長さは、通常の敵 1000ms・ボス 2906ms（ボス出現の演出と同じ。v1.22）', () => {
+    expect(ENCOUNTER_LOCK_MS).toEqual({ normal: 1000, boss: EFFECT_MS.bossAppear });
+    expect(encounterLockMs(false)).toBe(1000);
     expect(encounterLockMs(true)).toBe(2906);
   });
 });

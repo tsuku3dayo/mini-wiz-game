@@ -121,9 +121,14 @@ describe('階段で階を移る', () => {
 });
 
 describe('入口から宿屋へ戻る', () => {
-  test('TC-0017-01 1F の入口で戻ると、宿屋・ダンジョンと戦闘は null・「宿屋に もどった」。乱数は引かない', () => {
-    const r = returnToInn(deepFreeze(dungeonState(openMap({ x: 0, y: 9 }))));
-    expect(r.state).toMatchObject({ location: 'INN', dungeon: null, battle: null });
+  test('TC-0017-01 1F の入口で戻ると、宿屋・マップはそのまま残り（ほかの階の踏破記録も）・戦闘は null・「宿屋に もどった」。乱数は引かない（v1.22）', () => {
+    const map = openMap({ x: 0, y: 9 });
+    map.floors[0].visited[cellIndex({ x: 0, y: 9 })] = true;
+    map.floors[2].visited[cellIndex({ x: 4, y: 4 })] = true;
+    const start = deepFreeze(dungeonState(map));
+    const r = returnToInn(start);
+    expect(r.state).toMatchObject({ location: 'INN', battle: null });
+    expect(r.state.dungeon).toEqual(start.dungeon);
     expect(r.messages).toEqual([{ text: '宿屋に もどった', tone: 'normal' }]);
   });
 
@@ -148,6 +153,21 @@ describe('入口から宿屋へ戻る', () => {
     expect(r.state).toMatchObject({ hp: 10, maxHp: 30, mp: 4, maxMp: 10, exp: 15 });
     expect(r.state.inventory).toEqual(inventory);
     expect(r.state.records).toEqual(records);
+  });
+
+  test('TC-0017-05 マップを残した宿屋から出発すると、乱数を引かずに同じマップの 1F の入口に北向きで立ち、踏破記録は変わらない（v1.22）', () => {
+    const map = openMap({ x: 5, y: 2, facing: 'E' }, {}, 3);
+    map.floors[0].visited[cellIndex({ x: 0, y: 9 })] = true;
+    map.floors[0].visited[cellIndex({ x: 3, y: 3 })] = true;
+    map.floors[2].visited[cellIndex({ x: 5, y: 2 })] = true;
+    const start = deepFreeze(makeState('INN', { hp: 10, mp: 4, dungeon: map }));
+    const r = enterDungeon(start, noRng());
+    expect(r.state).toMatchObject({ location: 'DUNGEON', battle: null, hp: 10, mp: 4 });
+    const d = r.state.dungeon!;
+    expect(d.floors).toEqual(map.floors);
+    expect(d.floor).toBe(1);
+    expect(d.player).toEqual({ ...map.floors[0].up, facing: 'N' });
+    expect(r.messages).toEqual([{ text: 'ダンジョンに ふみこんだ', tone: 'normal' }]);
   });
 });
 
