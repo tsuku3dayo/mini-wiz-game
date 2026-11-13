@@ -205,7 +205,7 @@ test.describe('ダンジョンの画面', () => {
     await expect.poll(async () => (await logLines(page)).slice(-2)).toEqual(['2F に おりた', '足元に のぼり階段がある']);
   });
 
-  test('TC-0017-04 入口で「宿屋へ戻る」を押すと宿屋になり、HP・MP はそのまま。もう一度出発すると違う迷宮', async ({ page }, info) => {
+  test('TC-0017-04 入口で「宿屋へ戻る」を押すと宿屋になり、HP・MP はそのまま。もう一度出発すると同じ迷宮・踏破記録の入口に北向きで立つ（v1.22）', async ({ page }, info) => {
     await startAt(page, 'DUNGEON', { state: { hp: 10, maxHp: 30, mp: 4, maxMp: 10 } });
     const before = await debugDungeon(page);
     await press(page, info, '宿屋へ戻る');
@@ -215,7 +215,9 @@ test.describe('ダンジョンの画面', () => {
     await expect(page.getByTestId('status-panel').locator('dt', { hasText: /^MP$/ }).locator('xpath=following-sibling::dd[1]')).toContainText('  4/ 10');
     await page.getByRole('menu', { name: '宿屋' }).getByRole('menuitem').filter({ hasText: 'ダンジョンへ' }).click();
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon');
-    expect((await debugDungeon(page)).walls).not.toEqual(before.walls);
+    const after = await debugDungeon(page);
+    expect({ walls: after.walls, visited: after.visited }).toEqual({ walls: before.walls, visited: before.visited });
+    expect(after.player).toEqual({ ...after.up, facing: 'N' });
   });
 
   test('TC-0037-02 前進を押してから疑似3D が変わるまで、向きを変えて階と向きの表示が変わるまで、「たたかう」から最初の行まで、どれも 300ms 未満', async ({ page }) => {

@@ -156,7 +156,7 @@ export function createGameApi(deps: GameApiDeps): GameApi {
     debugDungeon: () => respond(() => {
       const { state } = requireGame();
       const d = state.dungeon;
-      if (!d) throw new InvalidStateError('ダンジョンに いません');
+      if (!d || state.location === 'INN') throw new InvalidStateError('ダンジョンに いません');
       const f = d.floors[d.floor - 1];
       return {
         floor: d.floor,

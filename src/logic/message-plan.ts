@@ -23,10 +23,10 @@ export const RARE_DROP_LG_MS = 1200;
 
 /**
  * 遭遇の入力止め（仕様書 v1.17 §11.8 の 7）：遭遇した時点から、操作もスキップも受け付けない長さ。
- * 通常の敵は遭遇の音 encounter の長さ（audio/sound.ts の SFX_MS.encounter。logic から audio は読めないので数値で書き、
- * 同じことを tests/audio/sound.test.ts で確かめる）、ボスはボス出現の演出の長さ
+ * 通常の敵は 1000ms（v1.22 のオーナーの決定。v1.21 までは遭遇の音の長さ 510ms。音より長いことを
+ * tests/audio/sound.test.ts で確かめる）、ボスはボス出現の演出の長さ
  */
-export const ENCOUNTER_LOCK_MS = { normal: 510, boss: EFFECT_MS.bossAppear } as const;
+export const ENCOUNTER_LOCK_MS = { normal: 1000, boss: EFFECT_MS.bossAppear } as const;
 
 /** 遭遇の入力止めの長さ */
 export function encounterLockMs(isBoss: boolean): number {

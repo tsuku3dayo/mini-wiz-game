@@ -9,11 +9,14 @@ import type { Rng } from './rng';
 
 export type StairsDirection = 'down' | 'up';
 
-/** 宿屋から出発する。5 階層を新しく作る。HP・MP は回復しない */
+/** 宿屋から出発する。残したマップがあれば 1F の入口・北向きから使い（乱数なし。v1.22）、なければ 5 階層を新しく作る。HP・MP は回復しない */
 export function enterDungeon(state: GameStateData, rng: Rng): StepResult {
   assertLocation(state, 'INN');
+  const kept = state.dungeon;
+  const up = kept?.floors[0].up;
+  const dungeon = kept && up ? { ...kept, floor: 1, player: { x: up.x, y: up.y, facing: 'N' as const } } : generateFloors(rng);
   return {
-    state: { ...state, location: 'DUNGEON', dungeon: generateFloors(rng), battle: null },
+    state: { ...state, location: 'DUNGEON', dungeon, battle: null },
     messages: [{ text: 'ダンジョンに ふみこんだ', tone: 'normal' }],
   };
 }
@@ -93,7 +96,7 @@ export function returnToInn(state: GameStateData): StepResult {
     throw new InvalidStateError('入口に いないため もどれません');
   }
   return {
-    state: { ...state, location: 'INN', dungeon: null, battle: null },
+    state: { ...state, location: 'INN', battle: null },
     messages: [{ text: '宿屋に もどった', tone: 'normal' }],
   };
 }

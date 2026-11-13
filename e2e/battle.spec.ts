@@ -429,21 +429,21 @@ test.describe('遭遇の入力止め（v1.17）', () => {
     expect(await revision(page), label).toBe(r0 + 1);
   }
 
-  test('TC-0018-11 通常の敵：遭遇から 509ms までは たたかう・メッセージ欄（PC は Enter・Space も）が効かず、510ms で押せる。押した分はあとで決まらない', async ({ page }, info) => {
+  test('TC-0018-11 通常の敵：遭遇から 999ms までは たたかう・メッセージ欄（PC は Enter・Space も）が効かず、1000ms で押せる（v1.22）。押した分はあとで決まらない', async ({ page }, info) => {
     await page.clock.install();
     await encounter(page, info);
     expect(await logLines(page)).toEqual(['スライムが あらわれた！']);
-    await lockSteps(page, info, 510, '通常の敵');
+    await lockSteps(page, info, 1000, '通常の敵');
   });
 
-  test('TC-0018-13 音がオンでも、動きを減らす設定でも、止める時間は同じ（通常の敵 510ms・ボス 2906ms）', async ({ page }, info) => {
+  test('TC-0018-13 音がオンでも、動きを減らす設定でも、止める時間は同じ（通常の敵 1000ms・ボス 2906ms。v1.22）', async ({ page }, info) => {
     await page.clock.install();
     await soundOnAtStart(page);
     await encounter(page, info);
-    await lockSteps(page, info, 510, '音オン・通常の敵');
+    await lockSteps(page, info, 1000, '音オン・通常の敵');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await encounter(page, info);
-    await lockSteps(page, info, 510, '動きを減らす・通常の敵');
+    await lockSteps(page, info, 1000, '動きを減らす・通常の敵');
     await encounter(page, info, true);
     await lockSteps(page, info, 2906, '動きを減らす・ボス');
   });

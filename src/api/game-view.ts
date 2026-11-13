@@ -50,7 +50,7 @@ export function toGameView(state: GameStateData, opts: { autoSaved?: boolean } =
     inventory: toInventoryView(state.inventory),
     records: { ...state.records },
     // 視界と、今の階の地図だけ（未踏破のマスの壁・ほかの階・ボスの位置は入れない。§22.5）
-    dungeon: state.dungeon ? { ...toFirstPersonView(state.dungeon), map: toAutoMapView(state.dungeon) } : null,
+    dungeon: state.dungeon && state.location !== 'INN' ? { ...toFirstPersonView(state.dungeon), map: toAutoMapView(state.dungeon) } : null,
     battle: toBattleView(state),
     clear: state.location === 'CLEARED' ? { autoSaved: opts.autoSaved ?? state.saveSlot !== null } : null,
     saveSlot: state.saveSlot,
