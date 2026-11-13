@@ -3,7 +3,7 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.10
+version: 1.11
 updated: 2026-11-13
 sources:
   - MWIZ-TD-0001（v1.2）
@@ -102,6 +102,18 @@ verified: null
 | 保存の版 | `GAME_SCHEMA_VERSION = 7`、`SAVE_SCHEMA_VERSION = 4`。`remapAccessoryIds(raw)`：保存値の所持品（形は調べない）の装備中・所持品・入れ替え待ちの `itemId` を、`accessory1→3`・`2→4`・`3→5`・`4→1`・`5→2` に付け替えた写しを返す。`migrateGameState` は版 6 以下、`migrateSave` は版 3 以下のときに、`normalizeInventory` の前に通す。`migrateSave` は版 4 を受け付ける |
 | 表示 | 補正が 3 つの種類（ソロモンのゆびわ）も、`bonusTexts`・`itemText`・`itemSpoken` は `stats` の数だけ並べるいまの作りのまま。`statDiff` の「`speed` があれば `evasion` にも足す」は、すばやさを上げる種類がなくなっても残す（足す値が 0 になるだけで、動きは変わらない） |
 | テストの道具 | `tests/api/game-api.test.ts` の `storedGame`・`storedSave`、`e2e/helpers.ts` の保存の版の既定を、`GAME_SCHEMA_VERSION`・`SAVE_SCHEMA_VERSION`（7・4）にする（古い版で書くと、テストの装備まで付け替えられる） |
+
+### 1.10 仕様書 v1.22 で変えること（v1.11。WS-0025）
+
+| 項目 | 作り |
+| --- | --- |
+| 帰還 | `explore.ts` の `returnToInn`：`dungeon` を残す（`{ ...state, location: 'INN', battle: null }`） |
+| 出発 | `enterDungeon`：`state.dungeon` があれば、`{ ...kept, floor: 1, player: { x: up.x, y: up.y, facing: 'N' } }`（`up` は 1F の `up`）を使い、乱数を引かない。なければいまと同じく `generateFloors(rng)`。踏破記録は変えない（入口のマスは前の出発で踏破済み） |
+| 捨てるところ | 変えない：敗北（`battle.ts` の `onDefeat`）・ボス撃破（`onVictory`）・周回（`continueToInn`）・はじめから・つづきから（`fromSaveData`）は、いまどおり `dungeon: null` |
+| 保存の版 | 変えない（`GAME_SCHEMA_VERSION = 7`）。宿屋で `dungeon` を持つ値は、いまの `migrateGameState` がそのまま読む（版 2 の踏破記録の補いも、版 1 の捨て方も、場所が INN のときの `dungeon` を変えない）。セーブ（`toSaveData`）はマップを持たない |
+| GameView | `game-view.ts`：`dungeon` は、場所が `INN` なら `null`（`state.dungeon && state.location !== 'INN'`）。型は変えない |
+| テスト用の入口 | `game-api.ts` の `debugDungeon`：場所が `INN` なら 409「ダンジョンに いません」 |
+| ほかで `dungeon` の有無を見ているところ | `logic/bgm-scene.ts`（SWAP で `dungeon === null` ならクリアの曲）は SWAP のときだけ見るので変えない。`ui/screens/dungeon.ts` はダンジョンの画面だけ。宿屋の画面は `dungeon` を使わない |
 
 ## 2. 表示の計算（`src/logic/`）
 

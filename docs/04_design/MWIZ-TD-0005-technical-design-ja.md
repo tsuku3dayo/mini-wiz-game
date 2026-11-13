@@ -3,7 +3,7 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.13
+version: 1.14
 updated: 2026-11-11
 sources:
   - MWIZ-TD-0001（v1.2）
@@ -56,6 +56,21 @@ verified: null
 | `public/boot.js` | 起動の見張り（8 秒）。失敗したらこのアプリのキャッシュと Service Worker だけを消して 1 回読み込み直す。2 分以内に続けて失敗したら `#boot-error`。**「なおす」を押したら、2 分の制限を待たずに、自動の復旧と同じこと（時刻を書く・このアプリの Service Worker とキャッシュだけ消す・読み込み直す）をすぐ行う**（仕様書 §30.4 に書かれていなかったので TASK-0003 で決めた。v1.2） |
 
 ### 2.1 アイコンの図柄の値（`scripts/make-icons.mjs`）
+
+**v1.14（仕様書 v1.22）で、ネクロマンサーの絵に替えた**（下の「v1.22 の作り」）。その下の表は v1.13 までの通路の図柄の値で、作り替えたら使わない（記録として残す）。
+
+#### v1.22 の作り
+
+| 項目 | 作り |
+| --- | --- |
+| 元の絵 | `public/enemies/necromancer.png`（256 × 256、8 ビット RGBA）。`node:zlib` の `inflateSync` で IDAT を戻し、行ごとのフィルタ（0〜4）を戻して点の色を取り出す（`decodePng(buf)` → `{ width, height, rgba }`）。8 ビットの RGB（色の種類 2）と RGBA（6）だけを受け付け、ほかは例外にする |
+| 切り抜き | 左上 `(26, −16)`・一辺 `198` の正方形（仕様書 §30.5）。出力の点 `(x, y)`（一辺 `n`）の色は、元の絵の `(26 + floor(x × 198 / n), −16 + floor(y × 198 / n))` の点（最も近い点。ぼかさない）。元の絵の外（上の 16 行）は背景 `#0B0A0F`。透明の点は背景 `#0B0A0F` の上に重ねる（`a / 255` で混ぜ、整数に丸める） |
+| maskable | 一辺 512 の背景 `#0B0A0F` の中央に、一辺 `round(512 × 0.7)` = 358 の図柄を置く（左上 `(77, 77)`） |
+| PNG の書き出し | いまと同じ（8 ビット RGB・フィルタ 0・`deflateSync`・`crc32`） |
+| `icon.svg` | `<svg viewBox="0 0 512 512">` の中に、`icon-512.png` を `data:image/png;base64,…` で入れた `<image>`（`width`・`height` 512、`style="image-rendering:pixelated"`） |
+| 書き出し方 | `renderIcons()` が `{ ファイル名: Buffer }` を返す関数として書き出し、`node scripts/make-icons.mjs` で直接動かしたときだけ `public/icons/` に書く（テストが同じ関数で作り、コミットしたファイルと比べられるように。TC-0002-08） |
+
+#### v1.13 までの通路の図柄の値
 
 仕様書 §30.5 で「03 画面設計で決める」とした細かい値。03 では決めなかったので、TASK-0002 で決めた（v1.1）。値は一辺に対する割合。
 

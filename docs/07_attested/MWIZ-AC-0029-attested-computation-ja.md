@@ -9,7 +9,7 @@ sources:
   - MWIZ-TASK-0029（v1.0）
   - MWIZ-TC-0032（v1.3）
   - MWIZ-TC-0034（v1.6）
-  - MWIZ-TD-0005（v1.13）
+  - MWIZ-TD-0005（v1.14）
 verified: { by: "tsuku3dayo", at: "2026-11-10T15:04:36+09:00" }
 ---
 

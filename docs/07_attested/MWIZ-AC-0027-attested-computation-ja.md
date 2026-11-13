@@ -8,8 +8,8 @@ updated: 2026-11-06
 sources:
   - MWIZ-TASK-0027（v1.0）
   - MWIZ-TC-0033（v1.5）
-  - MWIZ-TD-0003（v1.7）
-  - MWIZ-TD-0005（v1.13）
+  - MWIZ-TD-0003（v1.8）
+  - MWIZ-TD-0005（v1.14）
 verified: { by: "tsuku3dayo", at: "2026-11-06T15:25:22+09:00" }
 ---
 

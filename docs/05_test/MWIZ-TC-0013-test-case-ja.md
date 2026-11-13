@@ -3,28 +3,28 @@ id: MWIZ-TC-0013
 type: Test Case
 title: ダンジョンに出発する
 status: stable
-version: 1.0
+version: 1.1
 updated: 2026-10-30
 sources:
   - MWIZ-US-0013（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.10）
+  - MWIZ-TD-0002（v1.11）
   - docs/specification-ja.md (v1.22) §3、§4.5、§15.2、§16.2、§23
 verified: null
 ---
 
 # TC-0013 ダンジョンに出発する
 
-- 対象：[US-0013](../02_requirements/MWIZ-US-0013-user-story-ja.md)（受け入れ条件 4 つ）
+- 対象：[US-0013](../02_requirements/MWIZ-US-0013-user-story-ja.md)（受け入れ条件 4 つ。v1.1 で条件 1 が「残したマップがないときの出発」になった。帰還のあとの出発は TC-0017）
 - 方法の分け方・置き場所の決まりは [TST-0001](MWIZ-TST-0001-test-strategy-ja.md)。
 
 ## 1. 確認の一覧
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0013-01 | 1 | INN で `enterDungeon` すると、場所 `DUNGEON`・`battle` null・`dungeon.floors` が 5 階（各 `walls` の長さ 100）・`floor` 1・位置が 1F の `up`（入口）・向き `N`。踏破済みは 1F の入口のマスだけ。HP 10/30・MP 4/10 で出発しても 10・4 のまま。メッセージは「ダンジョンに ふみこんだ」（normal）の 1 行 | 単体 | `tests/domain/explore.test.ts` |
+| TC-0013-01 | 1 | `dungeon` が null の INN で `enterDungeon` すると、場所 `DUNGEON`・`battle` null・`dungeon.floors` が 5 階（各 `walls` の長さ 100）・`floor` 1・位置が 1F の `up`（入口）・向き `N`。踏破済みは 1F の入口のマスだけ。HP 10/30・MP 4/10 で出発しても 10・4 のまま。メッセージは「ダンジョンに ふみこんだ」（normal）の 1 行 | 単体 | `tests/domain/explore.test.ts` |
 | TC-0013-02 | 1 | INN 以外（DUNGEON・BATTLE・SWAP・CLEARED）で `enterDungeon` すると 409 `invalid_state`「その操作は いまは できない」で、状態が変わらない | 単体 | `tests/domain/explore.test.ts` |
-| TC-0013-03 | 1 | ゲーム API で 出発 → 宿屋へ戻る → もう一度出発 すると、2 回目の 5 階層（`debugDungeon()` の `walls`・`up`・`down`）が 1 回目と違う | 単体 | `tests/api/game-api.test.ts` |
+| TC-0013-03 | 1 | ゲーム API で、出発 → 宿屋へ戻る（`dungeon` を残す）→ 敗北・周回（クリアのあとの「宿屋へ」）・つづきから のどれかで `dungeon` が null になる → もう一度出発 すると、新しい 5 階層（`debugDungeon()` の `walls`・`up`・`down` が 1 回目と違う）。v1.1（仕様書 v1.22）で、帰還のあとではなく、マップを捨てたあとの出発にした（帰還のあとは TC-0017-01・TC-0017-05） | 単体 | `tests/api/game-api.test.ts` |
 | TC-0013-04 | 2 | シード 1〜1,000 の `generateFloors` で、どの階も `floorViolations(f, floor)` が空（外周がすべて壁・両側の壁が一致・`up` から 100 マスすべてに行ける・1F〜4F は `down` あり `boss` null、5F は `down` null `boss` あり・目標が `up` からいちばん遠いマスで歩数 5 以上） | 単体 | `tests/domain/floors.test.ts` |
 | TC-0013-05 | 3 | 同じシードで 2 回作った 5 階層が同じ（`toEqual`）。シード 1〜100 の 1F はすべて違い、同じ出撃の 5 階も互いに違う | 単体 | `tests/domain/floors.test.ts` |
 | TC-0013-06 | 3 | 5 階層の生成 1 回の時間が 50ms 未満、1,000 回の合計が 10 秒未満（CI では 3 倍まで許す。TST-0001 §7） | 単体 | `tests/domain/floors.test.ts` |
