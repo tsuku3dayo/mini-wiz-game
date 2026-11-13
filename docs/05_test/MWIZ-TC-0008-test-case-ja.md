@@ -3,12 +3,12 @@ id: MWIZ-TC-0008
 type: Test Case
 title: 宿屋で休む
 status: stable
-version: 1.1
-updated: 2026-11-11
+version: 1.2
+updated: 2026-11-13
 sources:
   - MWIZ-US-0008（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.9）
+  - MWIZ-TD-0002（v1.10）
   - MWIZ-TD-0004（v1.9）
   - MWIZ-GUI-0003（v1.3）
   - docs/specification-ja.md (v1.21) §7.2、§7.3、§9.3、§11.5、§11.6、§16.1
@@ -25,7 +25,7 @@ verified: null
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
 | TC-0008-01 | 1 | 宿屋の画面（狭い画面）に、上から StatusPanel(full)（見出しが名前、Lv・EXP・HP・MP・こうげき・ぼうぎょ・すばやさ・かいひ の行）→ メッセージ欄（`role="log"`）→ メニュー（`aria-label="宿屋"`）が並ぶ。メニューの項目は上から「やすむ」「メニュー」「ダンジョンへ」「セーブ」「タイトルへ戻る」（v1.1 で並びを変えた）、初めのカーソルは「やすむ」 | E2E | `e2e/inn.spec.ts` |
-| TC-0008-02 | 2 | `rest` で、HP・MP が装備込みの最大値（実効値）になる（例：さいだいHP +15 のアクセを付けた最大 HP 46 の HP 10 → 61）。HP・MP が最大のときも実行でき、値は変わらない。メッセージは「HP と MP が かいふくした」（success）1 行 | 単体 | `tests/domain/character.test.ts` |
+| TC-0008-02 | 2 | `rest` で、HP・MP が装備込みの最大値（実効値）になる（例：さいだいHP +7 のアクセ（ライフアミュレット［R］）を付けた最大 HP 46 の HP 10 → 53。v1.2：仕様書 v1.21 で さいだいHP のアクセの範囲が変わったので、例を +15 → +7 にした）。HP・MP が最大のときも実行でき、値は変わらない。メッセージは「HP と MP が かいふくした」（success）1 行 | 単体 | `tests/domain/character.test.ts` |
 | TC-0008-03 | 2 | 宿屋で「やすむ」を選ぶと、メッセージ欄に「HP と MP が かいふくした」が出て、ステータスの HP・MP が最大の値になる。HP・MP が最大のときも選べて、同じ行が出る | E2E | `e2e/inn.spec.ts` |
 | TC-0008-04 | 3 | `rest` はレベル・経験値・こうげき・ぼうぎょ・すばやさ・所持品・実績を変えず、乱数を引かない。続けて 3 回呼んでもエラーにならない。INN 以外（DUNGEON・BATTLE・SWAP・CLEARED）では 409「その操作は いまは できない」 | 単体 | `tests/domain/character.test.ts` |
 | TC-0008-05 | 5 | HP 10・MP 1 で 1F の入口から `returnToInn` で宿屋に戻っても HP 10・MP 1 のまま。CLEARED から `continueGame`（宿屋へ）でも HP・MP が変わらない | 単体 | `tests/api/game-api.test.ts` |

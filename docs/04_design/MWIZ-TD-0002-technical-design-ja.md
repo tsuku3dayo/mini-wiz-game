@@ -3,8 +3,8 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.9
-updated: 2026-11-11
+version: 1.10
+updated: 2026-11-13
 sources:
   - MWIZ-TD-0001（v1.2）
   - MWIZ-SA-0001（v1.1）
@@ -28,7 +28,7 @@ verified: null
 | `rng.ts` | `Rng`・`SeededRng`（mulberry32）・`SequenceRng`・`SwappableRng` | §23 |
 | `constants.ts` | 初期能力値・成長・回避（v1.8 から `EVASION = { min: 0, max: 90 }`）・逃走・ヒール・遭遇率・敵 6 種（`ENEMIES`。`orc` の表示名は「オークロード」）・出現表 | §6、§15.1 |
 | `errors.ts` | `DomainError` と派生（`ValidationError`・`InvalidStateError`・`ConflictError` など。`code`・`status`） | §24.1 |
-| `game-state.ts` | 型（`GameStateData`・`Location`・`StepResult`・`SaveSlot` など）、`SAVE_SLOTS`、`assertLocation`、読み込み時の移行（版 6 の `saveSlot`）、セーブとの変換 | §10、§21.4、§24.3 |
+| `game-state.ts` | 型（`GameStateData`・`Location`・`StepResult`・`SaveSlot` など）、`SAVE_SLOTS`、`assertLocation`、読み込み時の移行（版 6 の `saveSlot`、版 7・セーブの版 4 のアクセの ID の付け替え（v1.10））、セーブとの変換 | §10、§21.4、§24.3 |
 | `character.ts` | 名前の正規化と検査、作成、経験値（`gainExp`）とレベルアップ（`levelUp`）、やすむ（`rest(state, rng)`）、周回 | §2、§7.2、§9.3 |
 | `dungeon.ts` | 1 階の壁、最短歩数、違反の列挙、移動・回転、座標の補助 | §3.2、§3.3、§4.1 |
 | `floors.ts` | 5 階層の生成、1 階分の不変条件 | §3.4、§3.5 |
@@ -36,9 +36,9 @@ verified: null
 | `view.ts` | 視界（`toFirstPersonView`）・地図（`toAutoMapView`）・階段の種類 | §4.7、§4.10 |
 | `battle.ts` | ダメージ・行動順・回避（`evadeChance(受ける側のかいひ, 攻撃側の速)`。v1.9）・逃走・1 ターンの解決・敗北・`toBattleView` | §5 |
 | `heal.ts` | ヒール（戦闘・ダンジョン共通） | §7.1 |
-| `items.ts` | 装備のマスタ 32 種（たては `stats: ['evasion']`）・`StatKey`（`evasion` を含む 6 つ）・レアリティ・補正値の範囲・`conformItem` | §8.2、§8.3 |
+| `items.ts` | 装備のマスタ 32 種（たては `stats: ['evasion']`。v1.10 から種類ごとに出るレアリティ `rarities` と範囲 `ranges` を持つ）・`StatKey`（`evasion` を含む 6 つ）・レアリティ・補正値の範囲・`conformItem` | §8.2、§8.3 |
 | `loot.ts` | ドロップの抽選・所持品への追加・入れ替え・ドロップの行 | §8.4、§8.5 |
-| `equipment.ts` | 実効値（`evasion` ＝ 素早さの実効値 ＋ たての補正。v1.9）・付け替え・はずす・捨てる | §8.5 |
+| `equipment.ts` | 実効値（`evasion` ＝ 素早さの実効値 ＋ 装備の かいひ の補正。v1.9。v1.10 から たて・ウィンドブーツ・ソロモンのゆびわ）・付け替え・はずす・捨てる | §8.5 |
 | `records.ts` | 実績の数え方と補正 | §9.4 |
 
 ### 1.2 決まり
@@ -90,6 +90,18 @@ verified: null
 | 回避 | `evadeChance(defenderEvasion, attackerSpeed)` ＝ `clamp(defenderEvasion − attackerSpeed, EVASION.min, EVASION.max)`。`attack` は `evadeChance(defender.evasion, attacker.speed)`。プレイヤーの `Combatant` は `effectiveStats` の `evasion`、敵は `{ ...ENEMIES[kind], evasion: ENEMIES[kind].speed }`。乱数を引く順・数はいまと同じ（計算の結果も v1.8 と同じ） |
 | GameView | `character.evasion` ＝ `effectiveStats` の `evasion`。`base.evasion` ＝ 素早さの基礎値（`state.speed`）。`bonus.evasion` ＝ 素早さの補正 ＋ たての補正（`base + bonus = 実効値` がほかの能力と同じに成り立つ） |
 | 装備画面の変化 | `logic/stat-diff.ts` の `statDiff`：候補・今の枠の個体の `stats` に `speed` があれば、`evasion` にも同じ値を足し引きする（ウィンドブーツで すばやさ と かいひ の 2 行が変わる）。たて（`evasion`）は かいひ の行だけ |
+
+### 1.9 仕様書 v1.21 で変えること（v1.10。WS-0024）
+
+| 項目 | 作り |
+| --- | --- |
+| 敵 | `constants.ts` の `ENEMIES` を仕様書 §6.1 の表に（ボス以外の経験値は 2 倍） |
+| 装備のマスタ | `ItemMaster` の `min`・`max` をやめ、`rarities: readonly Rarity[]`（低い方, 高い方。段階 8 は LG だけ）と `ranges: readonly [lo, hi][]`（`rarities` と同じ順）を持つ。`rarities` の既定は段階の表（ファイルの中だけの定数）から作り、ガードリング（`accessory3`）だけ `['R', 'SR']` を渡す。`RARITY_MULTIPLIER`・`RARITY_BY_TIER` は書き出さない（使うところをなくす）。アクセの並び・能力は §8.2 の表（ウィンドブーツは `['evasion']`、ソロモンのゆびわは `['attack', 'defense', 'evasion']`） |
+| 補正値 | `valueRange(itemId, rarity)` ＝ その種類の `ranges` のうち `rarity` の位置の範囲（出ないレアリティなら、最も近い出るものの範囲）。`rollDrop` は部位・段階で `itemId` を決めてから、`ITEMS[itemId].rarities` でレアリティを決め、`rng.int(lo, hi)` を補正値にする。乱数を引く順・数は変わらない |
+| 古いデータの補正 | `conformItem`：レアリティを最も近い出るもの（同じ距離なら低い方）に替え、補正値は換算せずに範囲に切り詰める |
+| 保存の版 | `GAME_SCHEMA_VERSION = 7`、`SAVE_SCHEMA_VERSION = 4`。`remapAccessoryIds(raw)`：保存値の所持品（形は調べない）の装備中・所持品・入れ替え待ちの `itemId` を、`accessory1→3`・`2→4`・`3→5`・`4→1`・`5→2` に付け替えた写しを返す。`migrateGameState` は版 6 以下、`migrateSave` は版 3 以下のときに、`normalizeInventory` の前に通す。`migrateSave` は版 4 を受け付ける |
+| 表示 | 補正が 3 つの種類（ソロモンのゆびわ）も、`bonusTexts`・`itemText`・`itemSpoken` は `stats` の数だけ並べるいまの作りのまま。`statDiff` の「`speed` があれば `evasion` にも足す」は、すばやさを上げる種類がなくなっても残す（足す値が 0 になるだけで、動きは変わらない） |
+| テストの道具 | `tests/api/game-api.test.ts` の `storedGame`・`storedSave`、`e2e/helpers.ts` の保存の版の既定を、`GAME_SCHEMA_VERSION`・`SAVE_SCHEMA_VERSION`（7・4）にする（古い版で書くと、テストの装備まで付け替えられる） |
 
 ## 2. 表示の計算（`src/logic/`）
 
