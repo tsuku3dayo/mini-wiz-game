@@ -3,13 +3,13 @@ id: MWIZ-TC-0002
 type: Test Case
 title: ホーム画面に追加する
 status: stable
-version: 1.1
+version: 1.2
 updated: 2026-11-05
 sources:
   - MWIZ-US-0002（v1.1）
   - MWIZ-TST-0001（v1.2）
   - MWIZ-TD-0004（v1.9）
-  - MWIZ-TD-0005（v1.13）
+  - MWIZ-TD-0005（v1.14）
   - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0007（v1.1）
   - docs/specification-ja.md (v1.22) §11.12、§16.6、§27.1、§30.1、§30.2
@@ -32,6 +32,7 @@ verified: null
 | TC-0002-05 | 3 | インストール済み（`matchMedia('(display-mode: standalone)').matches` が true、または `navigator.standalone === true`）のとき、タイトル画面に「インストール」のボタンがない。版の表記「v1.0」は右に残る | E2E | `e2e/pwa.spec.ts` |
 | TC-0002-06 | 4 | `manifest.webmanifest` の `name`・`short_name` が「WIZミニ」、`display` が `standalone`、`start_url` が `./`、アイコン 192・512・512（maskable）がある。`index.html` の `apple-mobile-web-app-title` が `WIZミニ`、`apple-touch-icon` がある | E2E | `e2e/pwa.spec.ts` |
 | TC-0002-07 | 4 | iPhone 11 の Safari でホーム画面に追加でき、アイコンの下のアプリ名が「WIZミニ」で切れない。追加したアプリから起動して、はじめから → 宿屋 → ダンジョンまで遊べる | 手動 | 実機（iPhone 11） |
+| TC-0002-08 | 4 | アイコン（v1.2。仕様書 v1.22 §30.5）：`scripts/make-icons.mjs` の `renderIcons()` が作る 5 つのファイルが、`public/icons/` にコミットしたファイルとバイト単位で同じ。`icon-512.png` を読むと 512 × 512 で、点 `(x, y)` の色が `necromancer.png` の `(26 + floor(x × 198 / 512), −16 + floor(y × 198 / 512))` の点（絵の外は `#0B0A0F`）と同じ（いくつかの点：左上・上の端の行・中央・どくろのあたり・右下）。`icon-192.png` 192・`apple-touch-icon.png` 180 も同じ切り抜き。`icon-maskable-512.png` は、中央の一辺 358（左上 (77, 77)）の外が `#0B0A0F` で、中の点が同じ切り抜き。`icon.svg` は `icon-512.png` を `data:image/png;base64` で入れている | 単体 | `tests/scripts/icons.test.ts` |
 
 ## 2. 準備
 
@@ -52,3 +53,4 @@ verified: null
 | 確認 ID | 手順 | 期待する結果 |
 | --- | --- | --- |
 | TC-0002-07 | iPhone 11 の Safari で公開 URL を開く → 共有 → 「ホーム画面に追加」→ 追加 → ホーム画面のアイコンから開き、「はじめから」で名前を付けて宿屋 →「ダンジョンへ」 | アプリ名が「WIZミニ」で、「…」で切れない（すでに追加してあったアプリは、名前が古いままのことがあるので、消してから追加し直す）。アドレスバーのない画面で開き、ダンジョンまで遊べる。Android の実機はないので、AC の「確認できなかったこと」に書く（TST-0001 §6） |
+| TC-0002-09 | iPhone 11 で、前に追加したホーム画面のアイコンを消し、Safari で公開 URL を開いて「ホーム画面に追加」し直す。PC の Chrome でブラウザのタブを見る | ホーム画面のアイコンがボスの絵（フードの姿と、杖の先の緑に光るどくろ）で、四隅の丸みで大事なところ（顔・どくろ）が切れていない。PC のタブにも同じ絵の小さいアイコンが出る（暗いので見えにくくてもよい）。追加し直したアプリで、つづきから のセーブ・プレイ中の冒険が残っている（v1.2） |

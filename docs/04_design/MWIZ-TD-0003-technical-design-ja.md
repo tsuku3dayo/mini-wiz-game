@@ -3,7 +3,7 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.7
+version: 1.8
 updated: 2026-11-12
 sources:
   - MWIZ-TD-0001（v1.2）
@@ -38,7 +38,7 @@ verified: null
 
 - キューは `lines`（最新 7 行。`logic/message-plan.ts` の `MAX_LINES`）・`pending`・`busy`・`holdNavigation`・`activeEffect`・`locked`（v1.7）を持つ（仕様書 §11.8）。
 - 遭遇の入力止め（v1.7。仕様書 v1.17 §11.8 の 7）：
-  - 長さは `logic/message-plan.ts` の `ENCOUNTER_LOCK_MS = { normal: SFX_MS.encounter, boss: EFFECT_MS.bossAppear }`（510・2906）と `encounterLockMs(isBoss: boolean): number`。`SFX_MS` は `audio/sound.ts` にあるが、`logic/` から `audio/` は読めない（層の決まり）ので、`ENCOUNTER_LOCK_MS.normal` は数値 510 で書き、単体テストで `SFX_MS.encounter` と同じことを確かめる（TC-0018-10）。
+  - 長さは `logic/message-plan.ts` の `ENCOUNTER_LOCK_MS = { normal: 1000, boss: EFFECT_MS.bossAppear }`（1000・2906）と `encounterLockMs(isBoss: boolean): number`。通常の敵は、v1.7 では遭遇の音の長さ（`SFX_MS.encounter` 510）と同じにしていたが、v1.8（仕様書 v1.22）でオーナーの決めた 1000 にした。音の長さとは別の値なので、単体テストでは「1000 で、遭遇の音より長い」ことを確かめる（TC-0018-10）。
   - キューに `lock(ms)` を足す：`lockUntil = max(lockUntil, now + ms)` にし、タイマー（行のタイマーとは別）で `lockUntil` に `locked` を解いて `notify()`。`now` は `Date.now()`（E2E の偽の時計で進む）。`locked` は `lockUntil > now` ではなく、タイマーで切り替えるフラグにする（購読者に知らせる時点と値をそろえる）。
   - `busy` は `pending.length > 0 || active !== null || locked`。
   - `skip()` は `locked` の間、何もしない（行・演出・保留をそのまま）。`clear()` は入力止めも解く（タイマーを止め、`locked = false`）。`destroy()` もタイマーを止める。

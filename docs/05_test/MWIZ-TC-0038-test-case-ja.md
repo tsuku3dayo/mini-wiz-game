@@ -8,8 +8,8 @@ updated: 2026-11-11
 sources:
   - MWIZ-US-0038（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.10）
-  - MWIZ-TD-0005（v1.13）
+  - MWIZ-TD-0002（v1.11）
+  - MWIZ-TD-0005（v1.14）
   - docs/specification-ja.md (v1.22) §16.2、§22.2、§28
 verified: null
 ---

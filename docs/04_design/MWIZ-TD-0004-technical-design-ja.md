@@ -6,7 +6,7 @@ status: stable
 version: 1.9
 updated: 2026-11-12
 sources:
-  - MWIZ-TD-0003（v1.7）
+  - MWIZ-TD-0003（v1.8）
   - MWIZ-GUI-0001（v1.5）
   - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0003（v1.3）

@@ -10,8 +10,8 @@ sources:
   - MWIZ-TC-0001（v1.1）
   - MWIZ-TC-0003（v1.1）
   - MWIZ-TC-0033（v1.5）
-  - MWIZ-TD-0003（v1.7）
-  - MWIZ-TD-0005（v1.13）
+  - MWIZ-TD-0003（v1.8）
+  - MWIZ-TD-0005（v1.14）
 verified: null
 ---
 

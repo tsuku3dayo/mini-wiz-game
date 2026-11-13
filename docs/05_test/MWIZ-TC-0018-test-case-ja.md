@@ -3,13 +3,13 @@ id: MWIZ-TC-0018
 type: Test Case
 title: 敵と遭遇する
 status: stable
-version: 1.4
+version: 1.5
 updated: 2026-11-13
 sources:
   - MWIZ-US-0018（v1.2）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.10）
-  - MWIZ-TD-0003（v1.7）
+  - MWIZ-TD-0002（v1.11）
+  - MWIZ-TD-0003（v1.8）
   - MWIZ-TD-0004（v1.9）
   - docs/specification-ja.md (v1.22) §4.3、§5.1、§6、§11.8、§16.1、§16.2、§16.4、§23
 verified: null
@@ -33,10 +33,10 @@ verified: null
 | TC-0018-07 | 5 | `ENEMIES` の 6 種が仕様書 §6.1 の表のとおり：スライム（HP 24・攻 4・防 0・速 0・経験値 8）、ゴブリン（20・7・3・7・20）、スケルトン（32・21・5・18・54）、オークロード（99・38・7・7・90。種類は `orc`。v1.1 で表示名を「オーク」から変えた）、ダークナイト（110・45・28・26・150）、暗黒のネクロマンサー（800・80・0・50・1000）（v1.4。仕様書 v1.21。v1.3 は仕様書 v1.20 の値）。出現表に出る階が表のとおり（スライム 1F・2F、ゴブリン 1F〜3F、スケルトン 2F〜4F、オークロード 3F〜5F、ダークナイト 4F・5F、ネクロマンサーはどの出現表にもない）。各階の出現表の合計が 100 | 単体 | `tests/domain/constants.test.ts` |
 | TC-0018-08 | 6 | `SeededRng(1)` の `int(1,100)` を 10 回引くと 63, 1, 53, 99, 97, 29, 62, 73, 43, 100 | 単体 | `tests/domain/rng.test.ts` |
 | TC-0018-09 | 7 | `chance(0.1)` は、`int` が 10 を返すと真、11 を返すと偽（`SequenceRng`）。`chance` を 1 回呼ぶと乱数を 1 個だけ使う | 単体 | `tests/domain/rng.test.ts` |
-| TC-0018-10 | 4 | `ENCOUNTER_LOCK_MS` が `{ normal: 510, boss: 2906 }` で、`normal` が `SFX_MS.encounter`、`boss` が `EFFECT_MS.bossAppear` と同じ。`encounterLockMs(false)` が 510、`encounterLockMs(true)` が 2906（v1.2。仕様書 v1.17） | 単体 | `tests/audio/sound.test.ts` |
-| TC-0018-11 | 4 | 通常の敵（v1.2）：前進で遭遇した時刻から 509ms までは、`body[data-busy="true"]`、戦闘のボタンの箱が `aria-disabled="true"`。その間に「たたかう」を押し（`desktop` はクリックと Enter、`pixel7`・`small` はタップ）、メッセージ欄をクリック（タップ）しても、ターンが進まない（メッセージ欄が「スライムが あらわれた！」の 1 行のまま、`revision` が変わらない）。510ms で `data-busy` が `true` でなくなり、ボタンが押せる。そのあと「たたかう」を 1 回押すと、ターンが 1 回だけ進む（止めている間に押した分は決まらない） | E2E | `e2e/battle.spec.ts` |
+| TC-0018-10 | 4 | `ENCOUNTER_LOCK_MS` が `{ normal: 1000, boss: 2906 }` で、`boss` が `EFFECT_MS.bossAppear` と同じ。`normal` は遭遇の音の長さ `SFX_MS.encounter`（510）より長い。`encounterLockMs(false)` が 1000、`encounterLockMs(true)` が 2906（v1.2。仕様書 v1.17。v1.5・仕様書 v1.22 で通常の敵を 510 から 1000 に。v1.4 までは `normal` が `SFX_MS.encounter` と同じことを確かめていた） | 単体 | `tests/audio/sound.test.ts` |
+| TC-0018-11 | 4 | 通常の敵（v1.2。v1.5 で 510ms から 1000ms に）：前進で遭遇した時刻から 999ms までは、`body[data-busy="true"]`、戦闘のボタンの箱が `aria-disabled="true"`。その間に「たたかう」を押し（`desktop` はクリックと Enter、`pixel7`・`small` はタップ）、メッセージ欄をクリック（タップ）しても、ターンが進まない（メッセージ欄が「スライムが あらわれた！」の 1 行のまま、`revision` が変わらない）。1000ms で `data-busy` が `true` でなくなり、ボタンが押せる。そのあと「たたかう」を 1 回押すと、ターンが 1 回だけ進む（止めている間に押した分は決まらない） | E2E | `e2e/battle.spec.ts` |
 | TC-0018-12 | 4 | ボス（v1.2）：ボスのマスに入った時刻から 2905ms までは、メッセージ欄のクリック（タップ）、`desktop` の Enter・Space をしても、`#effect-layer` の `data-effect="bossAppear"` が残り、`body[data-busy="true"]` のまま、戦闘のボタンが押せない（ターンが進まない）。2906ms で演出が終わり、ボタンが押せる | E2E | `e2e/effects.spec.ts` |
-| TC-0018-13 | 4 | 音がオフ（既定）とオン、動きを減らす設定（`page.emulateMedia({ reducedMotion: 'reduce' })`）で、TC-0018-11 の 509ms・510ms の結果が同じ。動きを減らす設定のボスでも、2905ms まで押せず 2906ms で押せる（v1.2） | E2E | `e2e/battle.spec.ts` |
+| TC-0018-13 | 4 | 音がオフ（既定）とオン、動きを減らす設定（`page.emulateMedia({ reducedMotion: 'reduce' })`）で、TC-0018-11 の 999ms・1000ms の結果が同じ。動きを減らす設定のボスでも、2905ms まで押せず 2906ms で押せる（v1.2） | E2E | `e2e/battle.spec.ts` |
 
 ## 2. 準備
 
@@ -49,7 +49,7 @@ verified: null
 | 確認 ID | 手順 |
 | --- | --- |
 | TC-0018-06 | 正面が壁の向きで ↑ →「かべだ」が出る → → で通路の向きにする → `useSeed` → ↑ → メッセージ欄の行が「スライムが あらわれた！」の 1 つだけ（「かべだ」がない）。`body[data-screen]` が `battle` |
-| TC-0018-11 | 偽の時計（`install` → `pauseAt`）で、遭遇するシードにして ↑（タッチは前進のボタン）→ 戦闘の画面になったら、時計を進めずに「たたかう」とメッセージ欄を押す → `runFor(509)` → 行の数・`revision`・`data-busy`・`aria-disabled` を見る → `runFor(1)` → `data-busy` が `false`、`aria-disabled` がない →「たたかう」→ 表示が終わるまで進めて、行がターン 1 回分だけ増えている |
+| TC-0018-11 | 偽の時計（`install` → `pauseAt`）で、遭遇するシードにして ↑（タッチは前進のボタン）→ 戦闘の画面になったら、時計を進めずに「たたかう」とメッセージ欄を押す → `runFor(999)` → 行の数・`revision`・`data-busy`・`aria-disabled` を見る → `runFor(1)` → `data-busy` が `false`、`aria-disabled` がない →「たたかう」→ 表示が終わるまで進めて、行がターン 1 回分だけ増えている |
 | TC-0018-12 | 5F のボスの手前で前進 → 演出が立ったら、メッセージ欄をクリック（`desktop` は Enter・Space も）→ `runFor(2905)` の間に何度か同じことをする → `data-effect` が `bossAppear` のまま →「たたかう」を押しても行が増えない → `runFor(1)` → `data-effect` がなく、ボタンが押せる |
 | TC-0018-13 | 音をオンにしてから（タイトルの「おと」）TC-0018-11 の手順。`emulateMedia({ reducedMotion: 'reduce' })` で TC-0018-11 と TC-0018-12 の手順（クリックのところは同じ） |
 

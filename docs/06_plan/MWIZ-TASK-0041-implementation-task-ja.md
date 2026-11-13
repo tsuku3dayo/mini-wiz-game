@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-12
 sources:
   - MWIZ-WS-0023（v1.0）
-  - MWIZ-TC-0018（v1.4）
+  - MWIZ-TC-0018（v1.5）
   - MWIZ-TC-0019（v1.5）
   - MWIZ-TC-0020（v1.1）
   - MWIZ-TC-0024（v1.3）
