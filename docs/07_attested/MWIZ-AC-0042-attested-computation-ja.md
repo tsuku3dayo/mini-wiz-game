@@ -2,7 +2,7 @@
 id: MWIZ-AC-0042
 type: Attested Computation
 title: 敵と装備に特徴をつける（仕様書 v1.21）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-13
 sources:
@@ -17,7 +17,7 @@ sources:
   - MWIZ-TC-0027（v1.2）
   - MWIZ-TC-0028（v1.3）
   - MWIZ-TC-0029（v1.2）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T16:10:28+09:00" }
 ---
 
 # AC-0042 敵と装備に特徴をつける（仕様書 v1.21）の実施記録
