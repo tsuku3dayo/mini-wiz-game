@@ -2,7 +2,7 @@
 id: MWIZ-AC-0043
 type: Attested Computation
 title: 遭遇の入力止め・帰還でマップを残す・アイコン（仕様書 v1.22）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-13
 sources:
@@ -12,7 +12,7 @@ sources:
   - MWIZ-TC-0013（v1.1）
   - MWIZ-TC-0017（v1.1）
   - MWIZ-TC-0018（v1.5）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T18:06:30+09:00" }
 ---
 
 # AC-0043 遭遇の入力止め・帰還でマップを残す・アイコン（仕様書 v1.22）の実施記録
