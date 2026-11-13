@@ -3,12 +3,12 @@ id: MWIZ-TC-0018
 type: Test Case
 title: 敵と遭遇する
 status: stable
-version: 1.3
-updated: 2026-11-12
+version: 1.4
+updated: 2026-11-13
 sources:
   - MWIZ-US-0018（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.9）
+  - MWIZ-TD-0002（v1.10）
   - MWIZ-TD-0003（v1.7）
   - MWIZ-TD-0004（v1.9）
   - docs/specification-ja.md (v1.21) §4.3、§5.1、§6、§11.8、§16.1、§16.2、§16.4、§23
@@ -30,7 +30,7 @@ verified: null
 | TC-0018-04 | 2 | `pickEnemy` の境目：1F は 70 → スライム・71 → ゴブリン。2F〜4F は 30・31・80・81 の境目、5F は 40 → オークロード・41 → ダークナイト | 単体 | `tests/domain/explore.test.ts` |
 | TC-0018-05 | 3 | `arrival` の遭遇の判定：前の状態がない、または前の場所が BATTLE でなく、新しい場所が BATTLE のとき真。BATTLE → BATTLE（ターンの続き）・DUNGEON → DUNGEON では偽 | 単体 | `tests/logic/arrival.test.ts` |
 | TC-0018-06 | 3 | 画面で：メッセージ欄に行がある状態で前進して遭遇すると、それまでの行が消え、メッセージ欄が「スライムが あらわれた！」の 1 行だけになり、戦闘の画面（`body[data-screen="battle"]`）になる | E2E | `e2e/battle.spec.ts` |
-| TC-0018-07 | 5 | `ENEMIES` の 6 種が仕様書 §6.1 の表のとおり：スライム（HP 12・攻 4・防 2・速 3・経験値 4）、ゴブリン（20・7・3・7・10）、スケルトン（42・16・10・13・27）、オークロード（79・28・17・17・45。種類は `orc`。v1.1 で表示名を「オーク」から変えた）、ダークナイト（110・45・28・26・75）、暗黒のネクロマンサー（800・60・40・30・1000）（v1.3。仕様書 v1.20）。出現表に出る階が表のとおり（スライム 1F・2F、ゴブリン 1F〜3F、スケルトン 2F〜4F、オークロード 3F〜5F、ダークナイト 4F・5F、ネクロマンサーはどの出現表にもない）。各階の出現表の合計が 100 | 単体 | `tests/domain/constants.test.ts` |
+| TC-0018-07 | 5 | `ENEMIES` の 6 種が仕様書 §6.1 の表のとおり：スライム（HP 24・攻 4・防 0・速 0・経験値 8）、ゴブリン（20・7・3・7・20）、スケルトン（32・21・5・18・54）、オークロード（99・38・7・7・90。種類は `orc`。v1.1 で表示名を「オーク」から変えた）、ダークナイト（110・45・28・26・150）、暗黒のネクロマンサー（800・80・0・50・1000）（v1.4。仕様書 v1.21。v1.3 は仕様書 v1.20 の値）。出現表に出る階が表のとおり（スライム 1F・2F、ゴブリン 1F〜3F、スケルトン 2F〜4F、オークロード 3F〜5F、ダークナイト 4F・5F、ネクロマンサーはどの出現表にもない）。各階の出現表の合計が 100 | 単体 | `tests/domain/constants.test.ts` |
 | TC-0018-08 | 6 | `SeededRng(1)` の `int(1,100)` を 10 回引くと 63, 1, 53, 99, 97, 29, 62, 73, 43, 100 | 単体 | `tests/domain/rng.test.ts` |
 | TC-0018-09 | 7 | `chance(0.1)` は、`int` が 10 を返すと真、11 を返すと偽（`SequenceRng`）。`chance` を 1 回呼ぶと乱数を 1 個だけ使う | 単体 | `tests/domain/rng.test.ts` |
 | TC-0018-10 | 4 | `ENCOUNTER_LOCK_MS` が `{ normal: 510, boss: 2906 }` で、`normal` が `SFX_MS.encounter`、`boss` が `EFFECT_MS.bossAppear` と同じ。`encounterLockMs(false)` が 510、`encounterLockMs(true)` が 2906（v1.2。仕様書 v1.17） | 単体 | `tests/audio/sound.test.ts` |

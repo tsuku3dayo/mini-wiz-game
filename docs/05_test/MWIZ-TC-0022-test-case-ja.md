@@ -3,12 +3,12 @@ id: MWIZ-TC-0022
 type: Test Case
 title: 敵を倒して強くなる
 status: stable
-version: 1.3
-updated: 2026-11-11
+version: 1.4
+updated: 2026-11-13
 sources:
   - MWIZ-US-0022（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.9）
+  - MWIZ-TD-0002（v1.10）
   - MWIZ-TD-0003（v1.7）
   - MWIZ-TD-0004（v1.9）
   - MWIZ-GUI-0001（v1.4）
@@ -25,7 +25,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0022-01 | 1 | スライムを倒すターンの結果で、メッセージが「スライムを たおした！」（success）→「経験値 4 を かくとく」（success）の順に出る。場所 DUNGEON・x と y が戦闘前と同じ・`battle` が null・経験値が 4 増える・HP は戦闘中に減った値のまま（回復しない）・討伐数が 1 増える。経験値が次のレベルを超えても、レベルは上がらず、レベルアップの行がない（v1.1） | 単体 | `tests/domain/battle.test.ts` |
+| TC-0022-01 | 1 | スライムを倒すターンの結果で、メッセージが「スライムを たおした！」（success）→「経験値 8 を かくとく」（success）の順に出る（v1.4。仕様書 v1.21 でスライムの経験値が 4 → 8）。場所 DUNGEON・x と y が戦闘前と同じ・`battle` が null・経験値が 8 増える・HP は戦闘中に減った値のまま（回復しない）・討伐数が 1 増える。経験値が次のレベルを超えても、レベルは上がらず、レベルアップの行がない（v1.1） | 単体 | `tests/domain/battle.test.ts` |
 | TC-0022-02 | 2 | `expForLevel` が Lv2：24、Lv3：72、Lv4：144、Lv5：240、Lv10：1080、Lv100：118800 を返す | 単体 | `tests/domain/character.test.ts` |
 | TC-0022-03 | 3 | Lv1・経験値 23 で `levelUp` を呼ぶと Lv1 のまま・乱数 0 個・メッセージ 0 行。経験値 24 なら Lv2 になり、乱数をちょうど 5 個引く（引いた数を数える `Rng` で確かめる）。`gainExp(state, 24)` は経験値だけを足し、レベル・乱数・メッセージは変わらない（v1.1） | 単体 | `tests/domain/character.test.ts` |
 | TC-0022-04 | 4 | Lv1・経験値 72 で `levelUp` を呼ぶと Lv3・メッセージ 4 行（「レベルが あがった！ Lv2」「HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1」「レベルが あがった！ Lv3」「HP +8 MP +2 こうげき +1 ぼうぎょ +1 すばやさ +1」）。成長最小（8,2,1,1,1 × 2）で最大 HP 46（v1.1） | 単体 | `tests/domain/character.test.ts` |
