@@ -8,9 +8,9 @@ updated: 2026-11-06
 sources:
   - MWIZ-US-0006（v1.4）
   - MWIZ-US-0033（v1.4）
-  - MWIZ-GUI-0005（v1.7）
+  - MWIZ-GUI-0005（v1.8）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.21) §13
+  - docs/specification-ja.md (v1.22) §13
 verified: null
 ---
 

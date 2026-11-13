@@ -8,7 +8,7 @@ updated: 2026-11-12
 sources:
   - MWIZ-US-0033（v1.4）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.21) §11.3、§11.5、§13、§16.5
+  - docs/specification-ja.md (v1.22) §11.3、§11.5、§13、§16.5
 verified: null
 ---
 

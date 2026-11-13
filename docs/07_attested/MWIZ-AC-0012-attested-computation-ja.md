@@ -13,7 +13,7 @@ sources:
   - MWIZ-TC-0025（v1.1）
   - MWIZ-TD-0002（v1.10）
   - MWIZ-TD-0004（v1.9）
-  - MWIZ-GUI-0005（v1.7）
+  - MWIZ-GUI-0005（v1.8）
 verified: { by: "tsuku3dayo", at: "2026-11-02T17:49:25+09:00" }
 ---
 

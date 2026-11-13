@@ -15,7 +15,7 @@ sources:
   - MWIZ-US-0028（v1.2）
   - MWIZ-US-0035（v1.3）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.21) §2、§5、§6、§7.2、§8.2、§9.2、§11.4、§11.5、§21、§22
+  - docs/specification-ja.md (v1.22) §2、§5、§6、§7.2、§8.2、§9.2、§11.4、§11.5、§21、§22
 verified: null
 ---
 

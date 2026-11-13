@@ -2,13 +2,13 @@
 id: MWIZ-GUI-0001
 type: GUI Design
 title: 画面設計 共通（配置の決まり・デザイン・部品・画面遷移）
-status: review
+status: stable
 version: 1.5
 updated: 2026-11-13
 sources:
   - MWIZ-US-0006（v1.4）
   - MWIZ-US-0010（v1.1）
-  - MWIZ-US-0011（v1.2）
+  - MWIZ-US-0011（v1.3）
   - MWIZ-US-0012（v1.1）
   - MWIZ-US-0035（v1.3）
   - MWIZ-US-0036（v1.0）
@@ -16,7 +16,7 @@ sources:
   - MWIZ-ADR-0010（v1.0）
   - MWIZ-ADR-0012（v1.1）
   - docs/specification-ja.md (v1.22) §11.1〜§11.4、§11.6、§11.8、§11.11、§14
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T17:03:34+09:00" }
 ---
 
 # GUI-0001 画面設計 共通

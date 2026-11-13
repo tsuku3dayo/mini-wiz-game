@@ -2,13 +2,13 @@
 id: MWIZ-US-0017
 type: User Story
 title: 宿屋へ戻る
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-13
 sources:
   - MWIZ-EP-0003（v1.1）
   - docs/specification-ja.md (v1.22) §4.5、§7.3、§16.2
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-13T17:03:34+09:00" }
 ---
 
 # US-0017 宿屋へ戻る
