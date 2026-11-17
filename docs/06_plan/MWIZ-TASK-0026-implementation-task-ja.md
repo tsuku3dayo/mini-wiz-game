@@ -8,9 +8,9 @@ updated: 2026-11-06
 sources:
   - MWIZ-WS-0012（v1.2）
   - MWIZ-TC-0006（v1.5）
-  - MWIZ-TC-0033（v1.5）
+  - MWIZ-TC-0033（v1.6）
   - MWIZ-TD-0003（v1.8）
-  - MWIZ-TD-0005（v1.14）
+  - MWIZ-TD-0005（v1.15）
 verified: null
 ---
 
