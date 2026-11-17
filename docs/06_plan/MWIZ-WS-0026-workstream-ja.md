@@ -48,8 +48,8 @@ verified: null
 
 ## 完了の条件
 
-- [ ] TASK-0044 がマージ・公開された
-- [ ] 手動テストの結果を AC-0044 に書き、オーナーに承認された
-- [ ] ふりかえり（`docs/retrospectives/ws-26.md`）を書いた
-- [ ] 依頼 v1.23・v1.24 の影響の一覧の「結果」がすべて埋まった
-- [ ] 再現開発仕様書（`docs/reproduction-specification.md`）を v1.24 に合わせた
+- [x] TASK-0044 がマージ・公開された
+- [x] 手動テストの結果を AC-0044 に書き、オーナーに承認された
+- [x] ふりかえり（`docs/retrospectives/ws-26.md`）を書いた
+- [x] 依頼 v1.23・v1.24 の影響の一覧の「結果」がすべて埋まった
+- [x] 再現開発仕様書（`docs/reproduction-specification.md`）を v1.24 に合わせた
