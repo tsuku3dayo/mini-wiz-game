@@ -1,0 +1,70 @@
+---
+id: MWIZ-AC-0044
+type: Attested Computation
+title: 敵の絵の v6 への差し替えと、アイコンの作り直し（仕様書 v1.23・v1.24）の実施記録
+status: draft
+version: 1.0
+updated: 2026-11-17
+sources:
+  - MWIZ-TASK-0044（v1.0）
+  - MWIZ-TC-0002（v1.3）
+  - MWIZ-TC-0033（v1.6）
+verified: null
+---
+
+# AC-0044 敵の絵の v6 への差し替えと、アイコンの作り直し（仕様書 v1.23・v1.24）の実施記録
+
+## 1. 実施概要
+
+| 項目 | 内容 |
+| --- | --- |
+| タスク | [TASK-0044](../06_plan/MWIZ-TASK-0044-implementation-task-ja.md) 敵の絵の v6 への差し替えと、アイコンの作り直し（変更の依頼 `docs/requests/2026-11-17-spec-1.23-enemy-images-v6.md`・`docs/requests/2026-11-17-spec-1.24-icon-v6.md`） |
+| 実施者 | Claude Code（オーナー：tsuku3dayo） |
+| ブランチ | `feat/TASK-0044-enemy-images-v6` |
+| 環境 | Windows 11・PowerShell／Git Bash、Node.js v24.0.0。Vitest 5.1.0、Playwright 1.65.0 の Chromium |
+
+作ったもの（TD-0005 v1.15 §2.1・仕様書 §13・§30.5 のとおり）：
+
+- `public/enemies/*.png`：`docs/requests/monster/strip-metadata-v6.mjs` で、v6（256 版）の 6 枚から付属の情報を取り除いて上書きした。6 枚とも MD5 が仕様書 §13.1 の表と同じ
+- `scripts/make-icons.mjs`：`CROP_X = 44`・`CROP_SIZE = 199`（`CROP_Y = −16` は同じ）と頭の説明。`npm run icons` で `public/icons/` の 5 つを作り直した。5 つとも、依頼 v1.24 の時に試しに作ったものと MD5 が同じ
+- `tests/assets/enemy-images.test.ts`：MD5 を v6 に、説明の「v5」を直した。`tests/scripts/icons.test.ts`：テストの名前と説明の切り抜きの値（点の確かめは `CROP_X` などから計算するので式は変わらない）
+- `src/ui/theme.css`・`src/ui/style.css`：説明の文（コメント）の「敵の絵 v5」を「v5 から。v1.23 からは v6」に。色・形は変えていない
+- `docs/reproduction-specification.md`：仕様書 v1.22 → v1.24 の差分を当てた。当たらなかった版の行・改訂履歴・第 2 部の §30.5・§32 は手で直し、第 1 部・§30.5・§32・仕様書の改訂履歴の行が仕様書と 1 字も違わないことを比べた（改訂履歴の表は、再現開発仕様書だけにある「再現 1.0.0 → v1.x」の行が前からある）
+- 依頼書 v1.23・v1.24 の影響の一覧に結果を書いた
+
+直す前に、`e2e/`・`tests/`・`src/`・`scripts/`・`vite.config.ts` で、v5 の MD5・「v5」・`26, −16`・`198` と、画像のファイル名（`enemies/`・`necromancer.png`・`.png`）を探した。絵の中身から何かを作るのはアイコン（`make-icons.mjs`）だけで、E2E・公開前チェック（`check-dist.mjs`）は大きさ・ファイル名・4 隅の色だけを見る。
+
+## 2. 確認結果
+
+| 確認 ID | 方法 | 結果 | 直したこと |
+| --- | --- | --- | --- |
+| TC-0033-05 | 単体 | OK | 6 枚の MD5 を v6 に。形式（RGB か RGBA）・チャンク（IHDR・IDAT・IEND だけ）は直さずに通った（v6 のスライムは IDAT が 3 つ） |
+| TC-0002-08 | 単体 | OK | テストの名前を (44, −16)・一辺 199 に。コミットしたアイコン 5 つが作り直したものと同じ、点の色が切り抜きどおり |
+| TC-0033-01〜04・07 | E2E（3 端末） | OK | 直さずに通った（07：v6 も 4 隅は `(0,0,0,255)`） |
+| TC-0003-02・TC-0001-03・TC-0002-06 | E2E（3 端末） | OK | 直さずに通った |
+
+手元で通したもの（2026-11-17）：
+
+- `npm run verify`：lint、check:docs（エラー 0・注意 1：AC-0024 の仕様書の版の表記＝承認済みの記録なので変えない）、単体 39 ファイル 197 件、build、check:dist OK
+- `npm run test:e2e`：519 件通った・51 件はその端末の対象外で飛ばした・落ちたものはない（8.3 分）
+
+画面の確かめ：375 × 667（`small`）と 1280 × 800（`desktop`）で、6 体の戦闘画面を撮って見た（体力わずかの赤い枠のとき）。絵のまわりに四角は見えず、絵が枠や名前と重ならない。画面の形は変わっていない。アイコンは 192 と maskable を開いて見た：図柄の左右の余白がそろい、杖の先のどくろまで入る。
+
+## 3. 確認できなかったこと
+
+- （WS の終わりの手動テスト（TC-0033-06・TC-0002-09）のあとに書く）
+- Android の実機はない（E2E の `pixel7` で代わりに確かめた）。
+
+## 4. 後片付け
+
+- 撮影に使った一時的なテスト（`e2e/zz-shot.spec.ts`）、撮った画像、当たらなかった差分（`.rej`）は、プロジェクトの外の作業用の一時フォルダに移した（リポジトリには入れていない）。
+- 見比べに使った 128 版の v6 の 5 枚と、オーナーの `docs/screenshot/` はコミットしていない。
+
+## 5. 完了の定義
+
+- [x] 上の自動の確認 ID のテストがすべてあり、通る
+- [x] `npm run verify` と `npm run test:e2e` が手元で通る
+- [x] 画面の変更は、PC と一番小さいスマートフォンの幅でスクリーンショットを見た
+- [x] 設計と違う作りにしたら、TD・GUI を直した（設計どおりに作れたので直していない）
+- [x] AC-0044（draft）に自動テストの結果を書き、同じ PR に入れた
+- [ ] PR の CI が緑で、マージされた（マージ = 公開）

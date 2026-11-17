@@ -19,8 +19,8 @@ function expectCropped(png: ReturnType<typeof decodePng>, size: number, x: numbe
   expect(pixel(png, x, y), `(${x}, ${y})`).toEqual(sourceRgb(necro, sx, sy));
 }
 
-describe('アイコン（仕様書 v1.22 §30.5）', () => {
-  test('TC-0002-08 renderIcons の 5 つがコミットしたファイルと同じで、ネクロマンサーの絵の (26, −16)・一辺 198 を点のまま切り抜いている', () => {
+describe('アイコン（仕様書 v1.24 §30.5）', () => {
+  test('TC-0002-08 renderIcons の 5 つがコミットしたファイルと同じで、ネクロマンサーの絵の (44, −16)・一辺 199 を点のまま切り抜いている', () => {
     const made = renderIcons();
     expect(Object.keys(made).sort()).toEqual(['apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'icon.svg']);
     for (const [name, data] of Object.entries(made)) {

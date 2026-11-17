@@ -1,5 +1,5 @@
 // アイコンを作る（仕様書 §30.5、TD-0005 §2.1）。npm run icons で public/icons/ に書き、生成物をコミットする
-// v1.22：敵の絵 necromancer.png の (26, −16)・一辺 198 の正方形を、点のまま（最も近い点）各大きさにする
+// v1.22：敵の絵 necromancer.png の正方形を、点のまま（最も近い点）各大きさにする。v1.24：v6 の絵に合わせて (44, −16)・一辺 199（左右の余白が 26 ずつ。v1.22〜v1.23 は (26, −16)・一辺 198）
 // 外部ライブラリは使わず、PNG は node:zlib（inflateSync・deflateSync・crc32）で読み書きする
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,9 +12,9 @@ const SOURCE = path.join(root, 'public/enemies/necromancer.png');
 
 export const BG = [0x0b, 0x0a, 0x0f];
 /** 切り抜き（元の絵の座標）：左上 (CROP_X, CROP_Y)、一辺 CROP_SIZE。上の 16 行は絵の外 */
-export const CROP_X = 26;
+export const CROP_X = 44;
 export const CROP_Y = -16;
-export const CROP_SIZE = 198;
+export const CROP_SIZE = 199;
 /** maskable は図柄を 0.7 倍にして中央に置く（512 では一辺 358・左上 77） */
 export const MASKABLE_SCALE = 0.7;
 
