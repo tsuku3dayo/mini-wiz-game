@@ -2,14 +2,14 @@
 id: MWIZ-AC-0044
 type: Attested Computation
 title: 敵の絵の v6 への差し替えと、アイコンの作り直し（仕様書 v1.23・v1.24）の実施記録
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-17
 sources:
   - MWIZ-TASK-0044（v1.0）
   - MWIZ-TC-0002（v1.3）
   - MWIZ-TC-0033（v1.6）
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-17T15:19:40+09:00" }
 ---
 
 # AC-0044 敵の絵の v6 への差し替えと、アイコンの作り直し（仕様書 v1.23・v1.24）の実施記録
