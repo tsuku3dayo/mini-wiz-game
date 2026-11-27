@@ -2,13 +2,13 @@
 id: MWIZ-US-0016
 type: User Story
 title: 階段で階を移る
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-27
 sources:
   - MWIZ-EP-0003（v1.2）
   - docs/specification-ja.md (v1.25) §4.4、§4.8、§11.5、§16.2、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # US-0016 階段で階を移る

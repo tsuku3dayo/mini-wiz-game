@@ -2,14 +2,14 @@
 id: MWIZ-EP-0006
 type: Epic
 title: 装備を集めて強くする
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-27
 sources:
   - MWIZ-PB-0001（v1.12）
   - docs/specification-ja.md (v1.25) §8、§9.1、§11.4、§11.5、§11.7、§16.1、§16.3
   - docs/requests/2026-11-27-spec-1.25-doors-drop-se.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # EP-0006 装備を集めて強くする

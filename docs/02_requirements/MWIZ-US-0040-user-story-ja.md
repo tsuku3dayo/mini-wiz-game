@@ -2,14 +2,14 @@
 id: MWIZ-US-0040
 type: User Story
 title: 扉を開けて、宝箱や強い敵に出会う
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-27
 sources:
   - MWIZ-EP-0003（v1.2）
   - docs/specification-ja.md (v1.25) §3.4、§3.5、§3.6、§4.1、§4.2、§4.9、§4.10、§4.11、§8.4、§11.5、§16.2、§16.3、§16.4
   - docs/requests/2026-11-27-spec-1.25-doors-drop-se.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # US-0040 扉を開けて、宝箱や強い敵に出会う

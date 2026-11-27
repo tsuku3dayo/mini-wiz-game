@@ -2,14 +2,14 @@
 id: MWIZ-US-0032
 type: User Story
 title: 効果音を鳴らす・切り替える
-status: review
+status: stable
 version: 1.4
 updated: 2026-11-27
 sources:
   - MWIZ-EP-0007（v1.1）
   - docs/specification-ja.md (v1.25) §12.1、§15.5、§16.5、§25
   - docs/requests/2026-11-27-spec-1.25-doors-drop-se.md
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # US-0032 効果音を鳴らす・切り替える

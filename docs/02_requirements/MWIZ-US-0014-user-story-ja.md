@@ -2,13 +2,13 @@
 id: MWIZ-US-0014
 type: User Story
 title: 迷宮を一人称で歩く
-status: review
+status: stable
 version: 1.1
 updated: 2026-11-27
 sources:
   - MWIZ-EP-0003（v1.2）
   - docs/specification-ja.md (v1.25) §4.1、§4.2、§4.8、§4.10、§11.5、§16.2、§16.4
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # US-0014 迷宮を一人称で歩く

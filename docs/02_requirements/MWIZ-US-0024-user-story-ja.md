@@ -2,13 +2,13 @@
 id: MWIZ-US-0024
 type: User Story
 title: ボスを倒してクリアする
-status: review
+status: stable
 version: 1.4
 updated: 2026-11-27
 sources:
   - MWIZ-EP-0005（v1.1）
   - docs/specification-ja.md (v1.25) §4.3、§4.11、§6.3、§9.1、§9.2、§11.5、§16.1、§16.2
-verified: null
+verified: { by: "tsuku3dayo", at: "2026-11-27T16:05:34+09:00" }
 ---
 
 # US-0024 ボスを倒してクリアする
