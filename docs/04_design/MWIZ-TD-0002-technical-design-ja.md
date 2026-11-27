@@ -3,8 +3,8 @@ id: MWIZ-TD-0002
 type: Technical Design
 title: 詳細設計 ルール・表示の計算・ゲーム API・保存
 status: stable
-version: 1.11
-updated: 2026-11-13
+version: 1.12
+updated: 2026-11-27
 sources:
   - MWIZ-TD-0001（v1.2）
   - MWIZ-SA-0001（v1.1）
@@ -114,6 +114,37 @@ verified: null
 | GameView | `game-view.ts`：`dungeon` は、場所が `INN` なら `null`（`state.dungeon && state.location !== 'INN'`）。型は変えない |
 | テスト用の入口 | `game-api.ts` の `debugDungeon`：場所が `INN` なら 409「ダンジョンに いません」 |
 | ほかで `dungeon` の有無を見ているところ | `logic/bgm-scene.ts`（SWAP で `dungeon === null` ならクリアの曲）は SWAP のときだけ見るので変えない。`ui/screens/dungeon.ts` はダンジョンの画面だけ。宿屋の画面は `dungeon` を使わない |
+
+### 1.11 仕様書 v1.25 で変えること（v1.12。WS-0027）
+
+扉と宝箱（仕様書 §3.4〜§3.6・§4.1・§4.11）、通路の出現表（§6.2）、保存の版 8（§21.4）。04 で仮に作って単体テスト・E2E を流した（2026-11-27。TASK-0045）。
+
+| 項目 | 作り |
+| --- | --- |
+| 型 | `game-state.ts`：`FloorData` に `doors: DoorData[]`、`DoorData = { cell, side, content: 'down' | 'boss' | 'enemy' | 'chest', state: 'closed' | 'chest' | 'gone' }`。`BattleData` に `door?: number`（扉をあけて始めた戦闘だけキーを持つ。ないときはキーを付けない＝いまの戦闘データと同じ形のまま） |
+| 定数 | `constants.ts`：`ENCOUNTER_TABLE` を §6.2 の表に（1F は 1 種でも `pickEnemy` は乱数を 1 個引く＝いまの作りのまま）。`DOOR_ENEMY = { 1: goblin, 2: skeleton, 3: orc, 4: darkKnight }`、`CHEST_SOURCE = { 1: slime, 2: goblin, 3: goblin, 4: skeleton, 5: orc }` |
+| 扉の置き方 | 新しい `doors.ts`：`deadEnds(walls, upIndex)`（開いた辺が 1 つのマス、up を除く、番号順）・`doorSide(walls, cell)`・`placeDoors(walls, upIndex, dist, last, minDistance, rng)` → `{ target, doors }`（§3.4 の 3・5・6 の手順そのまま。`DOOR_CONTENTS` の順）。`floors.ts` の `generateFloors` は BFS のあとに `placeDoors` を呼び、`target` を `down`／`boss` に、`doors` を階に入れる。`floorViolations` の「目標が最遠」は、目標に下り階段・ボスの扉があれば行き止まりのうちの最遠、なければ全マスの最遠で比べる。扉の決まり（行き止まり・up でない・重ならない・`side` が開いた辺・中身の数・閉じている）も足す |
+| 移動 | `dungeon.ts` の `move`：壁を見たあと、進む先のマスの扉が `closed` で `side` が進む向きの反対なら `{ bumped: true, blocked: 'door' }`、`chest` なら `{ bumped: true, blocked: 'chest' }`（`doors.ts` を import しない：`doors.ts` が `battle.ts` を使うので、輪にならないように `move` の中で直接見る）。`explore.ts` の `moveInDungeon` は `blocked` で「とびらが しまっている」「たからばこが ある」（ほかは「かべだ」） |
+| 正面 | `doors.ts` の `aheadOf(d)` → `{ kind: 'door' | 'chest', door } | null`。`view.ts` も同じ決まりで `ahead` を作る（`depths[0].front === 'door'` → door、`front === 'open'` かつ `depths[1].chest` → chest） |
+| 扉・宝箱を開ける | `doors.ts` の `openDoor(state)`・`openChest(state, rng)`（§4.11 の表）。敵・ボスは `startBattle(state, kind, { door: cell })` を呼び、「とびらを あけた！」を前に足す。`openChest` は `loot.ts` の `rollChest(floor, rng)`（`rollDrop` の部位から先を `rollItem(rule, fixedTier, rng)` に切り出して使う。乱数 4 個）→ 扉を `gone` → `applyChest`（`applyDrop` と同じく、空きがあれば末尾、満杯なら `SWAP`・`thenClear: false`） |
+| 宝箱の行 | `loot.ts` の `chestMessage(item)`：`dropMessage` と同じ属性（`rarity`、UR・LG は `rareDrop`）で、文を「たからばこから {名前}［{ランク}］（{能力} +{値}）を てにいれた！」に。文の組み立て（名前・補正の並べ方）は `dropMessage` と共通の関数にする（仮に作ったときは `dropMessage` の文を置き換えたが、07 では共通の関数に切り出す） |
+| 扉の敵に勝つ | `battle.ts` の `onVictory`（通常の敵）：`battle.door` があれば、今の階のその扉を `gone`（`clearDoor`。`doors.ts` の `setDoorState` と同じ中身。輪にならないよう `battle.ts` に置く）。にげる（`fled`）・敗北はいまのまま |
+| GameView | `view.ts`：`Side` に `'door'`。視界は閉じた扉の辺を `'door'` にし、`front !== 'open'` で止める。`chest` を段に付ける。`ahead` を足す。地図は `doors: {n,e,s,w}`（閉じた扉の辺。そのとき `walls` の同じ辺も true） |
+| ゲーム API | `game-api.ts`：`openDoor: () => run(openDoor)`、`openChest: () => run((s) => openChest(s, deps.rng))`。`debugDungeon` に `doors`（写し）。`types.ts`：`Side`・`AheadView`・`DepthView.chest`・`AutoMapCell.doors`・`DungeonView.ahead`・`GameApi.openDoor`・`openChest`・`DebugDungeon.doors` |
+| 保存の版 | `GAME_SCHEMA_VERSION = 8`（`SAVE_SCHEMA_VERSION` は 4 のまま）。`migrateGameState`：版を問わず、`dungeon` の各階の `doors` を `normalizeDoors(raw)`（配列でなければ `[]`、形の合う要素だけ）で補う。`battle.door` は 0〜99 の整数なら残し、ほかはキーを消す |
+| テストの道具 | `tests/helpers/maps.ts` の `openMap`：各階に `doors: []`。`autoplayer.ts`：閉じた扉・残っている宝箱のマスを通らない。目的地（下り階段・ボス）が閉じた扉の中なら、扉の前で扉を向いて `openDoor`。行き来の目的地に行けなければ上り階段へ向きを変える。見積もり用の `openAll`（敵・宝箱の扉と宝箱を先に開ける）を持つ（テストでは使わない） |
+
+- 仮に作って確かめたこと：`SeededRng(2026)` の参考値のうち、後続の乱数は仕様書の 284376 と一致した（ハッシュはテストの `shape` に `doors` を足してから確かめる）。通しプレイ（TC-0024-05・TC-0025-03）は、自動プレイヤーを直すと通った。
+- 遊ぶ長さの見積もり（自動プレイヤー、シード 1〜10 でボスを 1 回倒すまで。平均）：
+
+| 版・遊び方 | 戦闘の数 | 倒れた回数 | ボスを倒した Lv | 敵が落とした数 |
+| --- | --- | --- | --- | --- |
+| v1.24 | 1,611.8 | 1.1 | 65.7 | 337.3 |
+| v1.25（下り階段・ボスの扉だけ開ける） | 1,382.4 | 0.3 | 52.3 | 256.9 |
+| v1.25（敵・宝箱の扉もすべて開ける） | 1,665.6 | 0.4 | 58.8 | 313.9 |
+
+  - 自動プレイヤーは、ボスの手前で育ちすぎる遊び方（Lv9 から挑み、倒れながら育つ）なので、数字の大きさより、版どうしの差を見る。通路の敵が弱くなり、倒れる回数が減る（やさしくなる）。扉をすべて開けると、扉の敵の分だけ戦闘が増える。宝箱で手に入れた数は「敵が落とした数」に入っていない。
+  - ボス戦の釣り合いの基準（§16.1、TC-0024-08）は、敵の数字も装備も変えていないので、そのまま通る。
 
 ## 2. 表示の計算（`src/logic/`）
 

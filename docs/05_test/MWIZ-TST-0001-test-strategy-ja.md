@@ -9,8 +9,8 @@ sources:
   - MWIZ-EP-0001（v1.0）
   - MWIZ-ADR-0011（v1.0）
   - MWIZ-TD-0001（v1.2）
-  - MWIZ-TD-0003（v1.8）
-  - MWIZ-TD-0005（v1.15）
+  - MWIZ-TD-0003（v1.9）
+  - MWIZ-TD-0005（v1.16）
   - MWIZ-GUI-0001（v1.5）
   - docs/specification-ja.md (v1.25) §14、§16、§29
 verified: null

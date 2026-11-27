@@ -3,10 +3,10 @@ id: MWIZ-TD-0004
 type: Technical Design
 title: 詳細設計 各画面の作り（画面設計との対応）
 status: stable
-version: 1.9
-updated: 2026-11-12
+version: 1.10
+updated: 2026-11-27
 sources:
-  - MWIZ-TD-0003（v1.8）
+  - MWIZ-TD-0003（v1.9）
   - MWIZ-GUI-0001（v1.5）
   - MWIZ-GUI-0002（v1.5）
   - MWIZ-GUI-0003（v1.3）
@@ -65,6 +65,25 @@ verified: null
 - 描いたあと・大きさが変わったとき・メッセージ欄を替えたときに `fitDungeon`（TD-0003 §6）。
 - 遷移の保留中は、直前の視界と地図を出し続ける（画面が最後の値を持つ）。
 - 壁にぶつかったら `ui/effects.ts` で段 0 の正面の壁を 200ms 点滅。
+
+### 4.1 扉と宝箱（v1.10。仕様書 v1.25・GUI-0004 v1.1 §5。TASK-0045）
+
+| 部品・計算 | 作り |
+| --- | --- |
+| `components/stairs-button.ts` | `update(ahead, underfoot, disabled)`。出すものは `ahead ?? underfoot`（正面の扉・宝箱を先に）。文字は `door`「扉をあける」・`chest`「宝箱をあける」・`down`「↓ おりる」・`up`「↑ のぼる」・`entrance`「宿屋へ戻る」。押したときは `StairsTarget`（5 つのどれか）を渡す |
+| `screens/dungeon.ts` | `doStairs(target)`：`door` → `api.openDoor()`、`chest` → `api.openChest()`、`entrance` → `api.returnToInn()`、ほかは `api.stairs`。点滅の条件に「とびらが しまっている」を足す（`flashOnMessage`）。扉の敵・ボスとの戦闘は、`ui/command.ts` の遭遇の判定（前が BATTLE でなく、新しいのが BATTLE）にそのまま当たるので、メッセージ欄を消す・入力止め・遭遇の音は変えずに効く |
+| `logic/view-to-segments.ts` | `SegmentKind` に `door`。`left`・`right` が `door` なら壁の 3 本に加えて、0.25・0.75 の 2 本の縦線（床から 85% の高さ）と上の線。`front` が `door` なら枠 k+1 の矩形に加えて、幅 0.5・高さ 0.85 の 3 辺と取っ手（仕様書 §11.5 の式のまま）。`leftFront`・`rightFront` が `door` は壁と同じ縦線。`chest` の段は「□ たからばこ」の文字（階段と同じ位置）。`door` の線は `data-kind="door"` なので、点滅（`front`・depth 0 の線だけ）に入らない |
+| `logic/map-to-shapes.ts` | `MapShapes.doors`（閉じた扉の辺。両端を `DOOR_GAP = 3` 空ける）。扉の辺は `walls` に入れない。`components/auto-map.ts` は `wiz-map-door`（`style.css`：info 色、太さ 4）の線で描く |
+| `logic/describe-view.ts` | 正面の最初の `front !== 'open'` が扉なら「とびら」。段 0 の左右が扉なら「左に とびら。」「右に とびら。」。`chest` の段は「{k} マス先に たからばこ。」 |
+| 操作の行の幅 | 左の列 8.5em は変えない。「宝箱をあける」（6 文字）が 1 行で収まることを、04 で狭い画面と広い画面で測った（下） |
+
+| 画面の大きさ | 文字 | ボタンの幅 × 高さ | はみ出し | ページの高さ |
+| --- | --- | --- | --- | --- |
+| 375 × 667 | 扉をあける／宝箱をあける | 136 × 48px（1 行） | なし（scrollWidth 132 = clientWidth 132） | 667px（縦にはみ出さない） |
+| 414 × 715 | 同じ | 136 × 48px（1 行） | なし | 715px |
+| 1280 × 800 | 同じ | 136 × 48px（1 行） | なし | 800px |
+
+- 2026-11-27、仮に作った版で、入口のマスの北に宝箱の扉を置いた場面（閉じた扉・残っている宝箱）を `?debug=1` の `writeState` で書いて測った。疑似3D の扉の形・「□ たからばこ」の文字・ボタンが重ならないことを、スクリーンショットで見た。仕様書 §11.5 の「8.5em に収まる見込み」は当たっていたので、仕様書は直さない。
 
 ## 5. 戦闘（`ui/screens/battle.ts`、`#/battle`）
 

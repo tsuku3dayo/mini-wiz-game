@@ -10,11 +10,11 @@ sources:
   - MWIZ-TC-0005（v1.1）
   - MWIZ-TC-0007（v1.1）
   - MWIZ-TC-0010（v1.1）
-  - MWIZ-TC-0011（v1.4）
+  - MWIZ-TC-0011（v1.5）
   - MWIZ-TD-0001（v1.2）
-  - MWIZ-TD-0002（v1.11）
-  - MWIZ-TD-0003（v1.8）
-  - MWIZ-TD-0005（v1.15）
+  - MWIZ-TD-0002（v1.12）
+  - MWIZ-TD-0003（v1.9）
+  - MWIZ-TD-0005（v1.16）
 verified: { by: "tsuku3dayo", at: "2026-11-02T11:55:40+09:00" }
 ---
 
