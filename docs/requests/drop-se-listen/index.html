@@ -1,0 +1,429 @@
+<title>ドロップ音の聞き比べ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;700&display=swap">
+<style>
+/* 迷宮の黒い画面に、案ごとの「音の札」を縦に並べる。下にゲームのメッセージ欄を模した試し場 */
+:root {
+  --bg: #0b0a0f;
+  --panel: #15131c;
+  --line: #2c2838;
+  --fg: #e9e6f2;
+  --muted: #9a94ab;
+  --accent: #b9a6ff;
+  --r-n: #ffffff;
+  --r-r: #5b8cff;
+  --r-sr: #c792ea;
+  --r-ur: #ff8c1a;
+  --r-lg: #ff4d6d;
+  --font-display: "DotGothic16", "Noto Sans JP", system-ui, sans-serif;
+  --font-body: "Noto Sans JP", system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 32px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
+h1 { font-size: 1.9rem; letter-spacing: 0.04em; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; }
+p { margin: 0; }
+.lead { display: grid; gap: 8px; color: var(--muted); max-width: 65ch; }
+.lead strong { color: var(--fg); }
+.sets { display: grid; gap: 16px; }
+.set {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.set-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.set-head p { color: var(--muted); font-size: 0.9rem; min-width: 0; flex: 1 1 260px; }
+.row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 560px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+button, select { font: inherit; color: inherit; }
+.snd {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rc);
+  border-radius: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+.snd:hover:not(:disabled) { border-color: var(--rc); }
+.snd:focus-visible, .btn:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.snd:disabled { cursor: default; opacity: 0.55; }
+.snd.playing { background: color-mix(in srgb, var(--rc) 18%, var(--bg)); }
+.rk { font-family: var(--font-display); color: var(--rc); font-size: 1rem; }
+.what { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+.ms { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.tag { font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 6px; margin-left: 8px; font-family: var(--font-body); }
+.r-N { --rc: var(--r-n); } .r-R { --rc: var(--r-r); } .r-SR { --rc: var(--r-sr); } .r-UR { --rc: var(--r-ur); } .r-LG { --rc: var(--r-lg); }
+.try { display: grid; gap: 16px; }
+.pick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 560px) { .pick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pick label { display: grid; gap: 4px; min-width: 0; }
+.pick select { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--rc); border-radius: 4px; padding: 6px 8px; width: 100%; }
+.log {
+  background: #000;
+  border: 2px solid #d8d4e4;
+  border-radius: 4px;
+  padding: 12px 14px;
+  min-height: 120px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+.log .ok { color: #9be39b; }
+.log .rar { color: var(--rc); }
+.log .hint { color: var(--muted); font-family: var(--font-body); font-size: 0.85rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.result { display: grid; gap: 8px; }
+.result code { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; font-size: 0.9rem; overflow-x: auto; white-space: pre-wrap; }
+.notes { display: grid; gap: 8px; color: var(--muted); max-width: 70ch; }
+.notes ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header class="lead">
+    <h1>ドロップ音の聞き比べ</h1>
+    <p>装備を拾ったときの効果音の案です。<strong>レアリティ（N・R・SR・UR・LG）ごとに音を変えます。</strong>ボタンを押すと鳴ります。最初に 1 回押したときに、音が出るようになります。</p>
+    <p>いまのゲームでは、UR と LG のときだけ音が鳴り、N・R・SR は鳴りません。音の作り方（FM 音源風・音色）は、いまのゲームの効果音と同じです。</p>
+  </header>
+
+  <section class="sets" aria-labelledby="sets-h">
+    <h2 id="sets-h">案ごとに聞く</h2>
+    <div id="sets"></div>
+  </section>
+
+  <section class="try" aria-labelledby="try-h">
+    <h2 id="try-h">ゲームの流れで聞く・組み合わせる</h2>
+    <p class="lead">レアリティごとに使う案を選び、「流す」を押すと、戦闘に勝ったあとのメッセージが 0.4 秒ずつ出て、ドロップの行で音が鳴ります（ゲームと同じ間隔）。案をまたいで組み合わせることもできます。</p>
+    <div class="pick" id="pick"></div>
+    <div class="controls" id="demo-buttons"></div>
+    <div class="log" id="log" aria-live="polite"><span class="hint">ここにメッセージが出ます。</span></div>
+    <div class="result">
+      <p>選んだ組み合わせ（返事にこのまま貼れます）：</p>
+      <code id="choice"></code>
+      <div class="controls"><button class="btn" id="copy" type="button">組み合わせをコピー</button><span id="copied" class="ms" aria-live="polite"></span></div>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h3 id="notes-h">選ぶときの目安</h3>
+    <ul>
+      <li>N・R はよく拾います（スライムは 15%、ゴブリンは 20% で落とし、段階 1〜3 は 8 割が N）。何度も聞くので、短く小さい音のほうが疲れにくいです。</li>
+      <li>LG は、ダークナイトがまれに落とすときと、ボスを倒したとき（ボス撃破の音のあと）に鳴ります。</li>
+      <li>効果音は同時に 1 つだけで、新しい音が鳴ると前の音は止まります。ドロップの行はメッセージの最後なので、ほかの音とは重なりません。</li>
+      <li>決まった案は、仕様書を直す依頼書にまとめてから、ゲームに入れます。</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---- 音色（ゲームの src/audio/sound.ts の SE_PATCHES と同じ値） ----
+  const P = {
+    沈んだ金管: { ratio: 1, index: 0.9, sustain: 0.5, idecay: 0.08, attack: 0.02, adecay: 0.5, asus: 0.75, lowpass: 1300, vol: 0.24 },
+    低い木の音: { ratio: 1, index: 0.8, sustain: 0, idecay: 0.02, attack: 0.004, adecay: 0.035, asus: 0, lowpass: 1000, vol: 0.28 },
+    暗い鐘: { ratio: 3, index: 0.8, sustain: 0, idecay: 0.15, attack: 0.003, adecay: 0.45, asus: 0, lowpass: 1500, vol: 0.22 },
+    暗いオルガン: { ratio: 2, index: 0.5, sustain: 0.9, idecay: 1, attack: 0.15, adecay: 2, asus: 0.9, lowpass: 1100, vol: 0.11 },
+    低い声: { ratio: 1, index: 0.6, sustain: 0.8, idecay: 0.6, attack: 0.08, adecay: 1.2, asus: 0.85, lowpass: 900, vol: 0.12 },
+  };
+  const ev = (f, at, len, patch, o = {}) => ({ f: Array.isArray(f) ? f : [f], at, len, patch: P[patch], ...o });
+  const C2 = 65.4, C3 = 130.8, Eb3 = 155.6, G3 = 196, C4 = 261.6, D4 = 293.7, Eb4 = 311.1, F4 = 349.2, G4 = 392, C5 = 523.3, Eb5 = 622.3, G5 = 784;
+
+  // いまの rareDrop・rareDropLG と同じ作り（分散和音 3 音 × times 回）
+  function sparkle(notes, times, lastMs) {
+    const total = times * notes.length * 60 + lastMs;
+    const out = [];
+    for (let k = 0; k < times * notes.length; k++) out.push(ev(notes[k % notes.length], k * 60, Math.min(180, total - k * 60), '暗い鐘'));
+    if (lastMs > 0) out.push(ev(notes[notes.length - 1], total - lastMs, lastMs, '暗い鐘'));
+    return out;
+  }
+  const NOW_UR = sparkle([Eb3, G3, C4], 2, 0);
+  const NOW_LG = sparkle([Eb3, G3, C4], 4, 300);
+
+  const RARITIES = ['N', 'R', 'SR', 'UR', 'LG'];
+  const SETS = [
+    {
+      key: 'A', name: '案 A　鐘の数で格を上げる', tag: 'UR・LG はいまのまま',
+      about: 'いまの UR・LG と同じ「暗い鐘」で、N は 1 音、R は 2 音、SR は 3 音と、鐘の数を増やします。いまの音とつながりがよい案です。',
+      s: {
+        N: { what: '鐘 1 音（ド）', ev: [ev(C4, 0, 180, '暗い鐘')] },
+        R: { what: '鐘 2 音（ソ・ド）', ev: [ev(G3, 0, 180, '暗い鐘'), ev(C4, 60, 180, '暗い鐘')] },
+        SR: { what: '鐘 3 音（ミ♭・ソ・ド）', ev: [ev(Eb3, 0, 180, '暗い鐘'), ev(G3, 60, 180, '暗い鐘'), ev(C4, 120, 180, '暗い鐘')] },
+        UR: { what: 'いまの音（3 音 × 2 回）', ev: NOW_UR },
+        LG: { what: 'いまの音（3 音 × 4 回と長い音）', ev: NOW_LG },
+      },
+    },
+    {
+      key: 'B', name: '案 B　高さと響きで格を上げる', tag: '5 つとも新しい音',
+      about: 'レアリティが上がるほど音が高く・厚くなります。N は木の音、R・SR・UR は鐘とオルガン、LG は金管のファンファーレに鐘とオルガンが重なります。UR・LG がいまより華やかになります。',
+      s: {
+        N: { what: '木の音 2 つ（コトッ）', ev: [ev(G4, 0, 60, '低い木の音'), ev(C5, 70, 70, '低い木の音')] },
+        R: { what: '鐘 2 音（ド・ソ）', ev: [ev(C4, 0, 220, '暗い鐘'), ev(G4, 100, 240, '暗い鐘')] },
+        SR: { what: '鐘で上がる（ド・ミ♭・ソ）＋オルガン', ev: [ev(C4, 0, 200, '暗い鐘'), ev(Eb4, 70, 200, '暗い鐘'), ev(G4, 140, 320, '暗い鐘'), ev([C3, G3], 0, 460, '暗いオルガン', { gain: 0.8 })] },
+        UR: { what: '鐘で 4 音上がり、和音が残る', ev: [ev(C4, 0, 200, '暗い鐘'), ev(Eb4, 70, 200, '暗い鐘'), ev(G4, 140, 200, '暗い鐘'), ev(C5, 210, 200, '暗い鐘'), ev([Eb4, G4, C5], 280, 460, '暗い鐘'), ev([C3, G3], 280, 460, '暗いオルガン')] },
+        LG: { what: '金管のファンファーレ＋鐘＋オルガン', ev: [
+          ev([C4, Eb4], 0, 180, '沈んだ金管', { gain: 1.2 }), ev([D4, F4], 200, 180, '沈んだ金管', { gain: 1.2 }),
+          ev([Eb4, G4], 400, 1000, '沈んだ金管', { vib: true, gain: 1.2 }),
+          ev(G4, 400, 300, '暗い鐘', { gain: 0.8 }), ev(C5, 520, 300, '暗い鐘', { gain: 0.8 }), ev(Eb5, 640, 300, '暗い鐘', { gain: 0.8 }), ev(G5, 760, 640, '暗い鐘', { gain: 0.8 }),
+          ev([C3, G3, C4], 400, 1000, '暗いオルガン'), ev(C2, 400, 1000, '低い声'),
+        ] },
+      },
+    },
+    {
+      key: 'C', name: '案 C　ふだんは控えめ、レアだけ目立つ', tag: 'UR・LG はいまのまま',
+      about: 'よく拾う N・R は「おと：オン」の確認音に近い短い木の音にして、目立たせません。SR から鐘が入り、UR・LG はいまの音です。',
+      s: {
+        N: { what: '木の音 1 つ（コッ）', ev: [ev(G4, 0, 80, '低い木の音', { gain: 0.8 })] },
+        R: { what: '木の音 2 つ（コッ・コッ）', ev: [ev(G4, 0, 70, '低い木の音'), ev(C5, 80, 80, '低い木の音')] },
+        SR: { what: '木の音のあとに鐘 2 音', ev: [ev(C5, 0, 60, '低い木の音'), ev(G3, 60, 240, '暗い鐘'), ev(C4, 120, 180, '暗い鐘')] },
+        UR: { what: 'いまの音（3 音 × 2 回）', ev: NOW_UR },
+        LG: { what: 'いまの音（3 音 × 4 回と長い音）', ev: NOW_LG },
+      },
+    },
+    {
+      key: 'NOW', name: 'いまのゲーム', tag: '比べる用',
+      about: 'N・R・SR は音なし、UR・LG だけ鳴ります。',
+      s: {
+        N: { what: '音なし', ev: [] }, R: { what: '音なし', ev: [] }, SR: { what: '音なし', ev: [] },
+        UR: { what: 'rareDrop（3 音 × 2 回）', ev: NOW_UR },
+        LG: { what: 'rareDropLG（3 音 × 4 回と長い音）', ev: NOW_LG },
+      },
+    },
+  ];
+  const lenOf = (evs) => evs.reduce((m, e) => Math.max(m, e.at + e.len), 0);
+
+  // ---- 合成（ゲームの fmTone・playSfx と同じ手順） ----
+  let ac = null, out = null, active = [], playingBtn = null, playTimer = 0;
+  function ctx() {
+    if (ac) return ac;
+    try {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      ac = new C();
+      try {
+        const comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -12; comp.ratio.value = 4; comp.connect(ac.destination); out = comp;
+      } catch { out = ac.destination; }
+    } catch { ac = null; }
+    return ac;
+  }
+  function track(node, t, stop) {
+    node.start(t); node.stop(stop);
+    node.onended = () => { active = active.filter((n) => n !== node); };
+    active.push(node);
+  }
+  function fmTone(a, dst, f, t, stop, p, vol, glide, vib) {
+    const carrier = a.createOscillator(), mod = a.createOscillator();
+    carrier.frequency.setValueAtTime(f, t);
+    mod.frequency.setValueAtTime(f * p.ratio, t);
+    if (glide !== 1) {
+      carrier.frequency.exponentialRampToValueAtTime(f * glide, stop);
+      mod.frequency.exponentialRampToValueAtTime(f * p.ratio * glide, stop);
+    }
+    const mg = a.createGain();
+    const dev = p.index * f * p.ratio;
+    mg.gain.setValueAtTime(dev, t);
+    mg.gain.setTargetAtTime(dev * p.sustain, t + 0.002, p.idecay);
+    mod.connect(mg); mg.connect(carrier.frequency);
+    const g = a.createGain();
+    const at = Math.min(p.attack, (stop - t) / 3), fade = Math.min(0.03, (stop - t) / 3);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + at);
+    g.gain.setTargetAtTime(vol * p.asus, t + at, p.adecay);
+    g.gain.setTargetAtTime(0, stop - fade * 2, fade / 2);
+    carrier.connect(g); g.connect(dst);
+    if (vib) {
+      const lfo = a.createOscillator(); lfo.frequency.value = 5.5;
+      const lg = a.createGain();
+      lg.gain.setValueAtTime(0, t);
+      lg.gain.linearRampToValueAtTime(f * 0.008, t + Math.min(0.4, stop - t));
+      lfo.connect(lg); lg.connect(carrier.frequency);
+      track(lfo, t, stop);
+    }
+    track(carrier, t, stop); track(mod, t, stop);
+  }
+  function stopAll() {
+    for (const n of active) { try { n.stop(); n.disconnect(); } catch { /* 止められなくてもよい */ } }
+    active = [];
+    if (playingBtn) playingBtn.classList.remove('playing');
+    playingBtn = null;
+    clearTimeout(playTimer);
+  }
+  function play(evs, btn) {
+    stopAll();
+    const a = ctx();
+    if (!a || evs.length === 0) return;
+    if (a.state === 'suspended') a.resume();
+    const ms = lenOf(evs);
+    const start = a.currentTime + 0.02, end = start + ms / 1000;
+    for (const e of evs) {
+      const lp = a.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = e.patch.lowpass; lp.Q.value = 0.7; lp.connect(out);
+      const t = start + e.at / 1000, stop = Math.min(end, t + e.len / 1000);
+      const vol = (e.patch.vol * (e.gain ?? 1)) / Math.sqrt(e.f.length);
+      for (const f of e.f) fmTone(a, lp, f, t, stop, e.patch, vol, e.glide ?? 1, e.vib ?? false);
+    }
+    if (btn) {
+      playingBtn = btn; btn.classList.add('playing');
+      playTimer = setTimeout(() => { btn.classList.remove('playing'); if (playingBtn === btn) playingBtn = null; }, ms + 40);
+    }
+  }
+
+  // ---- 案ごとの札 ----
+  const setsEl = document.getElementById('sets');
+  for (const set of SETS) {
+    const card = document.createElement('article');
+    card.className = 'set';
+    card.innerHTML = `<div class="set-head"><h3>${set.name}<span class="tag">${set.tag}</span></h3><p>${set.about}</p></div>`;
+    const row = document.createElement('div');
+    row.className = 'row';
+    for (const r of RARITIES) {
+      const s = set.s[r];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = `snd r-${r}`;
+      b.disabled = s.ev.length === 0;
+      b.innerHTML = `<span class="rk">［${r}］</span><span class="what">${s.what}</span><span class="ms">${s.ev.length ? (lenOf(s.ev) / 1000).toFixed(2) + ' 秒' : '—'}</span>`;
+      b.setAttribute('aria-label', `${set.name}、${r}：${s.what}`);
+      b.addEventListener('click', () => play(s.ev, b));
+      row.append(b);
+    }
+    card.append(row);
+    if (set.key !== 'NOW') {
+      const ctl = document.createElement('div');
+      ctl.className = 'controls';
+      const all = document.createElement('button');
+      all.type = 'button'; all.className = 'btn'; all.textContent = 'N から LG まで続けて聞く';
+      all.addEventListener('click', () => playSequence(RARITIES.map((r) => ({ evs: set.s[r].ev, btn: row.children[RARITIES.indexOf(r)] }))));
+      ctl.append(all);
+      card.append(ctl);
+    }
+    setsEl.append(card);
+  }
+  let seqTimers = [];
+  function clearSeq() { seqTimers.forEach(clearTimeout); seqTimers = []; }
+  function playSequence(items) {
+    clearSeq(); stopAll();
+    let t = 0;
+    for (const it of items) {
+      seqTimers.push(setTimeout(() => play(it.evs, it.btn), t));
+      t += Math.max(lenOf(it.evs), 300) + 450;
+    }
+  }
+
+  // ---- ゲームの流れ ----
+  const DEMO = {
+    N: { enemy: 'スライム', exp: 8, item: 'ショートソード', bonus: 'こうげき +2' },
+    R: { enemy: 'スケルトン', exp: 54, item: 'チェインメイル', bonus: 'ぼうぎょ +8' },
+    SR: { enemy: 'オークロード', exp: 90, item: 'ナイトシールド', bonus: 'かいひ +10' },
+    UR: { enemy: 'ダークナイト', exp: 150, item: 'ムラサメブレード', bonus: 'こうげき +35' },
+    LG: { enemy: 'ダークナイト', exp: 150, item: 'エクスカリバー', bonus: 'こうげき +52' },
+  };
+  const choice = { N: 'A', R: 'A', SR: 'A', UR: 'A', LG: 'A' };
+  try { Object.assign(choice, JSON.parse(localStorage.getItem('drop-se-choice') || '{}')); } catch { /* 読めなくてもよい */ }
+  const setOf = (k) => SETS.find((s) => s.key === k) || SETS[0];
+  const pickEl = document.getElementById('pick');
+  for (const r of RARITIES) {
+    const lab = document.createElement('label');
+    lab.className = `r-${r}`;
+    lab.innerHTML = `<span class="rk">［${r}］</span>`;
+    const sel = document.createElement('select');
+    sel.id = `pick-${r}`;
+    for (const s of SETS) {
+      const o = document.createElement('option');
+      o.value = s.key; o.textContent = s.key === 'NOW' ? 'いまのゲーム' : s.name.split('　')[0];
+      sel.append(o);
+    }
+    sel.value = choice[r];
+    sel.addEventListener('change', () => { choice[r] = sel.value; saveChoice(); });
+    lab.append(sel);
+    pickEl.append(lab);
+  }
+  const choiceEl = document.getElementById('choice');
+  function saveChoice() {
+    choiceEl.textContent = RARITIES.map((r) => `${r}＝${choice[r] === 'NOW' ? 'いまのゲーム' : '案 ' + choice[r]}`).join('、');
+    try { localStorage.setItem('drop-se-choice', JSON.stringify(choice)); } catch { /* 保存できなくてもよい */ }
+  }
+  saveChoice();
+
+  const logEl = document.getElementById('log');
+  let demoTimers = [];
+  function runDemo(r) {
+    demoTimers.forEach(clearTimeout); demoTimers = []; clearSeq(); stopAll();
+    const d = DEMO[r];
+    const lines = [
+      { cls: 'ok', text: `${d.enemy}を たおした！` },
+      { cls: 'ok', text: `経験値 ${d.exp} を かくとく` },
+      { drop: true },
+    ];
+    logEl.textContent = '';
+    lines.forEach((ln, i) => {
+      demoTimers.push(setTimeout(() => {
+        const div = document.createElement('div');
+        if (ln.drop) {
+          div.innerHTML = `${d.enemy}は ${d.item}<span class="rar r-${r}">［${r}］</span>（${d.bonus}）を おとした！`;
+          play(setOf(choice[r]).s[r].ev, null);
+        } else {
+          div.className = ln.cls; div.textContent = ln.text;
+        }
+        logEl.append(div);
+      }, i * 400));
+    });
+  }
+  const demoBtns = document.getElementById('demo-buttons');
+  for (const r of RARITIES) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn'; b.textContent = `［${r}］を拾う流れを流す`;
+    b.addEventListener('click', () => runDemo(r));
+    demoBtns.append(b);
+  }
+  const allDemo = document.createElement('button');
+  allDemo.type = 'button'; allDemo.className = 'btn'; allDemo.textContent = '選んだ組み合わせを N から順に聞く';
+  allDemo.addEventListener('click', () => { demoTimers.forEach(clearTimeout); demoTimers = []; playSequence(RARITIES.map((r) => ({ evs: setOf(choice[r]).s[r].ev, btn: null }))); });
+  demoBtns.append(allDemo);
+
+  document.getElementById('copy').addEventListener('click', () => {
+    const msg = document.getElementById('copied');
+    const text = choiceEl.textContent;
+    const fallback = () => {
+      const range = document.createRange(); range.selectNodeContents(choiceEl);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      msg.textContent = '選択しました。コピーしてください';
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => { msg.textContent = 'コピーしました'; }, fallback);
+    } catch { fallback(); }
+  });
+})();
+</script>
