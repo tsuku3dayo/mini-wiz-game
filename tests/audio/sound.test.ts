@@ -24,10 +24,10 @@ const ctx = (): FakeAudioContext => state.contexts[0];
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
 describe('効果音', () => {
-  test('TC-0032-09 encounter の長さは 510ms で、出来事の終わりのいちばん遅いものと同じ。8 種類とも長さが SFX_MS で、6 秒以内・20〜2,000 Hz', async () => {
+  test('TC-0032-09 encounter の長さは 510ms で、出来事の終わりのいちばん遅いものと同じ。11 種類とも長さが SFX_MS で、6 秒以内・20〜2,000 Hz', async () => {
     const s = await load();
     expect(s.sfxDuration('encounter')).toBe(510);
-    const ms = { levelUp: 1071, rareDrop: 360, rareDropLG: 1020, bossAppear: 2906, bossDefeat: 1000, clear: 5833, toggle: 80, encounter: 510 };
+    const ms = { levelUp: 1071, dropN: 140, dropR: 340, dropSR: 460, dropUR: 740, dropLG: 1400, bossAppear: 2906, bossDefeat: 1000, clear: 5833, toggle: 80, encounter: 510 };
     expect(s.SFX_MS).toEqual(ms);
     for (const [name, evs] of Object.entries(s.SFX)) {
       expect(Math.max(...evs.map((e) => e.at + e.len)), name).toBe(ms[name as keyof typeof ms]);
@@ -43,8 +43,8 @@ describe('効果音', () => {
     const { EFFECT_MS, RARE_DROP_LG_MS } = await import('../../src/logic/message-plan');
     for (const name of ['levelUp', 'bossAppear', 'bossDefeat', 'clear'] as const) expect(s.SFX_MS[name], name).toBe(EFFECT_MS[name]);
     expect(s.SFX_MS).toMatchObject({ levelUp: 1071, bossAppear: 2906, bossDefeat: 1000, clear: 5833 });
-    expect(s.SFX_MS.rareDrop).toBeLessThanOrEqual(EFFECT_MS.rareDrop);
-    expect(s.SFX_MS.rareDropLG).toBeLessThanOrEqual(RARE_DROP_LG_MS);
+    expect(s.SFX_MS.dropUR).toBeLessThanOrEqual(EFFECT_MS.rareDrop);
+    expect(s.SFX_MS.dropLG).toBeLessThanOrEqual(RARE_DROP_LG_MS);
   });
 
   test('TC-0018-10 遭遇の入力止めの長さ：通常の敵は 1000ms で遭遇の音（SFX_MS.encounter）より長く、ボスはボス出現の演出（EFFECT_MS.bossAppear）と同じ（1000・2906ms。v1.22）', async () => {
@@ -70,19 +70,14 @@ describe('効果音', () => {
     }
   });
 
-  test('TC-0032-19 8 種類の出来事（周波数・頭・長さ・音色・glide・ビブラート・音量の倍率）が仕様書 §25.2 と同じで、FM の予約（出口のコンプレッサー・ローパス・搬送波と変調波・止める時刻・音量・フェード）が §25.1 のとおり', async () => {
+  test('TC-0032-19 11 種類の出来事（周波数・頭・長さ・音色・glide・ビブラート・音量の倍率）が仕様書 §25.2 と同じで、FM の予約（出口のコンプレッサー・ローパス・搬送波と変調波・止める時刻・音量・フェード）が §25.1 のとおり', async () => {
     const s = await load();
     // [周波数, 頭 ms, 長さ ms, 音色, glide, ビブラート, 音量の倍率]
     type Row = [number[], number, number, string, number, boolean, number];
-    const Eb3 = 155.6, G3 = 196, C4 = 261.6;
+    const G3 = 196, C4 = 261.6;
     const r = (f: number[], at: number, len: number, patch: string, o: { glide?: number; vib?: boolean; gain?: number } = {}): Row =>
       [f, at, len, patch, o.glide ?? 1, o.vib ?? false, o.gain ?? 1];
-    const sparkle = (times: number, lastMs: number): Row[] => {
-      const total = times * 180 + lastMs;
-      const rows: Row[] = Array.from({ length: times * 3 }, (_, k) => r([[Eb3, G3, C4][k % 3]], k * 60, Math.min(180, total - k * 60), '暗い鐘'));
-      if (lastMs) rows.push(r([C4], total - lastMs, lastMs, '暗い鐘'));
-      return rows;
-    };
+    const Eb4 = 311.1, D4 = 293.7, F4 = 349.2, G4 = 392, C5 = 523.3, Eb5 = 622.3, G5 = 784, C3 = 130.8, C2 = 65.4;
     const 金管 = '沈んだ金管', 鐘 = '暗い鐘', オルガン = '暗いオルガン', 声 = '低い声', ひびく = 'ひびくオルガン';
     const expected: Record<string, Row[]> = {
       levelUp: [
@@ -93,8 +88,16 @@ describe('効果音', () => {
         r([523.3], 571, 286, 鐘, { gain: 0.8 }),
         r([622.3], 714, 357, 鐘, { gain: 0.8 }),
       ],
-      rareDrop: sparkle(2, 0),
-      rareDropLG: sparkle(4, 300),
+      // ドロップの案 B（v1.25）
+      dropN: [r([G4], 0, 60, '低い木の音'), r([C5], 70, 70, '低い木の音')],
+      dropR: [r([C4], 0, 220, 鐘), r([G4], 100, 240, 鐘)],
+      dropSR: [r([C4], 0, 200, 鐘), r([Eb4], 70, 200, 鐘), r([G4], 140, 320, 鐘), r([C3, G3], 0, 460, オルガン, { gain: 0.8 })],
+      dropUR: [r([C4], 0, 200, 鐘), r([Eb4], 70, 200, 鐘), r([G4], 140, 200, 鐘), r([C5], 210, 200, 鐘), r([Eb4, G4, C5], 280, 460, 鐘), r([C3, G3], 280, 460, オルガン)],
+      dropLG: [
+        r([C4, Eb4], 0, 180, 金管, { gain: 1.2 }), r([D4, F4], 200, 180, 金管, { gain: 1.2 }), r([Eb4, G4], 400, 1000, 金管, { vib: true, gain: 1.2 }),
+        r([G4], 400, 300, 鐘, { gain: 0.8 }), r([C5], 520, 300, 鐘, { gain: 0.8 }), r([Eb5], 640, 300, 鐘, { gain: 0.8 }), r([G5], 760, 640, 鐘, { gain: 0.8 }),
+        r([C3, G3, C4], 400, 1000, オルガン), r([C2], 400, 1000, 声),
+      ],
       bossAppear: [
         r([370], 0, 141, ひびく), r([311.1], 94, 141, ひびく), r([261.6], 188, 141, ひびく), r([220], 281, 141, ひびく),
         r([185], 375, 141, ひびく), r([155.6], 469, 141, ひびく), r([130.8], 563, 93, ひびく),

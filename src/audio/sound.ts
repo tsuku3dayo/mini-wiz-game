@@ -1,7 +1,7 @@
 // 効果音（仕様書 §12.1、§25、TD-0005 §1）。Web Audio でその場で合成する（FM 音源風。v1.7）。音声ファイルは使わない
 // 効果音と BGM は 1 つの AudioContext を共用する。音の機能がなくても、例外は外に出さない（音なしで遊べる）
 
-export type SfxName = 'levelUp' | 'rareDrop' | 'rareDropLG' | 'bossAppear' | 'bossDefeat' | 'clear' | 'toggle' | 'encounter';
+export type SfxName = 'levelUp' | 'dropN' | 'dropR' | 'dropSR' | 'dropUR' | 'dropLG' | 'bossAppear' | 'bossDefeat' | 'clear' | 'toggle' | 'encounter';
 
 /** 効果音の FM の音色（2 オペレーター。BGM の FmPatch と同じ考え方で、ローパスと音量を持つ） */
 export interface SePatch {
@@ -72,25 +72,19 @@ function seq(notes: readonly (readonly [number, number])[], patch: SePatch, tail
   return out;
 }
 
-/** ドロップの分散和音：3 音 × times 回（1 音 60ms、180ms まで響かせる）。lastMs があれば最後に 3 音目を長く */
-function sparkle(notes: readonly number[], times: number, lastMs: number): SfxEvent[] {
-  const total = times * notes.length * 60 + lastMs;
-  const out: SfxEvent[] = [];
-  for (let k = 0; k < times * notes.length; k++) out.push(ev(notes[k % notes.length], k * 60, Math.min(180, total - k * 60), S.暗い鐘));
-  if (lastMs > 0) out.push(ev(notes[notes.length - 1], total - lastMs, lastMs, S.暗い鐘));
-  return out;
-}
-
 // 音の高さ（Hz）
 const F1 = 43.7, G1 = 49, Ab1 = 51.9, A1 = 55, C2 = 65.4, F2 = 87.3, G2 = 98, Ab2 = 103.8;
 const C3 = 130.8, Eb3 = 155.6, F3 = 174.6, Gb3 = 185, G3 = 196, Ab3 = 207.7, A3 = 220, B3 = 246.9;
-const C4 = 261.6, D4 = 293.7, Eb4 = 311.1, E4 = 329.6, F4 = 349.2, Gb4 = 370, G4 = 392, C5 = 523.3, Eb5 = 622.3;
+const C4 = 261.6, D4 = 293.7, Eb4 = 311.1, E4 = 329.6, F4 = 349.2, Gb4 = 370, G4 = 392, C5 = 523.3, Eb5 = 622.3, G5 = 784;
 
-/** 効果音の長さ（ms）。演出の付く音は、演出の長さ（message-plan の EFFECT_MS）と同じ（v1.10） */
+/** 効果音の長さ（ms）。演出の付く音は、演出の長さ（message-plan の EFFECT_MS）と同じ（v1.10。dropUR は演出 800ms より短い） */
 export const SFX_MS: Readonly<Record<SfxName, number>> = {
   levelUp: 1071,
-  rareDrop: 360,
-  rareDropLG: 1020,
+  dropN: 140,
+  dropR: 340,
+  dropSR: 460,
+  dropUR: 740,
+  dropLG: 1400,
   bossAppear: 2906,
   bossDefeat: 1000,
   clear: 5833,
@@ -98,7 +92,7 @@ export const SFX_MS: Readonly<Record<SfxName, number>> = {
   encounter: 510,
 };
 
-/** 8 種類の音（仕様書 §25.2 のコードのとおり。オーナーが試聴ページで選んだもの：2026-11-06・2026-11-10） */
+/** 11 種類の音（仕様書 §25.2 のコードのとおり。オーナーが試聴ページで選んだもの：2026-11-06・2026-11-10・2026-11-27） */
 export const SFX: Readonly<Record<SfxName, readonly SfxEvent[]>> = {
   // 小さなファンファーレ（v1.10）：沈んだ金管が 3 つの和音で上がり、暗い鐘が答える
   levelUp: [
@@ -109,9 +103,34 @@ export const SFX: Readonly<Record<SfxName, readonly SfxEvent[]>> = {
     ev(C5, 571, 286, S.暗い鐘, { gain: 0.8 }),
     ev(Eb5, 714, 357, S.暗い鐘, { gain: 0.8 }),
   ],
-  // 低い音 2：ミ♭・ソ・ドの分散和音（3 オクターブ下）
-  rareDrop: sparkle([Eb3, G3, C4], 2, 0),
-  rareDropLG: sparkle([Eb3, G3, C4], 4, 300),
+  // ドロップの案 B（v1.25）：レアリティが上がるほど高く・厚くなる
+  dropN: [ev(G4, 0, 60, S.低い木の音), ev(C5, 70, 70, S.低い木の音)],
+  dropR: [ev(C4, 0, 220, S.暗い鐘), ev(G4, 100, 240, S.暗い鐘)],
+  dropSR: [
+    ev(C4, 0, 200, S.暗い鐘),
+    ev(Eb4, 70, 200, S.暗い鐘),
+    ev(G4, 140, 320, S.暗い鐘),
+    ev([C3, G3], 0, 460, S.暗いオルガン, { gain: 0.8 }),
+  ],
+  dropUR: [
+    ev(C4, 0, 200, S.暗い鐘),
+    ev(Eb4, 70, 200, S.暗い鐘),
+    ev(G4, 140, 200, S.暗い鐘),
+    ev(C5, 210, 200, S.暗い鐘),
+    ev([Eb4, G4, C5], 280, 460, S.暗い鐘),
+    ev([C3, G3], 280, 460, S.暗いオルガン),
+  ],
+  dropLG: [
+    ev([C4, Eb4], 0, 180, S.沈んだ金管, { gain: 1.2 }),
+    ev([D4, F4], 200, 180, S.沈んだ金管, { gain: 1.2 }),
+    ev([Eb4, G4], 400, 1000, S.沈んだ金管, { vib: true, gain: 1.2 }),
+    ev(G4, 400, 300, S.暗い鐘, { gain: 0.8 }),
+    ev(C5, 520, 300, S.暗い鐘, { gain: 0.8 }),
+    ev(Eb5, 640, 300, S.暗い鐘, { gain: 0.8 }),
+    ev(G5, 760, 640, S.暗い鐘, { gain: 0.8 }),
+    ev([C3, G3, C4], 400, 1000, S.暗いオルガン),
+    ev(C2, 400, 1000, S.低い声),
+  ],
   // オルガンの不協和音（v1.10）：オルガンが駆け下り、減七の和音を鳴らし続ける。下で低い声と太鼓
   bossAppear: [
     ev(Gb4, 0, 141, S.ひびくオルガン),

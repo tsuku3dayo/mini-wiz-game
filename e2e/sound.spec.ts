@@ -143,9 +143,9 @@ test.describe('効果音と音の設定', () => {
     const scenes: { at: 'BATTLE' | 'INN'; state: Record<string, unknown>; seed: number; expected: [string, number][] }[] = [
       // 1 行目のあと 400ms ごと。演出の行のあとはその長さ（v1.10：levelUp 1071・bossDefeat 1000）。
       // v1.14：勝利ではレベルが上がらず、レベルアップは宿屋の やすむ で鳴る
-      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['rareDrop', 1600]] },
-      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['rareDropLG', 1600]] },
-      { at: 'BATTLE', state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['rareDropLG', 1800], ['clear', 3000]] },
+      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropUR, expected: [['dropUR', 1600]] },
+      { at: 'BATTLE', state: darkKnight, seed: SEEDS.darkKnightDropLG, expected: [['dropLG', 1600]] },
+      { at: 'BATTLE', state: bossBattle(), seed: SEEDS.bossWin, expected: [['bossDefeat', 400], ['dropLG', 1800], ['clear', 3200]] }, // LG の演出は 1400ms（v1.25）
       { at: 'INN', state: innLevelUp(), seed: SEEDS.noEncounter, expected: [['levelUp', 400], ['levelUp', 1871], ['levelUp', 3342]] },
     ];
     for (const s of scenes) {
@@ -225,7 +225,7 @@ test.describe('効果音と音の設定', () => {
     await expect(page.locator('#effect-layer')).toHaveAttribute('data-effect', 'bossAppear');
     await check();
     // UR・LG のドロップ、ボス撃破とクリア
-    for (const [state, seed, end] of [[darkKnight, SEEDS.darkKnightDropUR, 'rareDrop'], [darkKnight, SEEDS.darkKnightDropLG, 'rareDropLG'], [bossBattle(), SEEDS.bossWin, 'clear']] as const) {
+    for (const [state, seed, end] of [[darkKnight, SEEDS.darkKnightDropUR, 'dropUR'], [darkKnight, SEEDS.darkKnightDropLG, 'dropLG'], [bossBattle(), SEEDS.bossWin, 'clear']] as const) {
       await startAt(page, 'BATTLE', { state, seed });
       await press(info, attackItem(page));
       await expect.poll(async () => (await heard(page)).some((h) => h.name === end), { timeout: 15_000 }).toBe(true);
@@ -236,7 +236,7 @@ test.describe('効果音と音の設定', () => {
     await press(info, restItem(page));
     await expect.poll(async () => (await heard(page)).some((h) => h.name === 'levelUp'), { timeout: 15_000 }).toBe(true);
     await check();
-    expect([...names].sort()).toEqual(['bossAppear', 'bossDefeat', 'clear', 'encounter', 'levelUp', 'rareDrop', 'rareDropLG']);
+    expect([...names].sort()).toEqual(['bossAppear', 'bossDefeat', 'clear', 'dropLG', 'dropUR', 'encounter', 'levelUp']);
   });
 
   test('TC-0032-16 AudioContext がないブラウザで、音をオンにして遭遇・戦闘・レベルアップまで遊んでも、例外もエラーの画面も出ない', async ({ page }, info) => {
@@ -261,7 +261,7 @@ test.describe('効果音と音の設定', () => {
     await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
     await press(info, attackItem(page));
     await expect(page.locator('body')).toHaveAttribute('data-screen', 'dungeon', { timeout: 10_000 });
-    expect(await names()).toEqual(['rareDrop']);
+    expect(await names()).toEqual(['dropUR']);
     // レベルアップは宿屋の やすむ で鳴る（v1.14）
     await startAt(page, 'INN', { state: innLevelUp() });
     await press(info, restItem(page));
@@ -499,5 +499,40 @@ test.describe('場面ごとの BGM', () => {
     console.log(`TC-0037-05 前進から遭遇の音まで ${ms.toFixed(1)}ms（操作を送る時間を含む）`);
     expect(ms).toBeGreaterThan(0);
     expect(ms).toBeLessThan(300);
+  });
+});
+
+test.describe('ドロップの音（v1.25）', () => {
+  const battles = [
+    { kind: 'goblin', seed: SEEDS.goblinDropN, name: 'dropN' },
+    { kind: 'slime', seed: SEEDS.slimeDropR, name: 'dropR' },
+    { kind: 'darkKnight', seed: SEEDS.darkKnightDropSR, name: 'dropSR' },
+    { kind: 'darkKnight', seed: SEEDS.darkKnightDropUR, name: 'dropUR' },
+    { kind: 'darkKnight', seed: SEEDS.darkKnightDropLG, name: 'dropLG' },
+  ];
+  test('TC-0032-23 N・R・SR は演出なしで音が 1 回、UR・LG は演出とともに 1 回だけ', async ({ page }, info) => {
+    await soundOnAtStart(page);
+    await recordSounds(page);
+    for (const b of battles) {
+      await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999, battle: battleOf(b.kind, 1) }, seed: b.seed });
+      await press(info, attackItem(page));
+      await expect.poll(async () => (await heard(page)).some((h) => h.name.startsWith('drop')), { timeout: 15_000 }).toBe(true);
+      // 音が出たときの演出の有無（N・R・SR は rareDrop が立たない）
+      const effect = await page.locator('#effect-layer').getAttribute('data-effect');
+      if (['dropN', 'dropR', 'dropSR'].includes(b.name)) expect(effect, b.name).not.toBe('rareDrop');
+      await page.waitForTimeout(1600);
+      expect((await heard(page)).filter((h) => h.name.startsWith('drop')).map((h) => h.name), b.kind).toEqual([b.name]);
+    }
+  });
+
+  test.describe('動きを減らす設定', () => {
+    test.use({ reducedMotion: 'reduce' });
+    test('TC-0032-23 動きを減らす設定で N を落とすと、一度に出た行のあと dropN が 1 回', async ({ page }, info) => {
+      await soundOnAtStart(page);
+      await recordSounds(page);
+      await startAt(page, 'BATTLE', { state: { hp: 999, maxHp: 999, battle: battleOf('goblin', 1) }, seed: SEEDS.goblinDropN });
+      await press(info, attackItem(page));
+      await expect.poll(async () => (await heard(page)).map((h) => h.name), { timeout: 10_000 }).toEqual(['dropN']);
+    });
   });
 });

@@ -4487,7 +4487,9 @@ export const SFX: Readonly<Record<SfxName, readonly SfxEvent[]>> = {
 ### 25.4 鳴らすタイミング（メッセージとの同期）
 
 - メッセージは 400 ms 間隔で 1 行ずつ出す。演出の付いた行を出したら「演出中」（`activeEffect`）になり、演出の長さ（§12.1（演出の長さと効果音の長さ））だけ待ってから次の行を出す。
-- メッセージキュー（`ui/message-queue.ts`）は、演出の始まり・終わりを `onEffectStart`・`onEffectEnd` で知らせる。`main.ts` が、始まりで `sfx(effect, { muted: 音がオフ })`（`rareDrop` でレア度 `LG` なら `'rareDropLG'`）、終わり（スキップ・消去を含む）で `stopSfx()` を呼ぶ。
+- メッセージキュー（`ui/message-queue.ts`）は、演出の始まり・終わりを `onEffectStart`・`onEffectEnd` で知らせる。`main.ts` が、始まりで `sfx(effect, { muted: 音がオフ })`（`rareDrop` なら、その行のレアリティで `'dropUR'`・`'dropLG'`。v1.25。v1.24 までは `'rareDrop'`・`'rareDropLG'`）、終わり（スキップ・消去を含む）で `stopSfx()` を呼ぶ。
+- 演出のない `rarity` 付きの行（N・R・SR のドロップ・宝箱の行。v1.25）を出したときは、キューが `onRarityLine(rarity)` で知らせ、`main.ts` が `sfx('drop' + rarity, { muted: 音がオフ })` を呼ぶ。`activeEffect` は立てず、次の行は 400 ms 後。動きを減らす設定で行を一度に出したときは、立てる演出がなく最後の行が `rarity` 付きなら、その音を鳴らす。
+- `SfxName` は `'levelUp' | 'dropN' | 'dropR' | 'dropSR' | 'dropUR' | 'dropLG' | 'bossAppear' | 'bossDefeat' | 'clear' | 'toggle' | 'encounter'`（v1.25。11 種）。
 - 演出は 1 行ずつ順番に立つので、複数の演出（例：ボス撃破 → LG ドロップ → クリア。v1.14 からレベルアップは宿屋の やすむ で鳴る）はメッセージの順に 1 つずつ鳴る。動きを減らす設定では、行を一度に出して最後の演出だけを立てるので、最後の演出の音だけが鳴る。
 - `encounter` はメッセージの流れの外で鳴らす：操作の共通の流れ（`ui/command.ts`）の成功時、`isEncounter(前の状態, 新しい状態)`（前が BATTLE でなく、新しいのが BATTLE）なら、メッセージ欄を消して遭遇の入力止め `queue.lock(encounterLockMs(ボスか))` をかけ（v1.17。§11.8）、`onEncounter(新しい状態)` を呼ぶ（`main.ts` が、ボス戦でなければ `sfx('encounter', { muted: 音がオフ })`。オフでも `app:sound` は出る）。そのあとメッセージ（「スライムが あらわれた！」等）を流す。戦闘中のターン（BATTLE → BATTLE）では鳴らさない。
 - 音をオンにした瞬間に `toggle` を鳴らす（`createSoundSetting` の `onTurnOn`。設定の受け手に知らせる前に鳴らすので、BGM はその残りのあとで始まる）。
@@ -5080,13 +5082,13 @@ export const BGM: Readonly<Record<BgmName, BgmTrack>> = {
 
 | テスト | 主に確かめること | v1.0 |
 | --- | --- | --- |
-| `tests/audio/sound.test.ts` | 8 種類の長さ `SFX_MS` と出来事の終わりが一致し、6 秒以内・20〜2,000 Hz（v1.10）、演出の付く 4 つの `SFX_MS` が `EFFECT_MS` と同じ（v1.10）、出来事（周波数・頭・長さ・音色・glide・ビブラート・音量の倍率）と音色 9 種の値が §25.2 と同じ、FM の予約（効果音の出口のコンプレッサー threshold −12・ratio 4 → destination、出来事ごとのローパス Q 0.7 → 出口、搬送波・変調波・止める時刻・glide の exponentialRamp・音量 vol × gain ÷ √音数・終わりのフェード min(0.03, 長さ/3)・ビブラートの LFO 5.5 Hz）、コンプレッサーが作れなくてもローパスを destination につないで鳴る（v1.10）、encounter は 510 ms・頭は 0 ms（v1.10）、残り時間（encounter 直後 0.51、0.3 秒後 0.21、終われば 0）、stopSfx で 0（1 音は搬送波・変調波の 2 つを止める）、Web Audio がなくても例外なし、suspended のときの再開（入力 5 種を capture で受ける）、encounter は遅れなく始まり 1 秒以内に終わる | `sound.test.tsx`・`encounter.test.tsx`・`soundTiming.test.ts` |
+| `tests/audio/sound.test.ts` | 11 種類（v1.25。v1.24 までは 8 種類）の長さ `SFX_MS` と出来事の終わりが一致し、6 秒以内・20〜2,000 Hz（v1.10）、演出の付く 4 つの `SFX_MS` が `EFFECT_MS` と同じ（v1.10）、出来事（周波数・頭・長さ・音色・glide・ビブラート・音量の倍率）と音色 9 種の値が §25.2 と同じ、FM の予約（効果音の出口のコンプレッサー threshold −12・ratio 4 → destination、出来事ごとのローパス Q 0.7 → 出口、搬送波・変調波・止める時刻・glide の exponentialRamp・音量 vol × gain ÷ √音数・終わりのフェード min(0.03, 長さ/3)・ビブラートの LFO 5.5 Hz）、コンプレッサーが作れなくてもローパスを destination につないで鳴る（v1.10）、encounter は 510 ms・頭は 0 ms（v1.10）、残り時間（encounter 直後 0.51、0.3 秒後 0.21、終われば 0）、stopSfx で 0（1 音は搬送波・変調波の 2 つを止める）、Web Audio がなくても例外なし、suspended のときの再開（入力 5 種を capture で受ける）、encounter は遅れなく始まり 1 秒以内に終わる | `sound.test.tsx`・`encounter.test.tsx`・`soundTiming.test.ts` |
 | `tests/audio/sound-setting.test.ts` | 初期オフ・`'on'` のときだけオン、保存に失敗しても切り替わる（保存できることは E2E の TC-0032-03） | `sound.test.tsx` の一部 |
 | `tests/audio/bgm.test.ts` | 1 周分の予約と 1 秒前の次の周の予約、同じ曲は頭に戻らない、違う曲は 0.3 秒で消して頭から（0.32・0.4 秒の後片付け）、始まりの遅らせ（`startAfterSec`）、ダッキング（3 割・戻す・重なり・0 で即戻す）、停止（遅らせた始まりも鳴らない） | `bgm.test.ts` |
 | `tests/logic/bgm-tracks.test.ts` | 6 曲、全パートの拍数が 1 周と同じ、打楽器が 1 周の中、音色 20 種と値の範囲、音域 24〜96、テンポ・拍子・パートの label・音色・vol の諸元（v1.7） | `bgmTracks.test.ts`（試聴ページとの突き合わせを除く） |
 | `tests/logic/bgm-scene.test.ts` | §26.7 の対応表すべて（ボス撃破後の判定を含む） | `bgmScene.test.ts` |
 | `tests/logic/message-plan.test.ts` | 演出の長さ、遭遇の入力止めの長さ（v1.17。v1.22 で通常の敵 1000ms。通常の敵が `SFX_MS.encounter` より長いこと・ボスが `EFFECT_MS.bossAppear` と同じことは `tests/audio/sound.test.ts`）、遷移の保留の件数、動きを減らす設定のときのまとめ方 | `effects.test.tsx` の一部 |
-| E2E（`e2e/sound.spec.ts`。BGM は同じファイルの「場面ごとの BGM」） | 遭遇でメッセージ欄を消して encounter、ボスでは鳴らさず bossAppear だけ、オンのときだけ演出で鳴る（LG は rareDropLG）、スキップで停止（遭遇の入力止めの間は止まらない。v1.17）、オフで鳴らさない、戦闘中のターンでは鳴らさない、メニューは閉じない、画面を通した曲の切り替え（§12.2（切り替えの規則）の各規則、エラーの画面でも止めない、開き直し） | `sound.test.tsx`・`encounter.test.tsx`・`effects.test.tsx`・`BgmDirector.test.tsx` |
+| E2E（`e2e/sound.spec.ts`。BGM は同じファイルの「場面ごとの BGM」） | 遭遇でメッセージ欄を消して encounter、ボスでは鳴らさず bossAppear だけ、オンのときだけ演出で鳴る（ドロップは N〜LG のすべてでレアリティごとの dropN〜dropLG。N・R・SR は演出なしで 1 回。v1.25）、スキップで停止（遭遇の入力止めの間は止まらない。v1.17）、オフで鳴らさない、戦闘中のターンでは鳴らさない、メニューは閉じない、画面を通した曲の切り替え（§12.2（切り替えの規則）の各規則、エラーの画面でも止めない、開き直し） | `sound.test.tsx`・`encounter.test.tsx`・`effects.test.tsx`・`BgmDirector.test.tsx` |
 
 ---
 

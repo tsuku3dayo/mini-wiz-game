@@ -19,7 +19,7 @@ export const EFFECT_MS: Readonly<Record<MessageEffect, number>> = {
   bossDefeat: 1000,
   clear: 5833,
 };
-export const RARE_DROP_LG_MS = 1200;
+export const RARE_DROP_LG_MS = 1400;
 
 /**
  * 遭遇の入力止め（仕様書 v1.17 §11.8 の 7）：遭遇した時点から、操作もスキップも受け付けない長さ。
@@ -33,7 +33,7 @@ export function encounterLockMs(isBoss: boolean): number {
   return isBoss ? ENCOUNTER_LOCK_MS.boss : ENCOUNTER_LOCK_MS.normal;
 }
 
-/** 演出の長さ。rareDrop は LG だけ 1200ms */
+/** 演出の長さ。rareDrop は LG だけ 1400ms（v1.25。v1.24 までは 1200ms） */
 export function effectDuration(effect: MessageEffect, rarity?: Rarity): number {
   if (effect === 'rareDrop' && rarity === 'LG') return RARE_DROP_LG_MS;
   return EFFECT_MS[effect];

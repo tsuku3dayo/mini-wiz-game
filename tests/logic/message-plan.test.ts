@@ -7,7 +7,7 @@ describe('メッセージの進め方', () => {
     expect(waitAfter({})).toBe(400);
     expect(waitAfter({ effect: 'levelUp' })).toBe(1071);
     expect(waitAfter({ effect: 'rareDrop', rarity: 'UR' })).toBe(800);
-    expect(waitAfter({ effect: 'rareDrop', rarity: 'LG' })).toBe(1200);
+    expect(waitAfter({ effect: 'rareDrop', rarity: 'LG' })).toBe(1400);
     expect(effectDuration('bossAppear')).toBe(2906);
     expect(effectDuration('bossDefeat')).toBe(1000);
     expect(effectDuration('clear')).toBe(5833);
@@ -20,9 +20,9 @@ describe('メッセージの進め方', () => {
 });
 
 describe('演出の長さと計画', () => {
-  test('TC-0031-06 EFFECT_MS は levelUp 1071・rareDrop 800（LG 1200）・bossAppear 2906・bossDefeat 1000・clear 5833（v1.10）。演出のない行のあとは 400ms、演出のある行のあとはその長さ待つ計画', () => {
+  test('TC-0031-06 EFFECT_MS は levelUp 1071・rareDrop 800（LG 1400。v1.25）・bossAppear 2906・bossDefeat 1000・clear 5833（v1.10）。演出のない行のあとは 400ms、演出のある行のあとはその長さ待つ計画', () => {
     expect(EFFECT_MS).toEqual({ levelUp: 1071, rareDrop: 800, bossAppear: 2906, bossDefeat: 1000, clear: 5833 });
-    expect(RARE_DROP_LG_MS).toBe(1200);
+    expect(RARE_DROP_LG_MS).toBe(1400);
     const lines = [
       { text: 'a' },
       { text: 'b', effect: 'bossDefeat' as const },
@@ -34,7 +34,7 @@ describe('演出の長さと計画', () => {
       { text: 'h', effect: 'clear' as const },
     ];
     expect(planSteps(lines).map((s) => [s.line.text, s.wait])).toEqual([
-      ['a', 400], ['b', 1000], ['c', 1071], ['d', 400], ['e', 800], ['f', 1200], ['g', 2906], ['h', 5833],
+      ['a', 400], ['b', 1000], ['c', 1071], ['d', 400], ['e', 800], ['f', 1400], ['g', 2906], ['h', 5833],
     ]);
   });
 
@@ -48,7 +48,7 @@ describe('演出の長さと計画', () => {
     const plan = planReduced(lines);
     expect(plan.show.map((l) => l.text)).toEqual(['a', 'b', 'c', 'd']);
     expect(plan.effectLine?.text).toBe('c');
-    expect(plan.wait).toBe(1200);
+    expect(plan.wait).toBe(1400);
     expect(plan.hold).toBe(0);
     expect(planReduced([{ text: 'x', tone: 'normal' as const, effect: undefined }])).toMatchObject({ effectLine: null, wait: 0, hold: 0 });
   });

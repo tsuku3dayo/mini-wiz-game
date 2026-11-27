@@ -41,6 +41,8 @@ export interface QueueOptions {
   /** 演出の始まり・終わり（効果音は音の TASK でつなぐ） */
   onEffectStart?: (e: ActiveEffect) => void;
   onEffectEnd?: (e: ActiveEffect) => void;
+  /** 演出のない rarity 付きの行（N・R・SR のドロップ・宝箱）を出した（v1.25。ドロップの音） */
+  onRarityLine?: (rarity: Rarity) => void;
 }
 
 export function createMessageQueue(opts: QueueOptions): MessageQueue {
@@ -91,6 +93,7 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
     lines = appendLines(lines, [line]);
     if (hold > 0) hold -= 1;
     startEffect(line);
+    if (!line.effect && line.rarity) opts.onRarityLine?.(line.rarity);
     if (line.effect || pending.length > 0) {
       timer = setTimeout(() => {
         timer = null;
@@ -123,6 +126,10 @@ export function createMessageQueue(opts: QueueOptions): MessageQueue {
         if (last) {
           startEffect(last);
           timer = setTimeout(() => { timer = null; endEffect(); notify(); }, plan.wait);
+        } else {
+          // 演出がなく、最後の行が rarity 付きなら、その音だけ鳴らす（v1.25）
+          const tail = all[all.length - 1];
+          if (tail.rarity) opts.onRarityLine?.(tail.rarity);
         }
         notify();
         return;
