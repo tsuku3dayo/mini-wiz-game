@@ -3,8 +3,8 @@ id: MWIZ-TD-0003
 type: Technical Design
 title: 詳細設計 画面の共通の仕組み（ストア・ルーター・操作の流れ・メッセージ・部品・画面の大きさへの合わせ方）
 status: stable
-version: 1.8
-updated: 2026-11-12
+version: 1.9
+updated: 2026-11-27
 sources:
   - MWIZ-TD-0001（v1.2）
   - MWIZ-GUI-0001（v1.5）
@@ -53,6 +53,7 @@ verified: null
 
 - メッセージ欄は `lines` の最新 `rows` 行を出す。高さは CSS で固定（`height: calc(var(--rows) * 1.6em); overflow: hidden`。`--rows` を部品の style に入れる）。
 - 折り返しで枠に入りきらないときは、描いたあとに `scrollHeight > clientHeight` の間、いちばん古い行の要素を消す（新しい行をいつも見せる。GUI-0001 §4.2）。
+- ドロップの音（v1.9。仕様書 v1.25 §25.4。TASK-0046）：キューの設定に `onRarityLine?: (rarity) => void` を足す。`showNext` で、演出のない `rarity` 付きの行（N・R・SR のドロップ・宝箱の行）を出したときに呼ぶ（`activeEffect` は立てない。待ちは 400ms のまま）。動きを減らす設定で一度に出すときは、立てる演出がなく、最後の行が `rarity` 付きならそれで呼ぶ。`main.ts` は `onRarityLine` を `sfx('drop' + rarity)` に、`onEffectStart` の `rareDrop` を `dropUR`／`dropLG` につなぐ。演出の長さは `logic/message-plan.ts` の `RARE_DROP_LG_MS = 1400`（仕様書 v1.25）。画面の光と行の点滅は 400ms × 3 回のまま（`effect-layer`・`message-log` の CSS が「長さ ÷ 回数」で決めていないか確かめ、決めていれば 400ms に固定する）
 - メッセージ欄のない画面（タイトル・そうび・もちもの・ステータス）でも、キューは動く。結果の文は `lines` にたまり、メッセージ欄のある画面に戻ったときに出る（仕様書 §11.7）。
 
 ## 4. 共通部品（`ui/components/`）

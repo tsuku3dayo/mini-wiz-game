@@ -3,13 +3,13 @@ id: MWIZ-TC-0014
 type: Test Case
 title: 迷宮を一人称で歩く
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-27
 sources:
   - MWIZ-US-0014（v1.1）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.11）
-  - MWIZ-TD-0004（v1.9）
+  - MWIZ-TD-0002（v1.12）
+  - MWIZ-TD-0004（v1.10）
   - docs/specification-ja.md (v1.25) §4.1、§4.2、§4.8、§4.10、§11.5、§16.2、§16.4
 verified: null
 ---
@@ -28,7 +28,7 @@ verified: null
 | TC-0014-03 | 3 | 矢印キーが、フォーカスがどこにあっても効く。ページはスクロールしない。応答待ち（`setDelay`）・逐次表示中・メニュー表示中に押したキーは捨てられ、あとで動かない | E2E（キー、`desktop`） | `e2e/dungeon.spec.ts` |
 | TC-0014-04 | 4 | `viewToSegments` が枠の座標（x = 0,40,80,110,130／y = 0,30,60,82,97）の線分を返す | 単体 | `tests/logic/view-to-segments.test.ts` |
 | TC-0014-05 | 4 | 壁にぶつかると、段 0 の正面の壁の線（`front`・depth 0）だけが 200ms 点滅し、そのあと消えない | E2E | `e2e/dungeon.spec.ts` |
-| TC-0014-06 | 5 | `toFirstPersonView` の視界は最大 4 段、正面の壁で止まり、視界の外のマスを変えても結果が同じ。キーは `floor`・`facing`・`underfoot`・`depths` だけ | 単体 | `tests/domain/view.test.ts` |
+| TC-0014-06 | 5 | `toFirstPersonView` の視界は最大 4 段、正面の壁（と閉じた扉）で止まり、視界の外のマスを変えても結果が同じ。キーは `floor`・`facing`・`underfoot`・`ahead`・`depths` だけ（v1.1：仕様書 v1.25。扉の見え方は TC-0041-05） | 単体 | `tests/domain/view.test.ts` |
 | TC-0014-07 | 6 | 疑似3D の上に「{階}F　{向き}」（例「3F　北」、間は全角スペース）が出て、座標の数字は出ない | E2E | `e2e/dungeon.spec.ts` |
 | TC-0014-08 | 2 | iPhone 11 で移動ボタンを親指で押しやすく、押したとき指で疑似3D・メッセージ欄・ステータスが隠れない | 手動 | 実機（iPhone 11） |
 

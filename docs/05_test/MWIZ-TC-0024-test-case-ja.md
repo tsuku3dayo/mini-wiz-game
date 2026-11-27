@@ -3,13 +3,13 @@ id: MWIZ-TC-0024
 type: Test Case
 title: ボスを倒してクリアする
 status: stable
-version: 1.3
-updated: 2026-11-13
+version: 1.4
+updated: 2026-11-27
 sources:
   - MWIZ-US-0024（v1.4）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.11）
-  - MWIZ-TD-0004（v1.9）
+  - MWIZ-TD-0002（v1.12）
+  - MWIZ-TD-0004（v1.10）
   - MWIZ-GUI-0005（v1.9）
   - docs/specification-ja.md (v1.25) §4.3、§6.3、§9.1、§9.2、§11.5、§16.1、§16.2
 verified: null
@@ -24,7 +24,7 @@ verified: null
 
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
-| TC-0024-01 | 1 | 5F でボスのマス（`openMap` の (9,0)）へ前進すると、乱数を 1 個も引かずに場所 BATTLE・敵が暗黒のネクロマンサー（`isBoss` true）になる。メッセージ「暗黒のネクロマンサーが あらわれた！」に effect `bossAppear` | 単体 | `tests/domain/explore.test.ts` |
+| TC-0024-01 | 1 | ボスに扉がないマップ（`openMap` は扉なし。v1.4：仕様書 v1.25 からは、行き止まりがない階と v1.24 までに作ったマップ）の 5F でボスのマス（(9,0)）へ前進すると、乱数を 1 個も引かずに場所 BATTLE・敵が暗黒のネクロマンサー（`isBoss` true）になる。メッセージ「暗黒のネクロマンサーが あらわれた！」に effect `bossAppear` | 単体 | `tests/domain/explore.test.ts` |
 | TC-0024-02 | 2 | ボスの経験値が 1000。Lv12・累計 1584 で撃破すると累計 2584 で Lv12 のまま（成長の乱数を引かない）。そのあと宿屋で `rest` すると Lv15 になる（v1.1） | 単体 | `tests/domain/battle.test.ts` |
 | TC-0024-03 | 3 | 上の撃破のメッセージが「暗黒のネクロマンサーを たおした！」→「経験値 1000 を かくとく」→ ドロップの行 →「ダンジョンに 平和が もどった」の 4 行。effect の並びが `bossDefeat, rareDrop, clear`。場所 CLEARED、`dungeon` と `battle` が null（v1.1 でレベルアップの行がなくなった） | 単体 | `tests/domain/battle.test.ts` |
 | TC-0024-04 | 4 | ゲーム API でボスを倒した操作のあと、最後に使ったスロット（`saveSlot` 2 の状態なら `mini-wiz-game-save-2`）がクリア時点の値で上書きされている：キャラクター（名前・Lv12・経験値 2584・HP/MP の現在値と最大値・基礎値）、所持品（段階 8・LG の個体が入り、`pending` は null）、実績（`laps` 2・`bossKills` 1）。ほかのスロットは変わらない。`getGame()` の `clear.autoSaved` が true（v1.1） | 単体 | `tests/api/game-api.test.ts` |

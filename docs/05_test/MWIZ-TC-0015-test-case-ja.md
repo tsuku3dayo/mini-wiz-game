@@ -3,13 +3,13 @@ id: MWIZ-TC-0015
 type: Test Case
 title: 自動地図で踏破したところを確かめる
 status: stable
-version: 1.0
-updated: 2026-10-30
+version: 1.1
+updated: 2026-11-27
 sources:
   - MWIZ-US-0015（v1.0）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.11）
-  - MWIZ-TD-0004（v1.9）
+  - MWIZ-TD-0002（v1.12）
+  - MWIZ-TD-0004（v1.10）
   - MWIZ-GUI-0004（v1.1）
   - docs/specification-ja.md (v1.25) §4.6、§4.7、§11.5、§16.2、§16.4、§22.5
 verified: null
@@ -25,10 +25,10 @@ verified: null
 | 確認 ID | 条件 | 確かめること（期待する結果） | 方法 | 置き場所 |
 | --- | --- | --- | --- | --- |
 | TC-0015-01 | 1 | 踏破記録（`visited`）：出発の直後は 1F の入口だけが true。前進・後退で別のマスへ移ると、そのマスが true（遭遇したときも）。回転・壁にぶつかったときは `visited` が変わらない。5F のボスのマスへ入ると戦闘になり、そのマスは false のまま。階段で 2F へ降りて戻ると、1F の記録が残っている（降りる前と同じ）。`visitCurrent` は入力を変えず、踏破済みのマスではそのまま返す | 単体 | `tests/domain/explore.test.ts` |
-| TC-0015-02 | 1 | `toAutoMapView` の `cells` は長さ 100 で、未踏破のマスは `null`、踏破済みのマスは `{ walls: { n, e, s, w }, stairs }`（隣が未踏破でもその境界の壁の有無を返す）。`stairs` は 1F の `up` が `'entrance'`、2F 以上の `up` が `'up'`、`down` が `'down'`。`player` は `{ x, y }` だけ（向きなし） | 単体 | `tests/domain/view.test.ts` |
+| TC-0015-02 | 1 | `toAutoMapView` の `cells` は長さ 100 で、未踏破のマスは `null`、踏破済みのマスは `{ walls: { n, e, s, w }, doors: { n, e, s, w }, stairs }`（隣が未踏破でもその境界の壁の有無を返す。扉のない地図では `doors` はすべて false。v1.1：仕様書 v1.25。扉は TC-0041-17）。`stairs` は 1F の `up` が `'entrance'`、2F 以上の `up` が `'up'`、`down` が `'down'`。`player` は `{ x, y }` だけ（向きなし） | 単体 | `tests/domain/view.test.ts` |
 | TC-0015-03 | 2 | `mapToShapes(map, facing)`：外枠の矩形 (0.5, 0.5)・幅 159・高さ 159。踏破済みのマスだけ 16×16 の塗り（位置 x = (i mod 10) × 16、y = floor(i ÷ 10) × 16）。壁は踏破済みのマスの壁のある辺だけ。記号は「↓」「↑」「入」と、現在地の向きの矢印「▲」（北）「▶」（東）「▼」（南）「◀」（西）。現在地のマスでは階段の記号を出さず矢印だけ。数字・ボスのマスの図形はない | 単体 | `tests/logic/map-to-shapes.test.ts` |
 | TC-0015-04 | 2 | 画面の自動地図（SVG）：`viewBox="0 0 160 160"`。狭い画面では `width`・`height` が 160。広い画面（`desktop`）では正方形で 176 以上。塗りのマスの数が `debugDungeon()` の `visited` の true の数と同じ。文字は「↓」「↑」「入」「▲」「▶」「▼」「◀」だけで、数字がない。`aria-label` が「{階}F の地図。踏破済み {N} マス。」 | E2E | `e2e/dungeon.spec.ts` |
-| TC-0015-05 | 3 | ゲーム API の結果（`getGame`・`move`・`stairs`・`battle` の `state`）に、`revision`・`schemaVersion`・`updatedAt`・`floors`・`walls`・`visited`・`boss`・敵の HP がない。`dungeon` のキーは `floor`・`facing`・`underfoot`・`depths`・`map` だけで、`map.cells` は現在の階の 100 個（未踏破は `null`）。`battle` のキーは `enemyKind`・`enemyName`・`isBoss`・`canHeal`・`canFlee` だけ。5F でボスのマスが視界に入っても、`depths` の `stairs` は `null` | 単体 | `tests/api/game-api.test.ts` |
+| TC-0015-05 | 3 | ゲーム API の結果（`getGame`・`move`・`stairs`・`battle` の `state`）に、`revision`・`schemaVersion`・`updatedAt`・`floors`・`walls`・`visited`・`boss`・敵の HP がない。`dungeon` のキーは `floor`・`facing`・`underfoot`・`ahead`・`depths`・`map` だけ（v1.1：仕様書 v1.25 で `ahead` を足した。扉の中身 `doors` はない）で、`map.cells` は現在の階の 100 個（未踏破は `null`）。`battle` のキーは `enemyKind`・`enemyName`・`isBoss`・`canHeal`・`canFlee` だけ。5F でボスのマスが視界に入っても、`depths` の `stairs` は `null` | 単体 | `tests/api/game-api.test.ts` |
 
 ## 2. 準備
 

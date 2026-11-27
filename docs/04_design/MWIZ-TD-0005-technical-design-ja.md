@@ -3,8 +3,8 @@ id: MWIZ-TD-0005
 type: Technical Design
 title: 詳細設計 音・PWA・テスト用の入口・ビルドと CI
 status: stable
-version: 1.15
-updated: 2026-11-17
+version: 1.16
+updated: 2026-11-27
 sources:
   - MWIZ-TD-0001（v1.2）
   - MWIZ-TS-0001（v1.4）
@@ -34,6 +34,14 @@ verified: null
 - テスト：`tests/audio/` で `tests/helpers/fake-audio.ts`（偽の `AudioContext`）を使い、予約した音の周波数・頭・止める時刻・音色（変調の深さ・ローパス）を確かめる（仕様書 §26.11。v1.8）。曲は 6 曲（v1.8）で、5/8 拍子（1 小節 2.5 拍）・5/4 拍子も同じ仕組みで鳴らす（1 周の秒 = 小節数 × 1 小節の拍数 × 60 ÷ bpm）。実際の聞こえ方は手動テスト。
 - 仕様書 v1.9 の曲の入れ替え（タイトル←カタコンベ、宿屋←ローエングリン、ボス戦←モーツァルト「怒りの日」）は、`logic/bgm-tracks.ts` の曲データだけを替える。曲の名前（`BgmName`）・場面の選び方（`bgm-scene.ts`）・再生の仕組み（`bgm.ts`・`bgm-director.ts`）は変えない（v1.10）。
 - ボス戦の曲は 1 周で予約する音が多い（16 分音符の刻みと 3 声の合唱。試聴ページで約 1,300 のオシレーター。カタコンベは約 190）。1 周分をまとめて予約する仕組み（仕様書 §26.5）は変えず、古い端末で音が途切れないかを実機で確かめる。途切れるときは、曲データ（刻みを 8 分音符にするなど）で減らす（変更の依頼を通す。v1.10）。
+
+### ドロップの音（v1.16、仕様書 v1.25。TASK-0046）
+
+- `sound.ts`：`SfxName` から `rareDrop`・`rareDropLG` をなくし、`dropN`・`dropR`・`dropSR`・`dropUR`・`dropLG` を足す（11 種）。`SFX`・`SFX_MS` は仕様書 §25.2 のコードをそのまま写す（`sparkle` は使わなくなるので消す。音の高さに `G5 = 784` を足す）。
+- 鳴らす判断は TD-0003 §3（`onRarityLine`・`onEffectStart`）。`app:sound` イベントの `name` も新しい名前になる。
+- 演出の長さ：`RARE_DROP_LG_MS = 1400`（`dropLG` の長さと同じ。テストで縛る）、UR は 800 のまま（`dropUR` 740 ≦ 800）。
+- BGM の音量下げ（ダッキング）は、効果音の長さで自動で決まる（コードは変えない）。N・R・SR の短い音でも、鳴っているあいだ下がる。
+- 試聴ページ（`docs/requests/drop-se-listen/index.html`）の音は、再生のときに頭を 0.02 秒遅らせている（ページの都合）。ゲームの `playSfx` はいまどおり `currentTime` から鳴らす（中身は同じ）。
 
 ### 効果音のジングル化（v1.11、仕様書 v1.10）
 

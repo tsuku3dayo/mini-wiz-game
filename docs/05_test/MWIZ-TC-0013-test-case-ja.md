@@ -3,12 +3,12 @@ id: MWIZ-TC-0013
 type: Test Case
 title: ダンジョンに出発する
 status: stable
-version: 1.1
-updated: 2026-10-30
+version: 1.2
+updated: 2026-11-27
 sources:
   - MWIZ-US-0013（v1.2）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0002（v1.11）
+  - MWIZ-TD-0002（v1.12）
   - docs/specification-ja.md (v1.25) §3、§4.5、§15.2、§16.2、§23
 verified: null
 ---
@@ -25,10 +25,10 @@ verified: null
 | TC-0013-01 | 1 | `dungeon` が null の INN で `enterDungeon` すると、場所 `DUNGEON`・`battle` null・`dungeon.floors` が 5 階（各 `walls` の長さ 100）・`floor` 1・位置が 1F の `up`（入口）・向き `N`。踏破済みは 1F の入口のマスだけ。HP 10/30・MP 4/10 で出発しても 10・4 のまま。メッセージは「ダンジョンに ふみこんだ」（normal）の 1 行 | 単体 | `tests/domain/explore.test.ts` |
 | TC-0013-02 | 1 | INN 以外（DUNGEON・BATTLE・SWAP・CLEARED）で `enterDungeon` すると 409 `invalid_state`「その操作は いまは できない」で、状態が変わらない | 単体 | `tests/domain/explore.test.ts` |
 | TC-0013-03 | 1 | ゲーム API で、出発 → 宿屋へ戻る（`dungeon` を残す）→ 敗北・周回（クリアのあとの「宿屋へ」）・つづきから のどれかで `dungeon` が null になる → もう一度出発 すると、新しい 5 階層（`debugDungeon()` の `walls`・`up`・`down` が 1 回目と違う）。v1.1（仕様書 v1.22）で、帰還のあとではなく、マップを捨てたあとの出発にした（帰還のあとは TC-0017-01・TC-0017-05） | 単体 | `tests/api/game-api.test.ts` |
-| TC-0013-04 | 2 | シード 1〜1,000 の `generateFloors` で、どの階も `floorViolations(f, floor)` が空（外周がすべて壁・両側の壁が一致・`up` から 100 マスすべてに行ける・1F〜4F は `down` あり `boss` null、5F は `down` null `boss` あり・目標が `up` からいちばん遠いマスで歩数 5 以上） | 単体 | `tests/domain/floors.test.ts` |
+| TC-0013-04 | 2 | シード 1〜1,000 の `generateFloors` で、どの階も `floorViolations(f, floor)` が空（外周がすべて壁・両側の壁が一致・`up` から 100 マスすべてに行ける・1F〜4F は `down` あり `boss` null、5F は `down` null `boss` あり・目標が歩数 5 以上で、下り階段・ボスの扉があれば行き止まりのうち `up` からいちばん遠いマス、なければ全マスのうちいちばん遠いマス。v1.2：仕様書 v1.25。扉の決まりは TC-0041-03） | 単体 | `tests/domain/floors.test.ts` |
 | TC-0013-05 | 3 | 同じシードで 2 回作った 5 階層が同じ（`toEqual`）。シード 1〜100 の 1F はすべて違い、同じ出撃の 5 階も互いに違う | 単体 | `tests/domain/floors.test.ts` |
 | TC-0013-06 | 3 | 5 階層の生成 1 回の時間が 50ms 未満、1,000 回の合計が 10 秒未満（CI では 3 倍まで許す。TST-0001 §7） | 単体 | `tests/domain/floors.test.ts` |
-| TC-0013-07 | 4 | `SeededRng(2026)` で生成すると、初期位置が `{ x: 9, y: 1, facing: 'N' }`、そのあと `rng.int(1, 1000000)` が 696131、`floors` の `{ walls, up, down, boss }` を `JSON.stringify` した SHA-256 の先頭 16 桁が `18a58bdf4b596269` | 単体 | `tests/domain/floors.test.ts` |
+| TC-0013-07 | 4 | `SeededRng(2026)` で生成すると、初期位置が `{ x: 9, y: 1, facing: 'N' }`、そのあと `rng.int(1, 1000000)` が 284376、`floors` の `{ walls, up, down, boss, doors }`（扉は `{ cell, side, content, state }` の順のキー）を `JSON.stringify` した SHA-256 の先頭 16 桁が `49843f9097299880`。扉は 5 階とも 5 つ（v1.2：仕様書 v1.25。v1.1 までは 696131・`18a58bdf4b596269`） | 単体 | `tests/domain/floors.test.ts` |
 
 ## 2. 準備
 

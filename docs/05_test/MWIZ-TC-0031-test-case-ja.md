@@ -3,15 +3,15 @@ id: MWIZ-TC-0031
 type: Test Case
 title: 演出でできごとを感じる
 status: stable
-version: 1.2
-updated: 2026-11-11
+version: 1.3
+updated: 2026-11-27
 sources:
   - MWIZ-US-0031（v1.2）
   - MWIZ-TST-0001（v1.2）
-  - MWIZ-TD-0003（v1.8）
-  - MWIZ-TD-0004（v1.9）
-  - MWIZ-TD-0005（v1.15）
-  - MWIZ-TD-0002（v1.11）
+  - MWIZ-TD-0003（v1.9）
+  - MWIZ-TD-0004（v1.10）
+  - MWIZ-TD-0005（v1.16）
+  - MWIZ-TD-0002（v1.12）
   - docs/specification-ja.md (v1.25) §8.4、§11.5、§11.8、§12.1、§16.3、§16.4
 verified: null
 ---
@@ -30,7 +30,7 @@ verified: null
 | TC-0031-03 | 1 | bossAppear の行（「暗黒のネクロマンサーが あらわれた！」）が出た瞬間に、層に `data-effect="bossAppear"` が付き、1200ms linear 1 回の背景色のアニメーションが付く。層の中央に h1 の大きさ・error 色で「暗黒のネクロマンサー」（行の文から「が あらわれた！」を取ったもの）が出る | E2E | `e2e/effects.spec.ts` |
 | TC-0031-04 | 1 | bossDefeat の行（「暗黒のネクロマンサーを たおした！」）が出た瞬間に、層に `data-effect="bossDefeat"` が付き、600ms linear 1 回のアニメーション（`rgba(232,220,192,α)`）が付く | E2E | `e2e/effects.spec.ts` |
 | TC-0031-05 | 1 | clear の行（「ダンジョンに 平和が もどった」）がクリア画面で出た瞬間に、見出し「暗黒のネクロマンサーを たおした」に 1500ms ease-out 1 回の浮かび上がり（不透明度 0・下 8px → 不透明度 1・元の位置）が付く。再読み込みでクリア画面に入ったときは付かない | E2E | `e2e/effects.spec.ts` |
-| TC-0031-06 | 2 | `EFFECT_MS` が levelUp 1071・rareDrop 800・rareDrop（LG）1200・bossAppear 2906・bossDefeat 1000・clear 5833（v1.1）。演出のない行のあとは 400ms、演出のある行のあとはその演出の長さだけ待って次の行を出す計画になる | 単体 | `tests/logic/message-plan.test.ts` |
+| TC-0031-06 | 2 | `EFFECT_MS` が levelUp 1071・rareDrop 800・rareDrop（LG）1400（v1.3：仕様書 v1.25。v1.2 までは 1200）・bossAppear 2906・bossDefeat 1000・clear 5833（v1.1）。演出のない行のあとは 400ms、演出のある行のあとはその演出の長さだけ待って次の行を出す計画になる | 単体 | `tests/logic/message-plan.test.ts` |
 | TC-0031-07 | 2 | 1 つの応答に演出の行が複数あるとき（ボス撃破の bossDefeat・rareDrop（LG）・clear、宿屋の やすむ の levelUp × 3。v1.2：仕様書 v1.14 で勝利ではレベルが上がらなくなり、bossDefeat と levelUp が同じ応答に出なくなった）、演出は行の順に 1 つずつ立つ（前の演出の長さが過ぎるまで次の行が出ない。同時に 2 つの演出が立たない）。長さは偽の時計で進めて確かめる | E2E | `e2e/effects.spec.ts` |
 | TC-0031-08 | 3 | 演出中にメッセージ欄をクリックすると、残りの行がすべて出て、`#effect-layer` の `data-effect` が消え、`body[data-busy]` が `true` でなくなる。`desktop` では Enter でも同じになり、キーはメニューに届かない（カーソルが動かない・決定しない） | E2E | `e2e/effects.spec.ts` |
 | TC-0031-09 | 4 | 動きを減らす設定（`page.emulateMedia({ reducedMotion: 'reduce' })`）では、受け取った行がすべて一度に出て、最後の演出だけが立つ（層の `data-motion="reduced"`）。メッセージの行・StatusPanel・層・クリアの見出しに animation が付かない（`getAnimations()` が空） | E2E | `e2e/effects.spec.ts` |
