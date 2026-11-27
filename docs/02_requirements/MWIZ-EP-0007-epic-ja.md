@@ -2,25 +2,26 @@
 id: MWIZ-EP-0007
 type: Epic
 title: 演出と効果音で盛り上げる
-status: stable
-version: 1.0
-updated: 2026-10-26
+status: review
+version: 1.1
+updated: 2026-11-27
 sources:
-  - MWIZ-PB-0001（v1.11）
-  - docs/specification-ja.md (v1.24) §11.8、§12.1、§16.3、§16.4、§16.5、§25
-verified: { by: "tsuku3dayo", at: "2026-10-26T17:42:42+09:00" }
+  - MWIZ-PB-0001（v1.12）
+  - docs/specification-ja.md (v1.25) §11.8、§12.1、§16.3、§16.4、§16.5、§25
+  - docs/requests/2026-11-27-spec-1.25-doors-drop-se.md
+verified: null
 ---
 
 # EP-0007 演出と効果音で盛り上げる
 
 ## 目的
 
-レベルアップ・レア装備・ボスの出現と撃破・クリアのときに、画面の演出と効果音で盛り上げ、遭遇の音で緊張感を出す。音はオン／オフでき、動きを減らす設定にも合わせる。
+レベルアップ・装備を拾ったとき（v1.1。仕様書 v1.25 で、すべてのレアリティに音）・ボスの出現と撃破・クリアのときに、画面の演出と効果音で盛り上げ、遭遇の音で緊張感を出す。音はオン／オフでき、動きを減らす設定にも合わせる。
 
 ## 範囲
 
 - 演出（levelUp・rareDrop・bossAppear・bossDefeat・clear）と演出の層、スキップ、動きを減らす設定
-- 効果音 8 種（Web Audio の合成）、音のオン／オフと保存、自動再生の制限への対処
+- 効果音 11 種（Web Audio の合成。v1.1：仕様書 v1.25 でドロップの音を 2 種から 5 種に）、音のオン／オフと保存、自動再生の制限への対処
 
 含めないもの：BGM（EP-0009）。
 

@@ -10,7 +10,7 @@ sources:
   - MWIZ-US-0033（v1.4）
   - MWIZ-GUI-0005（v1.9）
   - MWIZ-TST-0001（v1.2）
-  - docs/specification-ja.md (v1.24) §13
+  - docs/specification-ja.md (v1.25) §13
 verified: null
 ---
 

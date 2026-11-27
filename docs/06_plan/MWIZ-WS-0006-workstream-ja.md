@@ -6,7 +6,7 @@ status: stable
 version: 1.1
 updated: 2026-11-02
 sources:
-  - MWIZ-EP-0006（v1.0）
+  - MWIZ-EP-0006（v1.1）
   - MWIZ-US-0027（v1.1）
   - MWIZ-US-0028（v1.2）
   - MWIZ-US-0029（v1.0）
