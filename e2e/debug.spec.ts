@@ -28,7 +28,7 @@ test.describe('テスト用の入口', () => {
     await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 4, y: 6, floor: 3, facing: 'N' }) } });
     const r = await debugResult(page);
     const d = r.ok!;
-    expect(Object.keys(d).sort()).toEqual(['boss', 'down', 'floor', 'player', 'up', 'visited', 'walls']);
+    expect(Object.keys(d).sort()).toEqual(['boss', 'doors', 'down', 'floor', 'player', 'up', 'visited', 'walls']);
     expect(d.walls).toHaveLength(100);
     expect(d.visited).toHaveLength(100);
     expect(d).toMatchObject({ floor: 3, player: { x: 4, y: 6, facing: 'N' }, up: { x: 0, y: 9 }, down: { x: 9, y: 0 }, boss: null });

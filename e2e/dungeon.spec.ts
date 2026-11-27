@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { dungeonMap, logLines, startAt } from './helpers';
+import { doorMap, dungeonMap, logLines, startAt } from './helpers';
 
 const label = (page: Page) => page.getByTestId('location-label');
 const debugDungeon = (page: Page) => page.evaluate(() => window.__wiz!.debugDungeon());
@@ -240,5 +240,76 @@ test.describe('ダンジョンの画面', () => {
     await expect.poll(() => logLines(page)).not.toEqual([]);
     console.log(`TC-0037-02 前進 ${forward.toFixed(1)}ms、回転 ${turn.toFixed(1)}ms、たたかう ${attack.toFixed(1)}ms`);
     for (const ms of [forward, turn, attack]) expect(ms).toBeLessThan(300);
+  });
+});
+
+test.describe('扉と宝箱（v1.25）', () => {
+  const stairs = (page: Page) => page.locator('.wiz-stairs:visible');
+  const menuAt = async (page: Page) => {
+    const box = await page.getByRole('button', { name: '≡ メニュー' }).boundingBox();
+    return `${Math.round(box!.x)},${Math.round(box!.y)}`;
+  };
+
+  test('TC-0041-06 扉を向くと「扉をあける」（入口のマスでも）。向きを変えると「宿屋へ戻る」・なし に戻り、メニューボタンは動かない', async ({ page }, info) => {
+    await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 0, y: 9, facing: 'N', doors: [{ content: 'chest' }] }) } });
+    await expect(stairs(page)).toHaveText('扉をあける');
+    const at = await menuAt(page);
+    await press(page, info, '右を向く');
+    await expect(stairs(page)).toHaveText('宿屋へ戻る');
+    expect(await menuAt(page)).toBe(at);
+    // (1,9) で北を向く：正面は扉でない → ボタンなし
+    await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 1, y: 9, facing: 'N', doors: [{ content: 'chest' }] }) } });
+    await expect(stairs(page)).toHaveCount(0);
+    expect(await menuAt(page)).toBe(at);
+  });
+
+  test('TC-0041-11 宝箱の扉を開けると「たからばこを みつけた！」で「宝箱をあける」に。開けると「たからばこから …を てにいれた！」でボタンが消える。離れて戻っても宝箱は残る', async ({ page }, info) => {
+    await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 0, y: 9, facing: 'N', doors: [{ content: 'chest' }] }) } });
+    await press(page, info, '扉をあける');
+    await expect.poll(async () => (await logLines(page)).slice(-2)).toEqual(['とびらを あけた！', 'たからばこを みつけた！']);
+    await expect(stairs(page)).toHaveText('宝箱をあける');
+    // 向きを変えて戻っても残っている
+    await press(page, info, '右を向く');
+    await expect(stairs(page)).toHaveText('宿屋へ戻る');
+    await press(page, info, '左を向く');
+    await expect(stairs(page)).toHaveText('宝箱をあける');
+    await press(page, info, '宝箱をあける');
+    await expect.poll(async () => (await logLines(page)).at(-1)).toMatch(/^たからばこから .+［(N|R)］（.+）を てにいれた！$/);
+    await expect(page.getByTestId('message-window').locator('.rarity-n, .rarity-r').last()).toBeVisible();
+    await expect(stairs(page)).toHaveText('宿屋へ戻る');
+    expect((await debugDungeon(page)).doors[0].state).toBe('gone');
+  });
+
+  test('TC-0041-14 敵の扉を開けると、メッセージ欄が消えて「とびらを あけた！」「ゴブリンが あらわれた！」、戦闘画面へ。遭遇の音が鳴り、1000ms はボタンが押せない', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', '入力止めと音は desktop で見る（TC-0018 と同じ）');
+    await page.clock.install();
+    await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 0, y: 9, facing: 'N', doors: [{ content: 'enemy' }] }) } });
+    await page.evaluate(() => {
+      (window as unknown as { __sounds: string[] }).__sounds = [];
+      window.addEventListener('app:sound', (e) => (window as unknown as { __sounds: string[] }).__sounds.push((e as CustomEvent).detail.name));
+    });
+    await page.getByRole('button', { name: '扉をあける', exact: true }).click();
+    await expect(page.locator('body')).toHaveAttribute('data-screen', 'battle');
+    await expect.poll(async () => (await logLines(page)).slice(0, 2)).toEqual(['とびらを あけた！', 'ゴブリンが あらわれた！']);
+    expect(await page.evaluate(() => (window as unknown as { __sounds: string[] }).__sounds)).toContain('encounter');
+    await expect(page.locator('body')).toHaveAttribute('data-busy', 'true');
+    await page.clock.runFor(1001);
+    await expect(page.locator('body')).toHaveAttribute('data-busy', 'false');
+  });
+
+  test.describe('扉の見え方', () => {
+    test.use({ reducedMotion: 'no-preference' });
+    test('TC-0041-19 扉の線（data-kind="door"）が出て、扉にぶつかると正面の壁の線だけが点滅。地図に扉の線', async ({ page }) => {
+      await page.clock.install();
+      await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 0, y: 9, facing: 'N', doors: [{ content: 'chest' }] }) } });
+      await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+      const fpv = page.locator('[data-testid="first-person-view"]');
+      await expect(fpv.locator('line[data-kind="door"]')).toHaveCount(4);
+      await expect(page.locator('[data-testid="auto-map"] line.wiz-map-door')).toHaveCount(1);
+      await page.getByRole('button', { name: '前進', exact: true }).click();
+      await expect.poll(async () => (await logLines(page)).at(-1)).toBe('とびらが しまっている');
+      await expect(fpv.locator('line.flash')).toHaveCount(4);
+      await expect(fpv.locator('line[data-kind="door"].flash')).toHaveCount(0);
+    });
   });
 });

@@ -21,14 +21,20 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemyStats>> = {
   necromancer: { name: '暗黒のネクロマンサー', maxHp: 800, attack: 80, defense: 0, speed: 50, exp: 1000 },
 };
 
-/** 階ごとの出現表（百分率、この順に累積して判定する。仕様書 §6.2） */
+/** 階ごとの出現表（百分率、この順に累積して判定する。仕様書 §6.2。v1.25 で改めた） */
 export const ENCOUNTER_TABLE: Readonly<Record<number, readonly (readonly [EnemyKind, number])[]>> = {
-  1: [['slime', 70], ['goblin', 30]],
-  2: [['slime', 30], ['goblin', 50], ['skeleton', 20]],
-  3: [['goblin', 30], ['skeleton', 50], ['orc', 20]],
-  4: [['skeleton', 30], ['orc', 50], ['darkKnight', 20]],
-  5: [['orc', 40], ['darkKnight', 60]],
+  1: [['slime', 100]],
+  2: [['slime', 50], ['goblin', 50]],
+  3: [['goblin', 50], ['skeleton', 50]],
+  4: [['skeleton', 50], ['orc', 50]],
+  5: [['orc', 50], ['darkKnight', 50]],
 };
+
+/** 扉の敵（仕様書 §3.6。v1.25）。5F は扉の敵なし（ボスの扉だけ） */
+export const DOOR_ENEMY: Readonly<Record<number, EnemyKind>> = { 1: 'goblin', 2: 'skeleton', 3: 'orc', 4: 'darkKnight' };
+
+/** 宝箱の中身を、どの敵のドロップの段階で決めるか（仕様書 §3.6・§8.4。v1.25） */
+export const CHEST_SOURCE: Readonly<Record<number, EnemyKind>> = { 1: 'slime', 2: 'goblin', 3: 'goblin', 4: 'skeleton', 5: 'orc' };
 
 /** 回避率 clamp(受ける側の速 − 攻撃側の速 + 受ける側のかいひ, min, max)（v1.14） */
 export const EVASION = { min: 0, max: 90 } as const;

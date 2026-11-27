@@ -59,7 +59,11 @@ export function moveInDungeon(state: GameStateData, action: MoveAction, rng: Rng
   const d = state.dungeon;
   if (!d) throw new InvalidStateError();
   const r = move(d, action);
-  if (r.bumped) return { state, messages: [{ text: 'かべだ', tone: 'normal' }] };
+  // 閉じた扉・残っている宝箱は壁と同じく進めない（v1.25。仕様書 §4.2）
+  if (r.bumped) {
+    const text = r.blocked === 'door' ? 'とびらが しまっている' : r.blocked === 'chest' ? 'たからばこが ある' : 'かべだ';
+    return { state, messages: [{ text, tone: 'normal' }] };
+  }
   if (!r.moved) return { state: { ...state, dungeon: r.dungeon }, messages: [] };
   return checkEncounter({ ...state, dungeon: visitCurrent(r.dungeon) }, rng);
 }

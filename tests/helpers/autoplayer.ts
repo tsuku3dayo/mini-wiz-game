@@ -1,5 +1,6 @@
 // 自動プレイヤー（仕様書 §29.2）：ゲーム API だけで遊ぶ。乱数を引かない（ゲーム API に渡した Rng だけで結果が決まる）
 // - 今の階の全マスを debugDungeon で取り、幅優先探索で道を選ぶ（ボスのマスは、ボスに挑むとき以外は通らない）
+// - 閉じた扉・残っている宝箱のマスは通らない。下り階段・ボスが扉の中なら、扉の前で扉を向いて開ける（宝箱・敵の扉は開けない。v1.25）
 // - HP 50% 未満で帰還（ダンジョンのヒールが使えれば先に使う）、戦闘中は 30% 未満でヒール
 // - 経験値がたまったら（expToNext 0）宿屋へ帰って やすむ（レベルは やすむ でだけ上がる。v1.14）
 // - レベルで降りる階を決める（2F:Lv2、3F:Lv4、4F:Lv5、5F:Lv7、ボスは Lv9）
@@ -19,6 +20,7 @@ export interface PlayResult {
 const FACINGS: Facing[] = ['N', 'E', 'S', 'W'];
 const DX: Record<Facing, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
 const BIT: Record<Facing, number> = { N: 1, E: 2, S: 4, W: 8 };
+const BACK: Record<Facing, Facing> = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
 /** レベルで降りてよい最も深い階 */
 function maxFloor(level: number): number {
@@ -53,6 +55,8 @@ function firstStep(d: DebugDungeon, to: { x: number; y: number }, avoid: { x: nu
       const nx = x + DX[f][0];
       const ny = y + DX[f][1];
       const n = idx(nx, ny);
+      // 閉じた扉・残っている宝箱のマスには入れない（v1.25）
+      if ((d.doors ?? []).some((x) => x.cell === n && x.state !== 'gone')) continue;
       if (seen.has(n) || (avoid && avoid.x === nx && avoid.y === ny && n !== goal)) continue;
       seen.add(n);
       prev.set(n, [cur, f]);
@@ -78,7 +82,7 @@ function turnTo(facing: Facing, dir: Facing): MoveAction | null {
 }
 
 /** laps 回ボスを倒すまで遊ぶ。resume なら新しく始めず、今のプレイ中の状態から続ける */
-export async function play(api: GameApi, name: string, opts: { laps: number; maxCalls?: number; resume?: boolean }): Promise<PlayResult> {
+export async function play(api: GameApi, name: string, opts: { laps: number; maxCalls?: number; resume?: boolean; openAll?: boolean }): Promise<PlayResult> {
   const result = { battles: 0, deaths: 0, bossLevels: [] as number[], drops: 0, calls: 0 };
   const maxCalls = opts.maxCalls ?? 300_000;
   let lapsDone = 0;
@@ -145,7 +149,18 @@ export async function play(api: GameApi, name: string, opts: { laps: number; max
         // 目的地：帰るなら上り階段（1F は入口）、ボスに挑めるならボス、深く行けるなら下り階段、そうでなければ上と下を行き来する
         let target: { x: number; y: number };
         let goBoss = false;
-        if (low) {
+        // openAll（見積もり用）：敵・宝箱の扉と残っている宝箱を先に開ける
+        const extra = opts.openAll && !low ? (d.doors ?? []).find((x) => (x.state === 'closed' && (x.content === 'enemy' || x.content === 'chest')) || x.state === 'chest') : undefined;
+        if (extra) {
+          const cell = { x: extra.cell % 10, y: Math.floor(extra.cell / 10) };
+          const front = { x: cell.x + DX[extra.side][0], y: cell.y + DX[extra.side][1] };
+          if (same(d.player, front)) {
+            const turn = turnTo(d.player.facing, BACK[extra.side]);
+            await call(() => (turn ? api.move({ action: turn }) : extra.state === 'chest' ? api.openChest() : api.openDoor()));
+            break;
+          }
+          target = front;
+        } else if (low) {
           target = d.up;
         } else if (d.boss && level >= 9) {
           target = d.boss;
@@ -159,6 +174,17 @@ export async function play(api: GameApi, name: string, opts: { laps: number; max
           else if (roam === 'up' && same(d.player, d.up)) roam = 'down';
           target = roam === 'down' ? other : d.up;
         }
+        // 目的地が閉じた扉の中なら、扉の前まで行って扉を向いて開ける（v1.25）
+        const door = (d.doors ?? []).find((x) => x.cell === target.y * 10 + target.x && x.state === 'closed');
+        if (door) {
+          const front = { x: target.x + DX[door.side][0], y: target.y + DX[door.side][1] };
+          if (same(d.player, front)) {
+            const turn = turnTo(d.player.facing, BACK[door.side]);
+            await call(() => (turn ? api.move({ action: turn }) : api.openDoor()));
+            break;
+          }
+          target = front;
+        }
         if (same(d.player, target)) {
           // 着いた：弱っていれば上る（1F は宿屋へ）、深く行けるなら降りる
           if (low) await call(() => (d.floor === 1 ? api.returnToInn() : api.stairs({ direction: 'up' })));
@@ -166,7 +192,14 @@ export async function play(api: GameApi, name: string, opts: { laps: number; max
           break;
         }
         const dir = firstStep(d, target, goBoss ? null : d.boss);
-        if (!dir) throw new Error('自動プレイヤー：道が見つからない');
+        if (!dir) {
+          // 行き来の目的地が扉・宝箱のマスで行けないときは、向きを変えて上り階段へ（v1.25）
+          if (!low && !goBoss && roam === 'down') {
+            roam = 'up';
+            break;
+          }
+          throw new Error('自動プレイヤー：道が見つからない');
+        }
         const turn = turnTo(d.player.facing, dir);
         await call(() => api.move({ action: turn ?? 'forward' }));
         break;

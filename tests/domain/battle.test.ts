@@ -7,7 +7,8 @@ import { InvalidStateError } from '../../src/domain/errors';
 import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
 import { makeItem } from '../helpers/fixtures';
-import { battleState, noRng } from '../helpers/maps';
+import { battleState, noRng, openMap, withDoor } from '../helpers/maps';
+import type { GameStateData } from '../../src/domain/game-state';
 import { recordingRng } from '../helpers/rng';
 
 describe('敵と戦う', () => {
@@ -293,5 +294,22 @@ describe('戦闘の決まり', () => {
     expect(r.messages.map((m) => m.effect).filter(Boolean)).toEqual(['bossDefeat', 'rareDrop', 'clear']);
     expect(r.messages.at(-1)).toEqual({ text: 'ダンジョンに 平和が もどった', tone: 'success', effect: 'clear' });
     expect(r.messages.at(-2)!.text).toBe('暗黒のネクロマンサーは ソロモンのゆびわ［LG］（こうげき +30 ぼうぎょ +30 かいひ +30）を おとした！');
+  });
+});
+
+describe('扉の敵（v1.25）', () => {
+  test('TC-0041-13 扉の敵に勝つと扉が gone、にげると closed のまま。扉でない戦闘には door のキーがない', () => {
+    const base = withDoor(openMap({ x: 4, y: 5, facing: 'N' }), 1, 44, 'S', 'enemy');
+    const fighting = (hp: number): GameStateData => ({ ...battleState('goblin', hp, { speed: 10 }), dungeon: base, battle: { enemy: { kind: 'goblin', hp }, isBoss: false, door: 44 } });
+    // すばやさ 10 で先攻して倒す：回避の乱数 100（当たる）・ダメージ 2 → 経験値 → ドロップしない（100）
+    const won = resolveTurn(deepFreeze(fighting(1)), 'attack', new SequenceRng([100, 2, 100]));
+    expect(won.outcome).toBe('victory');
+    expect(won.state.dungeon!.floors[0].doors[0].state).toBe('gone');
+    expect(won.state.exp).toBe(20);
+    // にげる：成功（1）
+    const fled = resolveTurn(deepFreeze(fighting(20)), 'flee', new SequenceRng([1]));
+    expect(fled.outcome).toBe('fled');
+    expect(fled.state.dungeon!.floors[0].doors[0].state).toBe('closed');
+    expect(battleState('goblin', 20).battle).not.toHaveProperty('door');
   });
 });

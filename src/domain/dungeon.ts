@@ -9,6 +9,8 @@ export interface MoveResult {
   dungeon: DungeonData;
   moved: boolean;
   bumped: boolean;
+  /** 扉・宝箱でふさがれた（v1.25。そのとき bumped も true） */
+  blocked?: 'door' | 'chest';
 }
 
 /** 方向の列挙順（乱数で方向を選ぶときもこの順。仕様書 §3.2） */
@@ -139,5 +141,9 @@ export function move(d: DungeonData, action: MoveAction): MoveResult {
   const walls = d.floors[d.floor - 1].walls;
   if (walls[cellIndex(player, d.width)] & BIT[dir]) return { dungeon: d, moved: false, bumped: true };
   const to = step(player, dir);
+  // 閉じた扉（進む辺が扉の辺）・残っている宝箱のマスには進めない（v1.25。仕様書 §4.1）
+  const there = d.floors[d.floor - 1].doors.find((x) => x.cell === cellIndex(to, d.width));
+  if (there && there.state === 'closed' && there.side === BACK[dir]) return { dungeon: d, moved: false, bumped: true, blocked: 'door' };
+  if (there && there.state === 'chest') return { dungeon: d, moved: false, bumped: true, blocked: 'chest' };
   return { dungeon: { ...d, player: { ...to, facing: player.facing } }, moved: true, bumped: false };
 }

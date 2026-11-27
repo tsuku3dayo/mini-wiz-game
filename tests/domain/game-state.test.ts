@@ -5,6 +5,7 @@ import {
   fromSaveData,
   migrateGameState,
   migrateSave,
+  normalizeDoors,
   normalizeInventory,
   toSaveData,
   type DroppedItem,
@@ -179,5 +180,22 @@ describe('読み込み時の補正とセーブの変換', () => {
     const save = toSaveData(s);
     expect(save).toEqual({ schemaVersion: 4, ...CHARACTER, inventory: { ...s.inventory, pending: null }, records: RECORDS });
     expect(fromSaveData(deepFreeze(save), 3)).toEqual({ ...CHARACTER, location: 'INN', dungeon: null, battle: null, inventory: { ...s.inventory, pending: null }, records: RECORDS, saveSlot: 3 });
+  });
+});
+
+describe('扉の読み込み（v1.25）', () => {
+  test('TC-0041-22 版 7 のマップは各階 doors: [] で読み、形の違う扉は捨てる。battle.door は 0〜99 の整数だけ残す', () => {
+    const d = openMap({ x: 4, y: 5 });
+    // 版 7 のマップ：各階に doors がない
+    const old = { ...d, floors: d.floors.map((f) => Object.fromEntries(Object.entries(f).filter(([k]) => k !== 'doors'))) };
+    const row = { ...makeState('BATTLE'), dungeon: old, battle: { enemy: { kind: 'goblin', hp: 20 }, isBoss: false, door: 'x' }, schemaVersion: 7, revision: 0, updatedAt: '' };
+    const s = migrateGameState(row as unknown as StoredGameState);
+    expect(s.dungeon!.floors.every((f) => Array.isArray(f.doors) && f.doors.length === 0)).toBe(true);
+    expect(s.battle).not.toHaveProperty('door');
+    const good = { cell: 44, side: 'S', content: 'chest', state: 'chest' };
+    expect(normalizeDoors([good, { ...good, cell: 100 }, { ...good, side: 'X' }, { ...good, content: 'gold' }, { ...good, state: 'open' }, null, 3])).toEqual([good]);
+    expect(normalizeDoors('x')).toEqual([]);
+    const kept = migrateGameState({ ...row, schemaVersion: 8, battle: { enemy: { kind: 'goblin', hp: 20 }, isBoss: false, door: 44 } } as unknown as StoredGameState);
+    expect(kept.battle).toMatchObject({ door: 44 });
   });
 });

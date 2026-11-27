@@ -7,7 +7,7 @@ import type { GameStateData } from '../../src/domain/game-state';
 import { SeededRng, SequenceRng } from '../../src/domain/rng';
 import { deepFreeze } from '../helpers/deep-freeze';
 import { makeItem, makeState } from '../helpers/fixtures';
-import { addWall, constantRng, dungeonState, noRng, openMap } from '../helpers/maps';
+import { addWall, constantRng, dungeonState, noRng, openMap, withDoor } from '../helpers/maps';
 
 /** 409 invalid_state を投げ、文言が message であることを確かめる */
 function expectInvalid(fn: () => unknown, message: string) {
@@ -77,9 +77,9 @@ describe('迷宮を歩く', () => {
     expect(visitedCount(r.state, 1)).toBe(1);
   });
 
-  test('移動先で遭遇しても、そのマスは踏破済みになる。3F で [20, 31] はスケルトン、battles +1', () => {
+  test('移動先で遭遇しても、そのマスは踏破済みになる。3F で [20, 51] はスケルトン、battles +1（v1.25 の出現表）', () => {
     const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 }, {}, 3)));
-    const r = moveInDungeon(start, 'forward', new SequenceRng([20, 31]));
+    const r = moveInDungeon(start, 'forward', new SequenceRng([20, 51]));
     expect(r.state.location).toBe('BATTLE');
     expect(r.state.battle).toEqual({ enemy: { kind: 'skeleton', hp: 32 }, isBoss: false });
     expect(r.state.records.battles).toBe(1);
@@ -175,7 +175,7 @@ describe('敵に遭遇する', () => {
   test('TC-0018-01 何もないマスへ前進・後退すると、[20, n] で遭遇（BATTLE・battles +1・「…が あらわれた！」）、[21] では遭遇せず乱数 1 個', () => {
     for (const action of ['forward', 'backward'] as const) {
       const start = deepFreeze(dungeonState(openMap({ x: 4, y: 5 }, {}, 3)));
-      const hit = moveInDungeon(start, action, new SequenceRng([20, 31]));
+      const hit = moveInDungeon(start, action, new SequenceRng([20, 51]));
       expect(hit.state.location).toBe('BATTLE');
       expect(hit.state.records.battles).toBe(start.records.battles + 1);
       expect(hit.messages).toEqual([{ text: 'スケルトンが あらわれた！', tone: 'normal' }]);
@@ -221,14 +221,14 @@ describe('敵に遭遇する', () => {
     }
   });
 
-  test('TC-0018-04 pickEnemy の境目：1F 70/71、2F〜4F 30/31・80/81、5F 40/41', () => {
+  test('TC-0018-04 pickEnemy の境目（v1.25）：1F は 1・100 ともスライム、2F〜5F は 50/51', () => {
     const pick = (floor: number, r: number) => pickEnemy(floor, new SequenceRng([r]));
-    expect([pick(1, 70), pick(1, 71)]).toEqual(['slime', 'goblin']);
-    expect([pick(2, 30), pick(2, 31), pick(2, 80), pick(2, 81)]).toEqual(['slime', 'goblin', 'goblin', 'skeleton']);
-    expect([pick(3, 30), pick(3, 31), pick(3, 80), pick(3, 81)]).toEqual(['goblin', 'skeleton', 'skeleton', 'orc']);
-    expect([pick(4, 30), pick(4, 31), pick(4, 80), pick(4, 81)]).toEqual(['skeleton', 'orc', 'orc', 'darkKnight']);
-    expect([pick(5, 40), pick(5, 41)]).toEqual(['orc', 'darkKnight']);
-    expect(ENEMIES[pick(5, 40)].name).toBe('オークロード');
+    expect([pick(1, 1), pick(1, 100)]).toEqual(['slime', 'slime']);
+    expect([pick(2, 50), pick(2, 51)]).toEqual(['slime', 'goblin']);
+    expect([pick(3, 50), pick(3, 51)]).toEqual(['goblin', 'skeleton']);
+    expect([pick(4, 50), pick(4, 51)]).toEqual(['skeleton', 'orc']);
+    expect([pick(5, 50), pick(5, 51)]).toEqual(['orc', 'darkKnight']);
+    expect(ENEMIES[pick(5, 50)].name).toBe('オークロード');
   });
 });
 
@@ -284,10 +284,10 @@ describe('踏破記録とボス', () => {
 // 確認 ID のない、遭遇と踏破記録の決まり（仕様書 §4.3、§4.6）
 describe('遭遇と踏破記録', () => {
   test('pickEnemy は表の順に累積して選ぶ（境界の値）', () => {
-    expect(pickEnemy(1, new SequenceRng([70]))).toBe('slime');
-    expect(pickEnemy(1, new SequenceRng([71]))).toBe('goblin');
-    expect(pickEnemy(3, new SequenceRng([30]))).toBe('goblin');
-    expect(pickEnemy(3, new SequenceRng([80]))).toBe('skeleton');
+    expect(pickEnemy(1, new SequenceRng([100]))).toBe('slime');
+    expect(pickEnemy(2, new SequenceRng([51]))).toBe('goblin');
+    expect(pickEnemy(3, new SequenceRng([50]))).toBe('goblin');
+    expect(pickEnemy(3, new SequenceRng([51]))).toBe('skeleton');
     expect(pickEnemy(5, new SequenceRng([100]))).toBe('darkKnight');
   });
 
@@ -310,5 +310,25 @@ describe('遭遇と踏破記録', () => {
     expect(d.floors[0].visited[33]).toBe(false);
     expect(once.floors[0].visited[33]).toBe(true);
     expect(visitCurrent(once)).toBe(once);
+  });
+});
+
+describe('扉と宝箱にぶつかる（v1.25）', () => {
+  test('TC-0041-04 閉じた扉へは「とびらが しまっている」、宝箱のマスへは「たからばこが ある」で動かない。乱数を引かず踏破記録も変わらない。gone なら入れて遭遇判定', () => {
+    for (const [state, text] of [['closed', 'とびらが しまっている'], ['chest', 'たからばこが ある']] as const) {
+      const s = deepFreeze(dungeonState(withDoor(openMap({ x: 4, y: 5, facing: 'N' }), 1, 44, 'S', 'chest', state)));
+      const r = moveInDungeon(s, 'forward', new SequenceRng([]));
+      expect(r.messages).toEqual([{ text, tone: 'normal' }]);
+      expect(r.state).toBe(s);
+      // 後ろ向きに下がって入ろうとしても同じ（(4,5) を南向きで後退）
+      const back = moveInDungeon(deepFreeze({ ...s, dungeon: { ...s.dungeon!, player: { x: 4, y: 5, facing: 'S' } } }), 'backward', new SequenceRng([]));
+      expect(back.messages).toEqual([{ text, tone: 'normal' }]);
+    }
+    const gone = deepFreeze(dungeonState(withDoor(openMap({ x: 4, y: 5, facing: 'N' }), 1, 44, 'S', 'chest', 'gone')));
+    const rng = new SequenceRng([21]);
+    const r = moveInDungeon(gone, 'forward', rng);
+    rng.assertExhausted();
+    expect(r.state.dungeon!.player).toMatchObject({ x: 4, y: 4 });
+    expect(r.state.dungeon!.floors[0].visited[44]).toBe(true);
   });
 });

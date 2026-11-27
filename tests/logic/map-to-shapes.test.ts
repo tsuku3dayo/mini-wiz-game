@@ -3,7 +3,7 @@ import type { AutoMapCell, AutoMapView } from '../../src/api/types';
 import { describeMap, mapToShapes } from '../../src/logic/map-to-shapes';
 
 const cell = (walls: Partial<AutoMapCell['walls']> = {}, stairs: AutoMapCell['stairs'] = null): AutoMapCell =>
-  ({ walls: { n: false, e: false, s: false, w: false, ...walls }, stairs });
+  ({ walls: { n: false, e: false, s: false, w: false, ...walls }, doors: { n: false, e: false, s: false, w: false }, stairs });
 
 function map(entries: Record<number, AutoMapCell>, player: { x: number; y: number }): AutoMapView {
   const cells = Array.from({ length: 100 }, (_, i) => entries[i] ?? null);
@@ -46,5 +46,14 @@ describe('自動地図の図形', () => {
     // 2F の上り階段は「↑」
     expect(mapToShapes(map({ 0: cell({}, 'up') }, { x: 5, y: 5 }), 'N').symbols[0].text).toBe('↑');
     expect(describeMap(m, 1)).toBe('1F の地図。踏破済み 4 マス。');
+  });
+});
+
+describe('地図の扉（v1.25）', () => {
+  test('TC-0041-17 閉じた扉の辺は doors に入り（両端 3px 空ける）、walls に入らない', () => {
+    const c: AutoMapCell = { walls: { n: true, e: false, s: false, w: true }, doors: { n: true, e: false, s: false, w: false }, stairs: null };
+    const s = mapToShapes(map({ 44: c }, { x: 0, y: 0 }), 'N');
+    expect(s.doors).toEqual([{ x1: 64 + 3, y1: 64, x2: 64 + 16 - 3, y2: 64 }]);
+    expect(s.walls).toEqual([{ x1: 64, y1: 64, x2: 64, y2: 80 }]);
   });
 });

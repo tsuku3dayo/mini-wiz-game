@@ -5,7 +5,7 @@ import { emptyInventory } from './loot';
 import { initialRecords, normalizeRecords, type Records } from './records';
 import type { EnemyKind } from './constants';
 
-export const GAME_SCHEMA_VERSION = 7;
+export const GAME_SCHEMA_VERSION = 8;
 export const SAVE_SCHEMA_VERSION = 4;
 
 /** セーブのスロット（v1.14。仕様書 §21.2） */
@@ -27,6 +27,16 @@ export interface FloorData {
   down: Position | null;    // 下り階段。5F は null
   boss: Position | null;    // 5F のみ
   visited: boolean[];       // 長さ width*height。一度でも立ったマス
+  doors: DoorData[];        // 扉（v1.25。仕様書 §3.6）。版 7 以下のマップは []
+}
+
+export type DoorContent = 'down' | 'boss' | 'enemy' | 'chest';
+export type DoorState = 'closed' | 'chest' | 'gone';
+export interface DoorData {
+  cell: number;             // 行き止まりのマスの番号
+  side: Facing;             // そのマスのただ 1 つの開いた辺
+  content: DoorContent;
+  state: DoorState;
 }
 
 export interface DungeonData {
@@ -40,6 +50,7 @@ export interface DungeonData {
 export interface BattleData {
   enemy: { kind: EnemyKind; hp: number };
   isBoss: boolean;
+  door?: number | null;     // 扉をあけて始めた戦闘なら扉のマスの番号（v1.25）
 }
 
 export interface Character {
@@ -234,6 +245,22 @@ function addVisited(d: DungeonData): DungeonData {
   return { ...d, floors };
 }
 
+const FACING_SET = new Set<unknown>(['N', 'E', 'S', 'W']);
+const CONTENT_SET = new Set<unknown>(['down', 'boss', 'enemy', 'chest']);
+const DOOR_STATE_SET = new Set<unknown>(['closed', 'chest', 'gone']);
+const isCell = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 99;
+
+/** 扉の一覧の補正（v1.25。仕様書 §21.4）：配列でなければ []、形の合う要素だけ残す */
+export function normalizeDoors(raw: unknown): DoorData[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((d): DoorData[] => {
+    if (!d || typeof d !== 'object') return [];
+    const o = d as Record<string, unknown>;
+    if (!isCell(o.cell) || !FACING_SET.has(o.side) || !CONTENT_SET.has(o.content) || !DOOR_STATE_SET.has(o.state)) return [];
+    return [{ cell: o.cell, side: o.side as Facing, content: o.content as DoorContent, state: o.state as DoorState }];
+  });
+}
+
 /** 読み込み時の移行（仕様書 §21.4）。onDropped にはマスタにない装備を取り除いた一覧を渡す */
 export function migrateGameState(row: StoredGameState, onDropped?: (dropped: DroppedItem[]) => void): GameStateData {
   let location = row.location;
@@ -248,6 +275,12 @@ export function migrateGameState(row: StoredGameState, onDropped?: (dropped: Dro
       dungeon = null;
       battle = null;
     }
+  }
+  // 扉（v1.25）：版 7 以下のマップは扉なし。戦闘の扉は 0〜99 の整数だけ
+  if (dungeon) dungeon = { ...dungeon, floors: dungeon.floors.map((f) => ({ ...f, doors: normalizeDoors((f as { doors?: unknown }).doors) })) };
+  if (battle && 'door' in battle) {
+    const { door, ...rest } = battle;
+    battle = isCell(door) ? { ...rest, door } : rest;
   }
   // 版 6 以下のアクセは名前で引き継ぐ（v1.21）
   const rawInventory = row.schemaVersion >= 7 ? row.inventory : remapAccessoryIds(row.inventory);

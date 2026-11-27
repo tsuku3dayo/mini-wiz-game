@@ -10,7 +10,7 @@ export function storedInn(overrides: Record<string, unknown> = {}): Record<strin
   return {
     ...CHARACTER,
     // 今の版（src/domain/game-state.ts の GAME_SCHEMA_VERSION）。古い版だと読み込みでアクセの ID が付け替わる
-    schemaVersion: 7,
+    schemaVersion: 8,
     revision: 0,
     location: 'INN',
     dungeon: null,
@@ -105,7 +105,7 @@ type Facing = 'N' | 'E' | 'S' | 'W';
  * 上り (0,9)、下り (9,0)、5F は下りの代わりにボス (9,0)。今の位置だけ踏破済み（ボスのマスは除く）。
  * walls で、その階の壁の配列を差し替えられる
  */
-export function dungeonMap(opts: { x: number; y: number; facing?: Facing; floor?: number; walls?: number[] }): Record<string, unknown> {
+export function dungeonMap(opts: { x: number; y: number; facing?: Facing; floor?: number; walls?: number[]; doors?: Record<string, unknown>[] }): Record<string, unknown> {
   const size = 10;
   const floor = opts.floor ?? 1;
   const outer = Array.from({ length: size * size }, (_, i) => {
@@ -121,6 +121,8 @@ export function dungeonMap(opts: { x: number; y: number; facing?: Facing; floor?
       down: i === 4 ? null : { x: 9, y: 0 },
       boss: i === 4 ? { x: 9, y: 0 } : null,
       visited: Array.from({ length: size * size }, (_, j) => i === floor - 1 && !onBoss && j === opts.y * size + opts.x),
+      // 扉（v1.25）。今の階だけに置く
+      doors: i === floor - 1 && opts.doors ? opts.doors : [],
     };
   });
   return { width: size, height: size, floors, floor, player: { x: opts.x, y: opts.y, facing: opts.facing ?? 'N' } };
@@ -274,4 +276,28 @@ export async function cursorLabel(page: Page, label: string): Promise<string> {
 /** 保存の値（プレイ中の状態・スロット 1 のセーブ・音の設定・スロット 2・3 のセーブ）の文字列（v1.14 でスロット 2・3 を後ろに足した） */
 export function readStorage(page: Page): Promise<(string | null)[]> {
   return page.evaluate(() => ['game', 'save-1', 'sound', 'save-2', 'save-3'].map((k) => localStorage.getItem(`mini-wiz-game-${k}`)));
+}
+
+/**
+ * 扉の場面（v1.25。TC-0041）：外周だけが壁の地図に、行き止まりを 3 つ作る。
+ * 入口 (0,9) の北 (0,8) が A（南に開く）、(2,9) の上 (2,8) が B（南に開く）、(4,9) の上 (4,8) が C（南に開く）。
+ * 扉の前のマスは (0,9)・(2,9)・(4,9)。contents の順に A・B・C の扉を置く
+ */
+export function doorMap(opts: { x: number; y: number; facing?: Facing; floor?: number; doors: { content: string; state?: string }[] }): Record<string, unknown> {
+  const size = 10;
+  const walls = Array.from({ length: size * size }, (_, i) => {
+    const x = i % size;
+    const y = Math.floor(i / size);
+    return (y === 0 ? 1 : 0) | (x === size - 1 ? 2 : 0) | (y === size - 1 ? 4 : 0) | (x === 0 ? 8 : 0);
+  });
+  for (const x of [0, 2, 4]) {
+    const c = 8 * size + x;
+    walls[c] |= 1 | 2 | 8; // 北・東・西を壁に（南だけ開く）
+    walls[c - size] |= 4;
+    if (x > 0) walls[c - 1] |= 2;
+    walls[c + 1] |= 8;
+  }
+  const cells = [80, 82, 84];
+  const doors = opts.doors.map((d, i) => ({ cell: cells[i], side: 'S', content: d.content, state: d.state ?? 'closed' }));
+  return dungeonMap({ x: opts.x, y: opts.y, facing: opts.facing, floor: opts.floor, walls, doors });
 }

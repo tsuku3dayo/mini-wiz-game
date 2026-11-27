@@ -55,3 +55,30 @@ describe('疑似3D の説明文と階の表示', () => {
     expect(locationText(3, 'W')).toBe('3F　西');
   });
 });
+
+describe('扉と宝箱の線と文字（v1.25）', () => {
+  const plain = { left: 'wall', right: 'wall', front: 'open', stairs: null } as const;
+  test('TC-0041-16 正面の扉は矩形と扉の 3 辺と取っ手、左の扉は壁の 3 本と縦線 2 本と上の線、宝箱は文字。扉の線の種類は door', () => {
+    const front = viewToSegments([{ ...plain, front: 'door' }]);
+    const door = front.lines.filter((l) => l.kind === 'door');
+    // 枠 1：x 40・y 30 → 幅 240・高さ 180。扉は x 100〜220、y 210 − 153 = 57 〜 210。取っ手は 196〜205.6、高さ 133.5
+    expect(door).toEqual([
+      { x1: 100, y1: 210, x2: 100, y2: 57, kind: 'door', depth: 0 },
+      { x1: 100, y1: 57, x2: 220, y2: 57, kind: 'door', depth: 0 },
+      { x1: 220, y1: 57, x2: 220, y2: 210, kind: 'door', depth: 0 },
+      { x1: 196, y1: 133.5, x2: 205.6, y2: 133.5, kind: 'door', depth: 0 },
+    ]);
+    expect(front.lines.filter((l) => l.kind === 'front')).toHaveLength(4);
+
+    const left = viewToSegments([{ ...plain, left: 'door' }]).lines.filter((l) => l.kind === 'door');
+    expect(left).toHaveLength(3);
+    // x 10・30 の縦線（床 240 − 7.5 = 232.5 から）
+    expect(left[0]).toMatchObject({ x1: 10, x2: 10, y1: 232.5 });
+    expect(left[1]).toMatchObject({ x1: 30, x2: 30, y1: 217.5 });
+    const right = viewToSegments([{ ...plain, right: 'door' }]).lines.filter((l) => l.kind === 'door');
+    expect(right[0]).toMatchObject({ x1: 310, x2: 310 });
+
+    const chest = viewToSegments([{ ...plain }, { ...plain, chest: true }]);
+    expect(chest.labels).toEqual([{ x: 160, y: (210 + 180) / 2, text: '□ たからばこ' }]);
+  });
+});

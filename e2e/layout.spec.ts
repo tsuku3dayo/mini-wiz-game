@@ -1,6 +1,6 @@
 // 画面の大きさとタッチ（TC-0035）。全画面・全状態を順に出して、はみ出しと押せる大きさを測る
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { battleOf, bossBattle, dungeonMap, logLines, openDebug, SEEDS, startAt } from './helpers';
+import { battleOf, bossBattle, doorMap, dungeonMap, logLines, openDebug, SEEDS, startAt } from './helpers';
 import { item, scenes } from './scenes';
 
 const wideOf = (page: Page) => page.viewportSize()!.width >= 600;
@@ -325,5 +325,32 @@ test.describe('画面の大きさとタッチ', () => {
     await tap(item(page, 'つづきから', 'スロット1'));
     await screen('inn');
     expect(keys).toBe(0);
+  });
+});
+
+test.describe('扉と宝箱のボタン（v1.25）', () => {
+  test('TC-0041-23 「扉をあける」「宝箱をあける」は 1 行で、操作の行の左の列からはみ出さない（375×667・414×715・1280×800）', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', '画面の大きさを変えて測るので desktop だけで動かす');
+    for (const viewport of [{ width: 375, height: 667 }, { width: 414, height: 715 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(viewport);
+      for (const [state, text] of [['closed', '扉をあける'], ['chest', '宝箱をあける']] as const) {
+        await startAt(page, 'DUNGEON', { state: { dungeon: doorMap({ x: 0, y: 9, facing: 'N', doors: [{ content: 'chest', state }] }) } });
+        const button = page.locator('.wiz-stairs:visible');
+        await expect(button).toHaveText(text);
+        const m = await button.evaluate((b) => {
+          const slot = b.parentElement!.getBoundingClientRect();
+          const r = b.getBoundingClientRect();
+          const lineHeight = parseFloat(getComputedStyle(b).lineHeight);
+          const range = document.createRange();
+          range.selectNodeContents(b);
+          return { lines: range.getClientRects().length, over: b.scrollWidth - b.clientWidth, inside: r.left >= slot.left - 0.5 && r.right <= slot.right + 0.5, lineHeight, textH: range.getBoundingClientRect().height };
+        });
+        const label = `${viewport.width}×${viewport.height} ${text}`;
+        expect(m.over, label).toBeLessThanOrEqual(0);
+        expect(m.inside, label).toBe(true);
+        expect(m.textH, label).toBeLessThan(m.lineHeight * 1.5);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), label).toBe(true);
+      }
+    }
   });
 });

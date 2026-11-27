@@ -1,6 +1,6 @@
 // ドロップ・所持品（仕様書 §8.4、§8.5）
 // 抽選・追加・勝利時の反映は、戦闘に勝つ処理の中で乱数を引く順が決まっているので TASK-0010 で前倒しした（TD-0002 v1.5 §5）。
-import type { EnemyKind } from './constants';
+import { CHEST_SOURCE, type EnemyKind } from './constants';
 import { assertPending, itemLabel } from './equipment';
 import { RuleViolationError } from './errors';
 import type { GameStateData, InventoryData, ItemInstance, Location, Message, StepResult } from './game-state';
@@ -44,9 +44,14 @@ export function rollDrop(kind: EnemyKind, rng: Rng): Drop | null {
   if (rng.int(1, 100) > rule.rate) return null;
   let tier: number | null = null;
   if (rule.special && rng.int(1, 100) <= rule.special.pct) tier = rule.special.tier;
+  return rollItem(rule, tier, rng);
+}
+
+/** 部位 → 段階（tier が決まっていなければ）→ レアリティ → 補正値 */
+function rollItem(rule: DropRule, fixedTier: number | null, rng: Rng): Drop {
   const slot = SLOTS[rng.int(0, 3)];
   // 特例で段階が決まったときは、段階の乱数を引かない（ボスは 8〜8 でも 1 回引く）
-  if (tier === null) tier = rng.int(rule.tiers[0], rule.tiers[1]);
+  const tier = fixedTier ?? rng.int(rule.tiers[0], rule.tiers[1]);
   const itemId = `${slot}${tier}` as ItemId;
   // 出るレアリティは種類ごと（ガードリングだけ段階 3 でも R／SR。v1.21）
   const choices = ITEMS[itemId].rarities;
@@ -56,6 +61,11 @@ export function rollDrop(kind: EnemyKind, rng: Rng): Drop | null {
   const [lo, hi] = valueRange(itemId, rarity);
   const value = rng.int(lo, hi);
   return { itemId, rarity, value };
+}
+
+/** 宝箱の装備（v1.25。仕様書 §8.4）：その階の CHEST_SOURCE の敵の段階で必ず 1 個。乱数 4 個 */
+export function rollChest(floor: number, rng: Rng): Drop {
+  return rollItem(DROPS[CHEST_SOURCE[floor] ?? 'slime'], null, rng);
 }
 
 /** ID を振り（所持品に入るかどうかにかかわらず nextId を進める）、空きがあれば末尾に加える */
@@ -68,12 +78,32 @@ export function addItem(inv: InventoryData, drop: Drop): { inv: InventoryData; i
 
 /** ドロップの行：「{敵}は {名前}［{ランク}］（{能力} +{値}）を おとした！」。UR・LG は rareDrop */
 export function dropMessage(enemyName: string, item: Drop): Message {
+  return itemLine(`${enemyName}は ${itemPhrase(item)}を おとした！`, item);
+}
+
+/** 「{名前}［{ランク}］（{能力} +{値}）」。能力が 3 つなら半角スペースで並べる */
+function itemPhrase(item: Drop): string {
   const m = ITEMS[item.itemId];
   const bonus = m.stats.map((s) => `${statName(s)} +${item.value}`).join(' ');
-  const text = `${enemyName}は ${m.name}［${item.rarity}］（${bonus}）を おとした！`;
+  return `${m.name}［${item.rarity}］（${bonus}）`;
+}
+
+/** 装備を拾った行の属性：rarity、UR・LG は rareDrop（ドロップと宝箱で共通） */
+function itemLine(text: string, item: Drop): Message {
   return item.rarity === 'UR' || item.rarity === 'LG'
     ? { text, tone: 'normal', rarity: item.rarity, effect: 'rareDrop' }
     : { text, tone: 'normal', rarity: item.rarity };
+}
+
+/** 宝箱の行：「たからばこから {名前}［{ランク}］（{能力} +{値}）を てにいれた！」。属性はドロップの行と同じ（v1.25） */
+export function chestMessage(item: Drop): Message {
+  return itemLine(`たからばこから ${itemPhrase(item)}を てにいれた！`, item);
+}
+
+/** 宝箱の反映：空きがあれば末尾に加えて DUNGEON、満杯なら SWAP（thenClear なし） */
+export function applyChest(state: GameStateData, item: Drop): { state: GameStateData; messages: Message[] } {
+  const r = applyDrop(state, '', item, 'DUNGEON');
+  return { state: r.state, messages: [chestMessage(item)] };
 }
 
 /** 入れ替えを終えたとき：pending を消し、ボスの後なら CLEARED と「平和が もどった」、そうでなければ DUNGEON */
