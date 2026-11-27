@@ -3,7 +3,7 @@
 // 広い画面：上 ［階と向き・疑似3D］｜地図、下 メッセージ欄（6 行）｜［ステータス・［移動ボタン｜階段／メニュー］］
 // メニューを開くと、操作の場所（狭い画面は地図と移動ボタン・操作の行、広い画面は右下のボタン）を GameMenu に替える
 // そうび・もちもの・ステータス画面（狭い画面だけ）は、画面全体を差し替える。「おと」はその場で切り替える
-import type { MoveAction, StairsView } from '../../api/types';
+import type { MoveAction } from '../../api/types';
 import { autoMap, type AutoMap } from '../components/auto-map';
 import { equipmentPanel } from '../components/equipment-panel';
 import { inventoryPanel } from '../components/inventory-panel';
@@ -14,7 +14,7 @@ import { firstPersonView, type FirstPersonView } from '../components/first-perso
 import { locationLabel } from '../components/location-label';
 import { messageLog } from '../components/message-log';
 import { movePad } from '../components/move-pad';
-import { stairsButton } from '../components/stairs-button';
+import { stairsButton, type StairsTarget } from '../components/stairs-button';
 import { statusPanel, type StatusPanel } from '../components/status-panel';
 import { statusScreen } from '../components/status-screen';
 import { el, isTypingKey, isWide, onWideChange } from '../dom';
@@ -64,10 +64,12 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
   const doMove = (action: MoveAction) => {
     if (operable()) void command.run(() => api.move({ action }));
   };
-  const doStairs = (underfoot: Exclude<StairsView, null>) => {
+  const doStairs = (target: StairsTarget) => {
     if (!operable()) return;
-    if (underfoot === 'entrance') void command.run(() => api.returnToInn());
-    else void command.run(() => api.stairs({ direction: underfoot }));
+    if (target === 'door') void command.run(() => api.openDoor());
+    else if (target === 'chest') void command.run(() => api.openChest());
+    else if (target === 'entrance') void command.run(() => api.returnToInn());
+    else void command.run(() => api.stairs({ direction: target }));
   };
 
   function setMenu(open: boolean) {
@@ -213,7 +215,7 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
     }
     const ok = operable();
     pad?.setDisabled(!ok);
-    stairs?.update(state?.dungeon?.underfoot ?? null, !ok);
+    stairs?.update(state?.dungeon?.ahead ?? null, state?.dungeon?.underfoot ?? null, !ok);
     if (menuButton) menuButton.disabled = !ok;
     menu?.update({ canHeal: !!state?.canHeal, disabled: command.locked });
   }
@@ -274,7 +276,8 @@ export function mountDungeon(root: HTMLElement, ctx: ScreenContext): { destroy()
   const onResize = () => scheduleFit();
   window.addEventListener('resize', onResize);
 
-  const offFlash = flashOnMessage(queue, (text) => text === 'かべだ', (on) => fpv?.setFlash(on));
+  // 閉じた扉にぶつかったときも、正面の壁（扉の枠）を点滅させる（v1.25）
+  const offFlash = flashOnMessage(queue, (text) => text === 'かべだ' || text === 'とびらが しまっている', (on) => fpv?.setFlash(on));
   const onChange = () => {
     refresh();
     renderError();

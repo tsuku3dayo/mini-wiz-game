@@ -27,6 +27,7 @@ export function autoMap(): AutoMap {
         svgEl('rect', { class: 'wiz-map-frame', x: s.frame.x, y: s.frame.y, width: s.frame.width, height: s.frame.height }),
         ...s.cells.map((c) => svgEl('rect', { class: 'wiz-map-cell', x: c.x, y: c.y, width: c.size, height: c.size })),
         ...s.walls.map((w) => svgEl('line', { class: 'wiz-map-wall', x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 })),
+        ...s.doors.map((w) => svgEl('line', { class: 'wiz-map-door', x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 })),
         ...s.symbols.map((m) => svgEl('text', { class: `wiz-map-symbol ${m.kind}`, x: m.x, y: m.y }, m.text)),
       );
     },

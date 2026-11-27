@@ -1,6 +1,6 @@
 // テスト用のマップ・ダンジョンの状態・決まった値の乱数
 import type { EnemyKind } from '../../src/domain/constants';
-import type { DungeonData, Facing, GameStateData } from '../../src/domain/game-state';
+import type { DoorData, DungeonData, Facing, FloorData, GameStateData } from '../../src/domain/game-state';
 import { BaseRng } from '../../src/domain/rng';
 import { makeState } from './fixtures';
 
@@ -25,6 +25,7 @@ export function openMap(
     down: i === 4 ? null : { x: 9, y: 0 },
     boss: i === 4 ? { x: 9, y: 0 } : null,
     visited: new Array<boolean>(size * size).fill(false),
+    doors: [] as FloorData['doors'],
   }));
   return { width: size, height: size, floors, floor, player: { x: player.x, y: player.y, facing: player.facing ?? 'N' }, ...extra };
 }
@@ -80,4 +81,30 @@ export function addWall(d: DungeonData, floor: number, x: number, y: number, dir
   const ny = y + dy;
   if (nx >= 0 && ny >= 0 && nx < d.width && ny < d.height) walls[ny * d.width + nx] |= bits[back[dir]];
   return { ...d, floors: d.floors.map((f, i) => (i === floor - 1 ? { ...f, walls } : f)) };
+}
+
+const OPP: Record<Facing, Facing> = { N: 'S', S: 'N', E: 'W', W: 'E' };
+const BITS: Record<Facing, number> = { N: 1, E: 2, S: 4, W: 8 };
+const DXY: Record<Facing, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+
+/**
+ * 扉つきの地図（v1.25。TC-0041）：floor の階の cell を、open の辺だけ開いた行き止まりにし（両側の壁をそろえる）、
+ * そこに扉 { cell, side: open, content, state } を置く
+ */
+export function withDoor(d: DungeonData, floor: number, cell: number, open: Facing, content: DoorData['content'], state: DoorData['state'] = 'closed'): DungeonData {
+  const floors = d.floors.map((f, i) => {
+    if (i !== floor - 1) return f;
+    const walls = [...f.walls];
+    const x = cell % 10;
+    const y = Math.floor(cell / 10);
+    for (const dir of ['N', 'E', 'S', 'W'] as Facing[]) {
+      if (dir === open) continue;
+      walls[cell] |= BITS[dir];
+      const nx = x + DXY[dir][0];
+      const ny = y + DXY[dir][1];
+      if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10) walls[ny * 10 + nx] |= BITS[OPP[dir]];
+    }
+    return { ...f, walls, doors: [...f.doors, { cell, side: open, content, state }] };
+  });
+  return { ...d, floors };
 }

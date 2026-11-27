@@ -281,6 +281,7 @@ body {
 .wiz-map-frame { fill: none; stroke: var(--wiz-color-map-frame); stroke-width: 1; }
 .wiz-map-cell { fill: var(--wiz-color-floor); }
 .wiz-map-wall { stroke: var(--wiz-color-primary); stroke-width: 2; }
+.wiz-map-door { stroke: var(--wiz-color-info); stroke-width: 4; }
 .wiz-map-symbol { font-size: 12px; text-anchor: middle; dominant-baseline: central; }
 .wiz-map-symbol.stairs { fill: var(--wiz-color-info); }
 .wiz-map-symbol.player { fill: var(--wiz-color-secondary); }

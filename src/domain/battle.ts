@@ -63,14 +63,15 @@ export function attack(attacker: Combatant, defender: Combatant, rng: Rng): { da
 }
 
 /** 戦闘開始（仕様書 §5.1。乱数を使わない）：場所 BATTLE、敵の HP は最大、battles +1 */
-export function startBattle(state: GameStateData, kind: EnemyKind): StepResult {
+export function startBattle(state: GameStateData, kind: EnemyKind, opts: { door?: number } = {}): StepResult {
   const isBoss = kind === 'necromancer';
   const enemy = ENEMIES[kind];
   return {
     state: {
       ...state,
       location: 'BATTLE',
-      battle: { enemy: { kind, hp: enemy.maxHp }, isBoss },
+      // 扉をあけて始めた戦闘だけ door を持つ（v1.25）
+      battle: opts.door === undefined ? { enemy: { kind, hp: enemy.maxHp }, isBoss } : { enemy: { kind, hp: enemy.maxHp }, isBoss, door: opts.door },
       records: countBattle(state.records),
     },
     messages: [isBoss
@@ -101,6 +102,14 @@ export function onDefeat(state: GameStateData, messages: Message[]): TurnResult 
   };
 }
 
+/** 扉の敵に勝ったら、その扉をなくす（v1.25。仕様書 §4.11・§5.5） */
+function clearDoor(state: GameStateData): GameStateData['dungeon'] {
+  const d = state.dungeon;
+  const cell = state.battle?.door;
+  if (!d || cell === null || cell === undefined) return d;
+  return { ...d, floors: d.floors.map((f, n) => (n === d.floor - 1 ? { ...f, doors: f.doors.map((x) => (x.cell === cell ? { ...x, state: 'gone' as const } : x)) } : f)) };
+}
+
 /** 勝利：通常の敵は「たおした → 経験値 → ドロップ」、ボスはさらに「平和が もどった」（§5.5、§9.1）。レベルは宿屋の やすむ で上がる（v1.14） */
 function onVictory(state: GameStateData, kind: EnemyKind, messages: Message[], rng: Rng): TurnResult {
   const enemy = ENEMIES[kind];
@@ -114,7 +123,7 @@ function onVictory(state: GameStateData, kind: EnemyKind, messages: Message[], r
   ];
   const base: GameStateData = isBoss
     ? { ...state, dungeon: null, battle: null, records: countBossKill(state.records) }
-    : { ...state, battle: null, records: countKill(state.records) };
+    : { ...state, dungeon: clearDoor(state), battle: null, records: countKill(state.records) };
   // 経験値を足すだけ（乱数を引かない）→ ドロップ
   const dropped = applyDrop(gainExp(base, enemy.exp),enemy.name, rollDrop(kind, rng), isBoss ? 'CLEARED' : 'DUNGEON');
   out.push(...dropped.messages);

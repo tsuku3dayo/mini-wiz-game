@@ -30,3 +30,15 @@ describe('疑似3D の説明文（仕様書 §11.5）', () => {
       .toBe('4F 南を向いている。前方 3 マス先は かべ。足元に のぼり階段。');
   });
 });
+
+describe('扉と宝箱の説明文（v1.25）', () => {
+  const plain = { left: 'wall', right: 'wall', front: 'open', stairs: null } as const;
+  test('TC-0041-18 「前方は とびら。」「前方 2 マス先は とびら。」「左に とびら。」「1 マス先に たからばこ。」', () => {
+    const at = (depths: DepthView[]) => describeView({ floor: 1, facing: 'N', underfoot: null, depths });
+    expect(at([{ ...plain, front: 'door' }])).toContain('前方は とびら。');
+    expect(at([{ ...plain }, { ...plain }, { ...plain, front: 'door' }])).toContain('前方 2 マス先は とびら。');
+    expect(at([{ ...plain, left: 'door', front: 'wall' }])).toContain('左に とびら。');
+    expect(at([{ ...plain }, { ...plain, chest: true, front: 'wall' }])).toContain('1 マス先に たからばこ。');
+    expect(at([{ ...plain, front: 'wall' }])).not.toContain('とびら');
+  });
+});

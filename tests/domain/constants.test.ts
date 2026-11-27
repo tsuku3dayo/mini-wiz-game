@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { ENCOUNTER_TABLE, ENEMIES, type EnemyKind } from '../../src/domain/constants';
+import { CHEST_SOURCE, DOOR_ENEMY, ENCOUNTER_TABLE, ENEMIES, type EnemyKind } from '../../src/domain/constants';
 
 describe('敵の表', () => {
-  test('TC-0018-07 敵 6 種の能力値・経験値と、出現表に出る階が仕様書 §6 の表のとおり。各階の合計は 100', () => {
+  test('TC-0018-07 敵 6 種の能力値・経験値と、出現表に出る階が仕様書 §6 の表のとおり（v1.25）。各階の合計は 100。扉の敵と宝箱の元の敵', () => {
     const stats = (k: EnemyKind) => { const e = ENEMIES[k]; return [e.name, e.maxHp, e.attack, e.defense, e.speed, e.exp]; };
     expect(stats('slime')).toEqual(['スライム', 24, 4, 0, 0, 8]);
     expect(stats('goblin')).toEqual(['ゴブリン', 20, 7, 3, 7, 20]);
@@ -13,11 +13,13 @@ describe('敵の表', () => {
 
     const floorsOf = (k: EnemyKind) => [1, 2, 3, 4, 5].filter((f) => ENCOUNTER_TABLE[f].some(([kind]) => kind === k));
     expect(floorsOf('slime')).toEqual([1, 2]);
-    expect(floorsOf('goblin')).toEqual([1, 2, 3]);
-    expect(floorsOf('skeleton')).toEqual([2, 3, 4]);
-    expect(floorsOf('orc')).toEqual([3, 4, 5]);
-    expect(floorsOf('darkKnight')).toEqual([4, 5]);
+    expect(floorsOf('goblin')).toEqual([2, 3]);
+    expect(floorsOf('skeleton')).toEqual([3, 4]);
+    expect(floorsOf('orc')).toEqual([4, 5]);
+    expect(floorsOf('darkKnight')).toEqual([5]);
     expect(floorsOf('necromancer')).toEqual([]);
     for (const f of [1, 2, 3, 4, 5]) expect(ENCOUNTER_TABLE[f].reduce((s, [, rate]) => s + rate, 0)).toBe(100);
+    expect(DOOR_ENEMY).toEqual({ 1: 'goblin', 2: 'skeleton', 3: 'orc', 4: 'darkKnight' });
+    expect(CHEST_SOURCE).toEqual({ 1: 'slime', 2: 'goblin', 3: 'goblin', 4: 'skeleton', 5: 'orc' });
   });
 });

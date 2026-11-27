@@ -14,15 +14,20 @@ export function locationText(floor: number, facing: Facing): string {
 
 export function describeView(v: Pick<DungeonView, 'floor' | 'facing' | 'underfoot' | 'depths'>): string {
   const parts = [`${v.floor}F ${FACING_NAME[v.facing]}を向いている。`];
-  const wallAt = v.depths.findIndex((d) => d.front === 'wall');
-  if (wallAt === 0) parts.push('前方は かべ。');
-  else if (wallAt > 0) parts.push(`前方 ${wallAt} マス先は かべ。`);
+  const wallAt = v.depths.findIndex((d) => d.front !== 'open');
+  // 扉のときは「かべ」を「とびら」に（v1.25）
+  const what = wallAt >= 0 && v.depths[wallAt].front === 'door' ? 'とびら' : 'かべ';
+  if (wallAt === 0) parts.push(`前方は ${what}。`);
+  else if (wallAt > 0) parts.push(`前方 ${wallAt} マス先は ${what}。`);
   else parts.push(`前方は ${v.depths.length - 1} マス先まで つうろ。`);
   const near = v.depths.slice(0, 2);
   if (near.some((d) => d.left === 'open')) parts.push('左に わかれみち。');
   if (near.some((d) => d.right === 'open')) parts.push('右に わかれみち。');
+  if (v.depths[0]?.left === 'door') parts.push('左に とびら。');
+  if (v.depths[0]?.right === 'door') parts.push('右に とびら。');
   v.depths.forEach((d, k) => {
     if (k >= 1 && d.stairs) parts.push(`${k} マス先に ${STAIRS_NAME[d.stairs]}。`);
+    if (k >= 1 && d.chest) parts.push(`${k} マス先に たからばこ。`);
   });
   if (v.underfoot === 'entrance') parts.push('ここは入口。');
   else if (v.underfoot) parts.push(`足元に ${STAIRS_NAME[v.underfoot]}。`);

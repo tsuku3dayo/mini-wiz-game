@@ -5,7 +5,7 @@ import { GAME_SCHEMA_VERSION, SAVE_SCHEMA_VERSION, toSaveData, type GameStateDat
 import { SeededRng, SequenceRng, SwappableRng, type Rng } from '../../src/domain/rng';
 import { createFakeStorage, type FakeStorage } from '../helpers/fake-storage';
 import { LOCATIONS, makeItem, makeState } from '../helpers/fixtures';
-import { battleState, dungeonState, openMap } from '../helpers/maps';
+import { battleState, dungeonState, openMap, withDoor } from '../helpers/maps';
 import { recordingRng } from '../helpers/rng';
 
 const NOW = '2026-11-02T01:23:45.678Z';
@@ -263,13 +263,14 @@ describe('迷宮を探索する（ゲーム API）', () => {
       down: null,
       boss: { x: 9, y: 0 },
       visited: d.floors[4].visited,
+      doors: [],
     });
     const view = (await api.move({ action: 'turnLeft' })).state;
     const text = JSON.stringify(view);
-    for (const key of ['"walls":[', '"boss":', '"up":', '"down":', '"visited":', '"floors":', '"revision":', '"schemaVersion":', '"updatedAt":']) {
+    for (const key of ['"walls":[', '"boss":', '"up":', '"down":', '"visited":', '"floors":', '"doors":[', '"revision":', '"schemaVersion":', '"updatedAt":']) {
       expect(text).not.toContain(key);
     }
-    expect(Object.keys(view.dungeon!).sort()).toEqual(['depths', 'facing', 'floor', 'map', 'underfoot']);
+    expect(Object.keys(view.dungeon!).sort()).toEqual(['ahead', 'depths', 'facing', 'floor', 'map', 'underfoot']);
     expect(view.dungeon!.map.cells.every((c) => c === null)).toBe(true);
 
     // ゲームがなければ 404、ダンジョンがなければ 409「ダンジョンに いません」
@@ -314,24 +315,24 @@ function setupWith(initial: Record<string, unknown>, inner: Rng) {
 }
 
 describe('戦闘とヒール（ゲーム API）', () => {
-  test('TC-0015-05 結果に見せない情報がない。dungeon は 5 つのキーと今の階の 100 マス、battle は 5 つのキー。5F のボスは視界の stairs でも null', async () => {
+  test('TC-0015-05 結果に見せない情報がない。dungeon は 6 つのキー（ahead を含む）と今の階の 100 マス、battle は 5 つのキー。5F のボスは視界の stairs でも null', async () => {
     const d = openMap({ x: 9, y: 3, facing: 'N' }, {}, 5);
-    const { api } = setupWith({ game: storedGame(dungeonState(d)) }, new SequenceRng([100, 20, 50]));
+    const { api } = setupWith({ game: storedGame(dungeonState(d)) }, new SequenceRng([100, 20, 51]));
     // 敵の HP（ダークナイト 70・ゴブリン 18 から減った 14）が出ないことも見る
-    const hidden = ['"revision":', '"schemaVersion":', '"updatedAt":', '"floors":', '"walls":[', '"visited":', '"boss":', '"hp":70', '"hp":14'];
+    const hidden = ['"doors":[', '"revision":', '"schemaVersion":', '"updatedAt":', '"floors":', '"walls":[', '"visited":', '"boss":', '"hp":70', '"hp":14'];
     const check = (view: unknown) => {
       const text = JSON.stringify(view);
       for (const key of hidden) expect(text, key).not.toContain(key);
     };
     const game = (await api.getGame()).state!;
     check(game);
-    expect(Object.keys(game.dungeon!).sort()).toEqual(['depths', 'facing', 'floor', 'map', 'underfoot']);
+    expect(Object.keys(game.dungeon!).sort()).toEqual(['ahead', 'depths', 'facing', 'floor', 'map', 'underfoot']);
     expect(game.dungeon!.map.cells).toHaveLength(100);
     expect(game.dungeon!.map.cells.every((c) => c === null)).toBe(true);
     // ボスのマス (9,0) が視界の奥にあっても stairs は null
     expect(game.dungeon!.depths.map((x) => x.stairs)).toEqual([null, null, null, null]);
 
-    // 前進（100：遭遇なし）→ 後退で 20 → 遭遇（50：5F ではダークナイト）→ 戦闘の結果
+    // 前進（100：遭遇なし）→ 後退で 20 → 遭遇（51：5F ではダークナイト。v1.25 の出現表）→ 戦闘の結果
     expect(JSON.stringify(game)).not.toContain('"hp":70');
     check((await api.move({ action: 'forward' })).state);
     const met = await api.move({ action: 'backward' });
@@ -807,5 +808,39 @@ describe('操作の速さ', () => {
     console.log('TC-0037-01 操作の時間（ms）', JSON.stringify(times));
     for (const [name, ms] of Object.entries(times)) expect(ms, name).toBeLessThan(300);
     expect(Object.keys(times)).toHaveLength(18);
+  });
+});
+
+describe('扉（ゲーム API。v1.25）', () => {
+  test('TC-0041-20 開けた扉・残っている宝箱は宿屋に戻って出発しても同じ。敗北のあとの出発では新しいマップの閉じた扉', async () => {
+    // 入口 (0,9) の北 (0,8) に宝箱の扉、(2,8) に下り階段の扉（gone）
+    let d = withDoor(openMap({ x: 0, y: 9, facing: 'N' }), 1, 80, 'S', 'chest');
+    d = withDoor(d, 1, 82, 'S', 'down', 'gone');
+    d = { ...d, floors: d.floors.map((f, i) => (i === 0 ? { ...f, down: { x: 2, y: 8 } } : f)) };
+    const { api } = setup({ game: storedGame(dungeonState(d)) });
+    expect((await api.openDoor()).state.dungeon!.ahead).toBe('chest');
+    await api.returnToInn();
+    await api.enterDungeon();
+    expect((await api.debugDungeon()).doors.map((x) => x.state)).toEqual(['chest', 'gone']);
+    expect((await api.getGame()).state!.dungeon!.ahead).toBe('chest');
+
+    // 敗北のあと（dungeon が null）の出発では、新しいマップの扉はすべて closed
+    const lost = setup({ game: storedGame(makeState('INN', { dungeon: null })) });
+    await lost.api.enterDungeon();
+    const fresh = await lost.api.debugDungeon();
+    expect(fresh.doors.length).toBeGreaterThan(0);
+    expect(fresh.doors.every((x) => x.state === 'closed')).toBe(true);
+  });
+
+  test('TC-0041-21 GameView に扉の中身（doors の一覧）が入らず、ahead は door・chest・null だけ。debugDungeon だけが中身を返す', async () => {
+    const d = withDoor(openMap({ x: 4, y: 5, facing: 'N' }), 1, 44, 'S', 'enemy');
+    const { api } = setup({ game: storedGame(dungeonState(d)) });
+    const view = (await api.getGame()).state!;
+    const text = JSON.stringify(view);
+    expect(text).not.toContain('"doors":[');
+    expect(text).not.toContain('"content"');
+    expect(text).not.toContain('enemy');
+    expect(view.dungeon!.ahead).toBe('door');
+    expect((await api.debugDungeon()).doors).toEqual([{ cell: 44, side: 'S', content: 'enemy', state: 'closed' }]);
   });
 });

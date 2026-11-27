@@ -61,7 +61,8 @@ export interface CharacterView {
   bonus: Stats;
 }
 
-export type Side = 'wall' | 'open';
+export type Side = 'wall' | 'open' | 'door';   // 'door' は v1.25
+export type AheadView = 'door' | 'chest' | null;   // v1.25
 export type StairsView = 'up' | 'down' | 'entrance' | null;
 
 export interface DepthView {
@@ -71,10 +72,12 @@ export interface DepthView {
   leftFront?: Side;
   rightFront?: Side;
   stairs: StairsView;
+  chest?: true;   // v1.25
 }
 
 export interface AutoMapCell {
   walls: { n: boolean; e: boolean; s: boolean; w: boolean };
+  doors: { n: boolean; e: boolean; s: boolean; w: boolean };   // v1.25
   stairs: StairsView;
 }
 
@@ -89,6 +92,7 @@ export interface DungeonView {
   floor: number;
   facing: Facing;
   underfoot: StairsView;
+  ahead: AheadView;   // v1.25
   depths: DepthView[];
   map: AutoMapView;
 }
@@ -188,6 +192,9 @@ export interface GameApi {
   returnToInn(): Promise<CommandResult>;
   /** ダンジョンのヒール */
   heal(): Promise<CommandResult>;
+  /** 扉をあける・宝箱をあける（v1.25） */
+  openDoor(): Promise<CommandResult>;
+  openChest(): Promise<CommandResult>;
   battle(input: { command: BattleCommand }): Promise<CommandResult>;
   equip(input: { itemId: number }): Promise<CommandResult>;
   unequip(input: { slot: Slot }): Promise<CommandResult>;
@@ -208,4 +215,6 @@ export interface DebugDungeon {
   down: { x: number; y: number } | null;
   boss: { x: number; y: number } | null;
   visited: boolean[];
+  /** 扉（v1.25。中身と状態を含む） */
+  doors: { cell: number; side: Facing; content: 'down' | 'boss' | 'enemy' | 'chest'; state: 'closed' | 'chest' | 'gone' }[];
 }

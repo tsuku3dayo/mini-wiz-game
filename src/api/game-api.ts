@@ -7,6 +7,7 @@ import { fieldHeal } from '../domain/heal';
 import { abandonLoot, takeLoot } from '../domain/loot';
 import { DomainError, GameNotFoundError, InvalidStateError, SaveNotFoundError, ValidationError } from '../domain/errors';
 import { enterDungeon, moveInDungeon, returnToInn, useStairs } from '../domain/explore';
+import { openChest, openDoor } from '../domain/doors';
 import { assertLocation, fromSaveData, migrateSave, SAVE_SLOTS, toSaveData, type GameStateData, type SaveSlot, type StepResult } from '../domain/game-state';
 import type { Rng } from '../domain/rng';
 import { toGameView } from './game-view';
@@ -141,6 +142,10 @@ export function createGameApi(deps: GameApiDeps): GameApi {
 
     heal: () => run(fieldHeal),
 
+    openDoor: () => run(openDoor),
+
+    openChest: () => run((state) => openChest(state, deps.rng)),
+
     battle: (input) => run((state) => resolveTurn(state, validateBattle(input), deps.rng)),
 
     equip: (input) => run((state) => equip(state, validateItemId(input))),
@@ -166,6 +171,7 @@ export function createGameApi(deps: GameApiDeps): GameApi {
         down: f.down ? { ...f.down } : null,
         boss: f.boss ? { ...f.boss } : null,
         visited: [...f.visited],
+        doors: f.doors.map((x) => ({ ...x })),
       };
     }),
   };
