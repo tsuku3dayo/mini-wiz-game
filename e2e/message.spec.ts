@@ -191,7 +191,7 @@ test.describe('メッセージ欄', () => {
     await expect.poll(() => lineColor(/たおれた…/)).toBe('rgb(255, 90, 78)');
   });
 
-  test('TC-0027-09 ドロップの行はレアリティの色。UR は 400ms の点滅 2 回で次の行は 800ms 後、LG は 3 回で 1200ms 後。N・R・SR と動きを減らす設定では点滅しない', async ({ page }, info) => {
+  test('TC-0027-09 ドロップの行はレアリティの色。UR は 400ms の点滅 2 回で次の行は 800ms 後、LG は 3 回で 1400ms 後（v1.25）。N・R・SR と動きを減らす設定では点滅しない', async ({ page }, info) => {
     const dropLine = () => page.locator('[role="log"] .wiz-line').filter({ hasText: /おとした！/ }).last();
     const blink = () => dropLine().evaluate((e) => {
       const s = getComputedStyle(e);
@@ -204,7 +204,7 @@ test.describe('メッセージ欄', () => {
     await page.clock.install();
     for (const s of [
       { seed: SEEDS.darkKnightDropUR, color: 'rgb(255, 140, 26)', count: '2', next: 800 },
-      { seed: SEEDS.darkKnightDropLG, color: 'rgb(255, 77, 109)', count: '3', next: 1200 },
+      { seed: SEEDS.darkKnightDropLG, color: 'rgb(255, 77, 109)', count: '3', next: 1400 },
     ]) {
       await startAt(page, 'BATTLE', { state: atStairs('darkKnight'), seed: s.seed });
       await pauseClock(page);

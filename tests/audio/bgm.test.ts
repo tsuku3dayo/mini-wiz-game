@@ -116,10 +116,10 @@ describe('BGM の再生エンジン', () => {
     ac.currentTime = 1;
     s.playSfx('encounter'); // 0.51 秒（v1.10）
     expect(g.events).toEqual([['cancel', 0, 1], ['target', 0.0105, 1, 0.02], ['target', 0.035, 1.51, 0.02]]);
-    // 前の効果音（1.51 まで）の途中で、短い効果音（0.36 秒）
+    // 前の効果音（1.51 まで）の途中で、短い効果音（dropN 0.14 秒。v1.25 で rareDrop 0.36 秒から替えた）。遅いほうの 1.51 まで下げたまま
     g.events = [];
     ac.currentTime = 1.1;
-    s.playSfx('rareDrop');
+    s.playSfx('dropN');
     expect(g.events).toEqual([['cancel', 0, 1.1], ['target', 0.0105, 1.1, 0.02], ['target', 0.035, 1.51, 0.02]]);
     // 止めたらすぐ戻す
     g.events = [];

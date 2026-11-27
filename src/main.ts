@@ -54,7 +54,10 @@ if (app) {
   const sound = createSoundSetting({ storage: browserStorage(), onTurnOn: () => sfx('toggle', { muted: false }) });
   const queue = createMessageQueue({
     reducedMotion: prefersReducedMotion,
-    onEffectStart: (e) => sfx(e.effect === 'rareDrop' && e.rarity === 'LG' ? 'rareDropLG' : e.effect, { muted: !sound.on }),
+    // rareDrop は、その行のレアリティの音（dropUR・dropLG。v1.25）
+    onEffectStart: (e) => sfx(e.effect === 'rareDrop' ? (e.rarity === 'LG' ? 'dropLG' : 'dropUR') : e.effect, { muted: !sound.on }),
+    // 演出のない N・R・SR のドロップ・宝箱の行（v1.25）
+    onRarityLine: (r) => sfx(`drop${r}` as 'dropN' | 'dropR' | 'dropSR' | 'dropUR' | 'dropLG', { muted: !sound.on }),
     onEffectEnd: () => stopSfx(),
   });
   attachSkipKeys(queue);

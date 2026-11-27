@@ -270,10 +270,10 @@ test.describe('キーボードと読み上げ', () => {
       const darkKnight = { hp: 999, maxHp: 999, battle: battleOf('darkKnight', 1) };
       await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropUR });
       await attack();
-      await expectLine('rareDrop', /^ダークナイトは .+［UR］（.+）を おとした！$/);
+      await expectLine('dropUR', /^ダークナイトは .+［UR］（.+）を おとした！$/);
       await startAt(page, 'BATTLE', { state: darkKnight, seed: SEEDS.darkKnightDropLG });
       await attack();
-      await expectLine('rareDropLG', /^ダークナイトは .+［LG］（.+）を おとした！$/);
+      await expectLine('dropLG', /^ダークナイトは .+［LG］（.+）を おとした！$/);
 
       // ボスの出現・撃破・クリア
       await startAt(page, 'DUNGEON', { state: { dungeon: dungeonMap({ x: 9, y: 1, floor: 5, facing: 'N' }) } });
